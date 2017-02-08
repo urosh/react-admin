@@ -1,17 +1,18 @@
 import React, { Component } from 'react';
-import '../App.css';
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 
-class App extends Component {
-  render() {
+const App = ({children, location}) => {
+  
     return (
-      <div className="App">
-        <div className="App-header">
-          <h2>Market Notifications</h2>
-        </div>
-        <div>{this.props.children}</div>
-      </div>
+    	<div>
+	    	<ReactCSSTransitionGroup transitionName="example"
+	  			transitionEnterTimeout={1200} transitionLeaveTimeout={1200}>
+	    		{React.cloneElement(children, { key: location.pathname })}
+	    	</ReactCSSTransitionGroup>
+    		
+    	</div>
     );
-  }
+  
 }
 
 export default App;

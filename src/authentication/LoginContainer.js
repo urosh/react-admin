@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Login from './Login';
+import { browserHistory } from 'react-router';
 
 class LoginContainer extends Component {
 	constructor() {
@@ -25,7 +26,8 @@ class LoginContainer extends Component {
 			this.setState({
 				errorMessage: '',
 				errorLogin: false
-			})
+			});
+			browserHistory.push('/');
 		}
 	}
 
@@ -66,7 +68,7 @@ class LoginContainer extends Component {
 
 		return true;
 	}
-	
+
 	render() {
 		return (
 			<Login onLogin={this.onLogin} errorLogin={this.state.errorLogin} errorMessage={this.state.errorMessage}/>

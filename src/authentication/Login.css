@@ -147,4 +147,31 @@
 	text-transform: lowercase;
 	color: #e2e2e2;
 }
+/* Transitions */
+.example-enter{
+	opacity: 0.1;
+}
+
+.example-enter.example-enter-active{
+	opacity: 1;
+	transition: opacity 1200ms ease-in;
+}
+
+.example-leave {
+  opacity: 1;
+}
+
+.example-leave.example-leave-active {
+  opacity: 0.01;
+  transition: opacity 1200ms ease-in;
+}
+
+.example-appear {
+  opacity: 0.01;
+}
+
+.example-appear.example-appear-active {
+  opacity: 1;
+  transition: opacity .5s ease-in;
+}
 
