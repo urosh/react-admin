@@ -1,12 +1,16 @@
-.login-form{
-	background: #33393d;
+.login-content{
 	height: 420px;
 	width: 420px;
-	padding: 0 20px;
 	position: absolute;
 	top: 50%;
 	left: 50%;
 	transform: translateY(-210px) translateX(-210px);
+	background: #33393d;
+}
+.login-form{
+	height: 420px;
+	width: 420px;
+	padding: 0 20px;
 }
 
 .logo-container{ 
@@ -148,30 +152,14 @@
 	color: #e2e2e2;
 }
 /* Transitions */
-.example-enter{
-	opacity: 0.1;
-}
 
-.example-enter.example-enter-active{
-	opacity: 1;
-	transition: opacity 1200ms ease-in;
-}
 
-.example-leave {
-  opacity: 1;
+.login-content.exit-active {
+	transform: translateY(0) translateX(0);
+  	top: 0;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 260px;
+  	transition: all 500ms ease-in;
 }
-
-.example-leave.example-leave-active {
-  opacity: 0.01;
-  transition: opacity 1200ms ease-in;
-}
-
-.example-appear {
-  opacity: 0.01;
-}
-
-.example-appear.example-appear-active {
-  opacity: 1;
-  transition: opacity .5s ease-in;
-}
-

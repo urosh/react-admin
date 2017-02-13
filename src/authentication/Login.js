@@ -9,10 +9,13 @@ import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 const Login = (props) => {
 	let userName;
 	let password;
+	let loginClassName = 'login-content ' + props.transitionStage;
+	
 	return (
 			
-		<div className="content">
-			    <div id="login-form-holder" className="login-form">
+		<div className={loginClassName}	>
+			<div id="login-form-holder" className="login-form">
+			    <div className={props.loginHidden ? 'hidden' : ''}>
 			        <div className="header">
 			        	<div id="logo-container" className="logo-container">
 			        		<div className="logo-holder holder">
@@ -48,7 +51,8 @@ const Login = (props) => {
 			                </div>
 			            </form>
 			        </div>
-		    	</div>
+			    </div>
+		    </div>
 		</div>
 		  
 		   
@@ -57,6 +61,8 @@ const Login = (props) => {
 
 Login.propTypes = {
 	errorLogin: React.PropTypes.bool,
-	errorMessage: React.PropTypes.string
+	errorMessage: React.PropTypes.string,
+	loginHidden: React.PropTypes.bool,
+	transitionStage: React.PropTypes.string
 }
 export default Login;

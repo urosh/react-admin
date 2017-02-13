@@ -2,6 +2,13 @@ import React, { Component } from 'react';
 import Login from './Login';
 import { browserHistory } from 'react-router';
 
+const transitionStageStates = {
+	'_PENDING_' : '',
+	'_INIT_': 'exit-init',
+	'_ACTIVE_': 'exit-active',
+	'_COMPLETE_': 'exit-complete'
+};
+
 class LoginContainer extends Component {
 	constructor() {
 		super();
@@ -12,7 +19,9 @@ class LoginContainer extends Component {
 		
 		this.state = {
 			errorLogin: false,
-			errorMessage: ''
+			errorMessage: '',
+			loginHidden: false,
+			transitionStage: transitionStageStates._PENDING_,
 		}
 	}
 
@@ -25,10 +34,23 @@ class LoginContainer extends Component {
 		}else{
 			this.setState({
 				errorMessage: '',
-				errorLogin: false
+				errorLogin: false,
+				loginHidden: true
 			});
-			browserHistory.push('/');
+			this.runTransition()
+			
 		}
+	}
+
+	runTransition() {
+		
+		this.setState({transitionStage: transitionStageStates._ACTIVE_});
+		
+		setTimeout(() => {
+			this.setState({transitionStage: transitionStageStates._COMPLETE_});
+			
+			browserHistory.push('/messages');
+		}, 1600)
 	}
 
 	onLogin(username, password) {
@@ -49,7 +71,7 @@ class LoginContainer extends Component {
 				if(response.status !== 200) {
 					this.setErrorMessage( 'Username and password are not recognized');
 				}else{
-					this.setErrorMessage('Bravo');
+					this.setErrorMessage();
 				}
 			})
 		}
@@ -64,14 +86,18 @@ class LoginContainer extends Component {
 			return false;
 		}
 		
-		this.setErrorMessage();
-
 		return true;
 	}
 
 	render() {
 		return (
-			<Login onLogin={this.onLogin} errorLogin={this.state.errorLogin} errorMessage={this.state.errorMessage}/>
+			<Login 
+				onLogin={this.onLogin} 
+				loginHidden={this.state.loginHidden} 
+				errorLogin={this.state.errorLogin} 
+				errorMessage={this.state.errorMessage}
+				transitionStage={this.state.transitionStage}	
+			/>
 		);
 	}
 }

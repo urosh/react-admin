@@ -15,14 +15,11 @@ const checkLogin = () =>{
 const Routes = (props) => {
 	return (
 		<Router {...props} >
-			
-			<Route path="/" component={App}>
-				<IndexRoute  component={Dashboard} onEnter={checkLogin}>
-					<Route path="/messages" component={Messages} />
-					<Route path="/filters" component={Filters} />
-				</IndexRoute>
-				<Route path="/login" component={LoginContainer}/>
+			<Route path="/" component={Dashboard} onEnter={checkLogin}>
+				<Route path="/messages" component={Messages} />
+				<Route path="/filters" component={Filters} />
 			</Route>
+			<Route path="/login" component={LoginContainer}/>
 		</Router>
 	)
 }
