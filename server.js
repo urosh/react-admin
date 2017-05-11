@@ -15,6 +15,7 @@ const http = require('http').Server(app);
 const colors = require('colors');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const serverIdGenerator = require('./serverIdGenerator');
 
 const config = require('./config');
 
