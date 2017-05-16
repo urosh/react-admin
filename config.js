@@ -48,11 +48,16 @@ const globalAlerts = [
 	'ASX/AUD'
 ];
 
+const sentinels = [
+	{ host: 'localhost', port: 26379 }
+];
+
 module.exports = {
 	port,
 	socketOrigins,
 	eventChannels,
 	mssql,
 	db,
-	globalAlerts
+	globalAlerts,
+	sentinels
 };

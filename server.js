@@ -15,7 +15,7 @@ const http = require('http').Server(app);
 const colors = require('colors');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const serverIdGenerator = require('./serverIdGenerator');
+
 const parameterList = require('./lib/marketAlerts/parameterList');
 const config = require('./config');
 

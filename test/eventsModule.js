@@ -30,7 +30,7 @@ describe('Events module', function(){
 		events.reset();
 
 		events.addEvent('register', 'sockets', [1, 2, 4], function(){}).should.be.a('string');
-		events.addEvent('register', 'sockets', [1, 2, 4], function(){}).should.be.a('string');
+		events.addEvent('register', 'sockets', [1, 2, 4], function(){}).should.equal(-1);
 		events.getEvents('sockets').length.should.equal(1);
 		events.addEvent('push.register', 'sockets', [1, 2, 4], function(){}).should.be.a('string');
 		events.getEvents('sockets').length.should.equal(2);
@@ -39,19 +39,50 @@ describe('Events module', function(){
 	it('4. Checks remove event logic', function() {
 		events.reset();
 		events.addEvent('register', 'sockets', [1, 2, 4], function(){}).should.be.a('string');
-		events.addEvent('push.register', 'sockets', [1, 2, 4], function(){}).should.be.a('string');
+		events.addEvent('pushRegister', 'sockets', [1, 2, 4], function(){}).should.be.a('string');
 		events.removeEvent();
-		events.getEvents('sockets').length.should.equal(2);
+		events.getEvents().length.should.equal(2);
 		events.removeEvent('dssd');
-		events.getEvents('sockets').length.should.equal(2);
-		events.removeEvent('register', 'wewweew');
-		events.getEvents('sockets').length.should.equal(2);
-		events.removeEvent('register', 'sockets');
-		events.getEvents('sockets').length.should.equal(1);
-		events.removeEvent('push.register', '232323');
-		events.getEvents('sockets').length.should.equal(1);
-		events.removeEvent('push.register', 'sockets');
-		events.getEvents('sockets').length.should.equal(0);
+		events.getEvents().length.should.equal(2);
+		events.removeEvent('register');
+		events.getEvents().length.should.equal(1);
+		events.removeEvent('register');
+		events.getEvents().length.should.equal(1);
+		events.removeEvent('pushRegister');
+		events.getEvents().length.should.equal(0);
+		events.removeEvent('pushRegister');
+		events.getEvents().length.should.equal(0);
+	});
+
+	it('5. Checks getEvents functionality', function() {
+		events.reset();
+		events.getEvents().length.should.equal(0);
+		events.addEvent('register', 'sockets', [1, 2, 4], function(){});
+		events.addEvent('register', 'sockets', [1, 2, 4], function(){});
+		events.getEvents().length.should.equal(1);
+		events.addEvent('pushRegister', 'sockets', [1, 2, 4], function(){});
+		events.addEvent('registerUser', 'sockets', [1, 2, 4], function(){});
+		events.addEvent('pushVisitor', 'sockets', [1, 2, 4], function(){});
+		events.getEvents().length.should.equal(4);
+		events.reset();
+		events.getEvents().length.should.equal(0);
+		events.addEvent('register', 'sockets', [1, 2, 4], function(){});
+		events.addEvent('register', 'sockets', [1, 2, 4], function(){});
+		events.getEvents().length.should.equal(1);
+	})
+
+	it('6. Check getEventNames functionality', function() {
+		events.reset();
+		events.addEvent('register', 'sockets', [1, 2, 4], function(){});
+		events.getEventNames()['REGISTER'].should.equal('register');
+		events.addEvent('register.user', 'sockets', [1, 2, 4], function(){});
+		events.getEventNames()['REGISTER_USER'].should.equal('register.user');
+		events.addEvent('register_visitor', 'sockets', [1, 2, 4], function(){});
+		events.getEventNames()['REGISTER_VISITOR'].should.equal('register_visitor');
+		events.addEvent('pushRegister', 'sockets', [1, 2, 4], function(){});
+		events.getEventNames()['PUSH_REGISTER'].should.equal('pushRegister');
+		
+
 	})
 	
 });
