@@ -16,7 +16,8 @@ const colors = require('colors');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
-const parameterList = require('./lib/marketAlerts/parameterList');
+const parameterList = require('./lib/marketAlerts/parameterList').parameterList;
+const messageChannels = require('./lib/marketAlerts/parameterList').messageChannels;
 const config = require('./config');
 
 var mongoose = require('mongoose');
@@ -26,9 +27,11 @@ mongoose.Promise = require('bluebird');
 mongoose.connect(connectionString);
 
 const marketAlerts = require('./lib/marketAlerts')(http);
+const usersManagemet = marketAlerts.usersManagemet;
 
 app.use(bodyParser.json());
 app.use(cors());
+
 
 
 marketAlerts.addEvent('connectUser', 
@@ -41,8 +44,9 @@ marketAlerts.addEvent('connectUser',
 		parameterList.LANGUAGE,
 		parameterList.PAIRS
 	], 
-	function(){
+	function(data){
 		console.log('Logged in user connected');
+		usersManagemet.loggedOutUserBrowserConnect(data, messageChannels.BROWSER)
 	}
 );
 
@@ -54,7 +58,8 @@ marketAlerts.addEvent(
 		parameterList.TEST_ENABLED,
 		parameterList.LANGUAGE
 	], 
-	function(){
+	function(data){
+		marketAlerts.connect(data, messageChannels.BROWSER)
 		console.log('Logged out user connected');
 	}
 )
