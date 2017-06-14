@@ -20,7 +20,7 @@ const db = {
 	connection: 'mongodb://localhost:27017/'
 };
 
-const globalAlerts = [
+const globalPairs = [
 	'EUR/USD',
 	'USD/CHF', 
 	'USD/JPY',
@@ -58,6 +58,6 @@ module.exports = {
 	eventChannels,
 	mssql,
 	db,
-	globalAlerts,
+	globalPairs,
 	sentinels
 };
