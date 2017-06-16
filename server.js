@@ -16,7 +16,7 @@ const colors = require('colors');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
-const parametersList = require('./lib/marketAlerts/parameterList').parameterList;
+const parametersList = require('./lib/marketAlerts/parameterList').parametersList;
 const messageChannels = require('./lib/marketAlerts/parameterList').messageChannels;
 const config = require('./config');
 
@@ -37,8 +37,9 @@ app.get('/test', (req, res) => {
 	res.send(usersManagement.getUsers());
 })
 
+// Loged in user socket connection
 marketAlerts.addEvent('connectUser', 
-	config.eventChannels._SOCKETS_, 
+	config.eventChannels.SOCKETS, 
 	[
 		parametersList.MACHINE_HASH,
 		parametersList.USER_ID,
@@ -67,10 +68,10 @@ marketAlerts.addEvent('connectUser',
 		/*usersManagemet.loggedOutUserBrowserConnect(data, messageChannels.BROWSER)*/
 	}
 );
-
+// Logged out user socket connection
 marketAlerts.addEvent(
 	'connectVisitor', 
-	config.eventChannels._SOCKETS_, 
+	config.eventChannels.SOCKETS, 
 	[
 		parametersList.MACHINE_HASH,
 		parametersList.TEST_ENABLED,
@@ -86,22 +87,71 @@ marketAlerts.addEvent(
 	}
 )
 
+// Closing socket connection
 marketAlerts.addEvent(
 	'disconnect', 
-	config.eventChannels._SOCKETS_, 
+	config.eventChannels.SOCKETS, 
 	[], 
 	function(data){
-		/*marketAlerts.connect(data, messageChannels.BROWSER)*/
-		console.log('DISCONNECT');
-		console.log(data);
-
-		/*usersManagement.setUserData(data);
-		usersManagement.addSocketConnection(data);
-		usersManagement.setBrowserData(data);*/
-
+		usersManagement.socketDisconnect(data);
 	}
 )
 
+// Push notification subscription
+marketAlerts.addEvent(
+	'pushSubscribe',
+	config.eventChannels.SOCKETS,
+	[
+		parametersList.TOKEN,
+		parametersList.USER_ID,
+		parametersList.MACHINE_HASH,
+		parametersList.SERVER_ID,
+	],
+	function(data) {
+		usersManagement.pushSubscribe(data);
+	}
+)
+
+// Push notification removing subscription
+marketAlerts.addEvent(
+	'pushUnsubscribe',
+	config.eventChannels.SOCKETS,
+	[
+		parametersList.USER_ID,
+		parametersList.MACHINE_HASH,
+		parametersList.SERVER_ID,
+	],
+	function(data) {
+		usersManagement.pushUnsubscribe(data);
+	}
+)
+
+// Browser tab active event handler
+marketAlerts.addEvent(
+	'tabActive',
+	config.eventChannels.SOCKETS,
+	[
+		parametersList.USER_ID,
+		parametersList.MACHINE_HASH,
+	],
+	function(data) {
+		console.log('Tab toggle');
+		usersManagement.browserTabVisibilityHandler(data);
+	}
+)
+// Browser tab hidden event handler
+marketAlerts.addEvent(
+	'tabHidden',
+	config.eventChannels.SOCKETS,
+	[
+		parametersList.USER_ID,
+		parametersList.MACHINE_HASH,
+	],
+	function(data) {
+		console.log('Tab Hidden');
+		usersManagement.browserTabVisibilityHandler(data);
+	}
+)
 
 
 marketAlerts.init({
