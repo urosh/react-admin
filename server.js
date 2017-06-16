@@ -128,31 +128,17 @@ marketAlerts.addEvent(
 
 // Browser tab active event handler
 marketAlerts.addEvent(
-	'tabActive',
+	'tabVisibilityChange',
 	config.eventChannels.SOCKETS,
 	[
 		parametersList.USER_ID,
 		parametersList.MACHINE_HASH,
+		parametersList.VISIBLE,
 	],
 	function(data) {
-		console.log('Tab toggle');
 		usersManagement.browserTabVisibilityHandler(data);
 	}
 )
-// Browser tab hidden event handler
-marketAlerts.addEvent(
-	'tabHidden',
-	config.eventChannels.SOCKETS,
-	[
-		parametersList.USER_ID,
-		parametersList.MACHINE_HASH,
-	],
-	function(data) {
-		console.log('Tab Hidden');
-		usersManagement.browserTabVisibilityHandler(data);
-	}
-)
-
 
 marketAlerts.init({
 	socketOrigins: config.socketOrigins
