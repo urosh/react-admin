@@ -155,6 +155,20 @@ marketAlerts.addEvent(
 	}
 )
 
+// Browser tab active event handler
+marketAlerts.addEvent(
+	'updateMarketAlertsSubscription',
+	config.eventChannels.SOCKETS,
+	[
+		parametersList.USER_ID,
+		parametersList.MARKET_ALERT_ALLOW
+	],
+	function(data) {
+		usersManagement.updateMarketAlertSubscription(data);
+	}
+)
+
+
 
 marketAlerts.init({
 	socketOrigins: config.socketOrigins
