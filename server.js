@@ -106,6 +106,7 @@ marketAlerts.addEvent(
 		parametersList.USER_ID,
 		parametersList.MACHINE_HASH,
 		parametersList.SERVER_ID,
+		parametersList.TAB_ACTIVE,
 	],
 	function(data) {
 		usersManagement.pushSubscribe(data);
@@ -133,12 +134,27 @@ marketAlerts.addEvent(
 	[
 		parametersList.USER_ID,
 		parametersList.MACHINE_HASH,
-		parametersList.VISIBLE,
+		parametersList.TAB_ACTIVE,
 	],
 	function(data) {
 		usersManagement.browserTabVisibilityHandler(data);
 	}
 )
+
+// Browser tab active event handler
+marketAlerts.addEvent(
+	'alertsSubscriptionChange',
+	config.eventChannels.SOCKETS,
+	[
+		parametersList.USER_ID,
+		parametersList.MACHINE_HASH,
+		parametersList.MARKET_ALERT_ALLOW
+	],
+	function(data) {
+		usersManagement.browserTabVisibilityHandler(data);
+	}
+)
+
 
 marketAlerts.init({
 	socketOrigins: config.socketOrigins
