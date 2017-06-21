@@ -168,6 +168,21 @@ marketAlerts.addEvent(
 	}
 )
 
+// Browser tab active event handler
+marketAlerts.addEvent(
+	'instrumentUpdate',
+	config.eventChannels.SOCKETS,
+	[
+		parametersList.USER_ID,
+		parametersList.INSTRUMENT,
+		parametersList.INSTRUMENT_STATUS
+	],
+	function(data) {
+		usersManagement.updateInstrument(data);
+	}
+)
+
+
 
 
 marketAlerts.init({
