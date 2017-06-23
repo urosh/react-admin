@@ -6,7 +6,9 @@ const socketOrigins = 'www.easymarkets.com:* chn.easymarkets.com:* prp.easymarke
 
 const eventChannels = {
 	SOCKETS : 'sockets',
-	ROUTES : 'routes'
+	ROUTES : 'routes',
+	POST: 'post',
+	GET: 'get'
 };
 
 const mssqlHost = 'mssql://' + process.env.MSSQL_USER + ':' + process.env.MSSQL_PASS + '@' + process.env.MSSQL_IP + ':' + process.env.MSSQL_PORT + '/EZFX_MC';
