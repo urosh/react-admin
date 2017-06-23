@@ -26,16 +26,16 @@ var connectionString = config.db.connection + dbName;
 mongoose.Promise = require('bluebird');
 mongoose.connect(connectionString);
 
-const marketAlerts = require('./lib/marketAlerts')(http);
+const marketAlerts = require('./lib/marketAlerts')(http, app);
 const usersManagement = marketAlerts.usersManagement;
 
 app.use(bodyParser.json());
 app.use(cors());
 
 // Just for testing purposes
-app.get('/test', (req, res) => {
+/*app.get('/test', (req, res) => {
 	res.send(usersManagement.getUsers());
-})
+})*/
 
 // Loged in user socket connection
 marketAlerts.addEvent('connectUser', 
@@ -181,6 +181,65 @@ marketAlerts.addEvent(
 		usersManagement.updateInstrument(data);
 	}
 )
+
+
+marketAlerts.addEvent(
+	'/test',
+	config.eventChannels.ROUTES,
+	[],
+	function(req, res) {
+		res.send(usersManagement.getUsers());
+	},
+	'get'
+)
+
+marketAlerts.addEvent(
+	'/api/fetch/users',
+	config.eventChannels.ROUTES,
+	[],
+	function(req, res) {
+		const users = usersManagement.getUsers();
+		const loggedInUsers = Object.keys(users)
+			.map(id => users[id])
+			.filter(user => user[parametersList.USER_ID]);
+		res.send(loggedInUsers);
+	},
+	'get'
+)
+
+marketAlerts.addEvent(
+	'/api/fetch/push',
+	config.eventChannels.ROUTES,
+	[],
+	function(req, res) {
+		const users = usersManagement.getUsers();
+		const loggedInUsers = Object.keys(users)
+			.map(id => users[id])
+			.filter(user => user[parametersList.PUSH].length);
+		res.send(loggedInUsers);
+	},
+	'get'
+)
+
+marketAlerts.addEvent(
+	'mobileConnect',
+	config.eventChannels.ROUTES,
+	[
+		parametersList.USER_ID,
+		parametersList.LANGUAGE,
+		parametersList.CULTURE,
+		parametersList.TOKEN,
+		parametersList.SYSTEM
+	],
+	function(req, res) {
+	
+	},
+	'post',
+	'/devices/mobile/connect'
+)
+
+
+
 
 
 
