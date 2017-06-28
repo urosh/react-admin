@@ -50,6 +50,7 @@ const globalPairs = [
 	'ASX/AUD'
 ];
 
+
 const sentinels = [
 	{ host: 'localhost', port: 26379 }
 ];
