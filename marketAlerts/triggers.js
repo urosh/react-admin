@@ -5,6 +5,10 @@ const marketAlertsParameters = marketAlertsConfig.parametersList;
 const uidGenerator = require('../utils/uidGenerator');
 const marketAlertTranslate = require('./utils/marketAlerts');
 const languages = marketAlertsConfig.languages;
+var FCM = require('fcm-push');
+var serverKey = 'AIzaSyBuBkx25PYli0uCjdzhp20p9M6CqMibKyc';
+var fcm = new FCM(serverKey);
+
 
 module.exports = (marketAlerts, io) => {
 	const parametersList = marketAlerts.getParametersList();
@@ -28,21 +32,25 @@ module.exports = (marketAlerts, io) => {
 		],
 		function(data) {
 			let processedData = marketAlertTranslate(data);
-			console.log(processedData);
 			Object.keys(languages)
 				.map(code => languages[code])
 				.forEach(language => {
-				const room = language + '-' + parametersList.INSTRUMENT + '-' + processedData[parametersList.INSTRUMENT];
-				console.log(room);
-				io.sockets.in(room).emit('market-notification', {
-	                	message: processedData.socket[language],
-	                	url: processedData.action.socket[language],
-	                	title: processedData.title[language],
-	                	type: processedData.type,
-	                	triggerID: processedData.triggerID,
-	                	instrument: processedData.instrument
-	                });
+					const room = language + '-' + parametersList.INSTRUMENT + '-' + processedData[parametersList.INSTRUMENT];
+					io.sockets.in(room).emit('market-notification', {
+		            	message: processedData.socket[language],
+		            	url: processedData.action.socket[language],
+		            	title: processedData.title[language],
+		            	type: processedData.type,
+		            	triggerID: processedData.triggerID,
+		            	instrument: processedData.instrument
+		            });
+				});
+			
+			usersManagement.getPushUsers(processedData[parametersList.INSTRUMENT]).forEach(push => {
+				
 			})
+
+
 		},
 		'post',
 		'/live/market-trigger'
