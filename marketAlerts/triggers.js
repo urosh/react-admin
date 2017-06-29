@@ -4,8 +4,9 @@ const generalConfig = require('../config');
 const marketAlertsParameters = marketAlertsConfig.parametersList;
 const uidGenerator = require('../utils/uidGenerator');
 const marketAlertTranslate = require('./utils/marketAlerts');
+const languages = marketAlertsConfig.languages;
 
-module.exports = (marketAlerts) => {
+module.exports = (marketAlerts, io) => {
 	const parametersList = marketAlerts.getParametersList();
 	const usersManagement = marketAlerts.usersManagement;
 	
@@ -27,8 +28,21 @@ module.exports = (marketAlerts) => {
 		],
 		function(data) {
 			let processedData = marketAlertTranslate(data);
-			console.log('We recieved market alert');
 			console.log(processedData);
+			Object.keys(languages)
+				.map(code => languages[code])
+				.forEach(language => {
+				const room = language + '-' + parametersList.INSTRUMENT + '-' + processedData[parametersList.INSTRUMENT];
+				console.log(room);
+				io.sockets.in(room).emit('market-notification', {
+	                	message: processedData.socket[language],
+	                	url: processedData.action.socket[language],
+	                	title: processedData.title[language],
+	                	type: processedData.type,
+	                	triggerID: processedData.triggerID,
+	                	instrument: processedData.instrument
+	                });
+			})
 		},
 		'post',
 		'/live/market-trigger'
@@ -53,8 +67,7 @@ module.exports = (marketAlerts) => {
 		function(data) {
 			data[parametersList.TEST_ENABLED] = true;
 			let processedData = marketAlertTranslate(data);
-			console.log('We recieved market alert');
-			console.log(processedData);
+			
 		},
 		'post',
 		'/live/market-trigger/test'
