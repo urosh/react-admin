@@ -51,7 +51,7 @@ require('./marketAlerts/browserConnections')(marketAlerts);
 require('./marketAlerts/api')(marketAlerts);
 require('./marketAlerts/mobileConnections')(marketAlerts);
 require('./marketAlerts/pushConnections')(marketAlerts);
-require('./marketAlerts/triggers')(marketAlerts);
+require('./marketAlerts/triggers')(marketAlerts, io);
 
 /*
  * TODO
