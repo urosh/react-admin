@@ -17,6 +17,7 @@
     "express": "^4.15.2",
     "express-body-parser-json-error": "^0.1.0",
     "facter": "^0.1.1",
+    "fcm-push": "^1.1.2",
     "ioredis": "^2.5.0",
     "mocha": "^3.3.0",
     "mongoose": "^4.9.8",
