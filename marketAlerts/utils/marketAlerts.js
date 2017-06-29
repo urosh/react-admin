@@ -31,18 +31,31 @@ const roundToTwo = value => (Math.round(value * 100) / 100);
 const setInstrument = data => data[parametersList.BASE_CURR] + '/' + data[parametersList.NON_BASE_CURR];
 
 // Instrument based url
-const setNotificationUrl = data =>  '/trade/' + data[parametersList.BASE_CURR].toLowerCase() + '-' + data[parametersList.NON_BASE_CURR].toLowerCase() + '/';
+const setNotificationAction = data =>  {
+	
+	const actionUrl = '/trade/' + data[parametersList.BASE_CURR].toLowerCase() + '-' + data[parametersList.NON_BASE_CURR].toLowerCase() + '/';
+	
+	return {
+		push: actionUrl,
+		socket: {
+			[languages.EN]: actionUrl,
+			[languages.PL]: '/' + languages.PL +  actionUrl,
+			[languages.AR]: '/' + languages.AR +  actionUrl,
+			[languages.ZH_HANS]: '/' + languages.ZH_HANS + actionUrl
+		}
+	}
+}
 
 
 const setEventDate = data =>  {
-	data[parametersList.EVENT_DATE]
-		.split(' ')
-		.map(function(item){
-			if(item.indexOf('-') > -1){
-				return item.split('-').reverse().join('/');
-			}
-			return item;
-		}).join(' ');
+	return 	data[parametersList.EVENT_DATE]
+				.split(' ')
+				.map(function(item){
+					if(item.indexOf('-') > -1){
+						return item.split('-').reverse().join('/');
+					}
+					return item;
+				}).join(' ');
 }
 
 // Formating notification message based on recieved data
@@ -120,7 +133,7 @@ const setSocketMessages = (data, alertData) => {
 		Object.keys(languages)
 			.map(language => languages[language])
 			.forEach(language => {
-			alertData.socket[language] = instrument.toUpperCase() + ' ' + eventList[eventNumber].message[language] + ' (' + instrumentPrice + ')' + '\n' + date;
+			alertData.socket[language] = '<strong>' + instrument.toUpperCase() + '</strong> ' + eventList[eventNumber].message[language] + ' (' + instrumentPrice + ')' + '<br>' + date;
 		})
 	}
 }
@@ -169,7 +182,7 @@ module.exports = function(requestData) {
 
     alertData[parametersList.INSTRUMENT] = setInstrument(requestData);
 
-    alertData[parametersList.ACTION] = setNotificationUrl(requestData);
+    alertData[parametersList.ACTION] = setNotificationAction(requestData);
 
     alertData[parametersList.PRICE] = requestData[parametersList.NEW_VALUE];
 
