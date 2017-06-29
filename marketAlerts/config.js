@@ -105,10 +105,11 @@ const languages = {
 	'EN': 'en',
 	'PL': 'pl',
 	'AR': 'ar',
-	'ZH-HANS': 'zh-hans'
+	'ZH_HANS': 'zh-hans'
 }
 
 module.exports = {
 	eventList,
-	parametersList
+	parametersList,
+	languages
 }
