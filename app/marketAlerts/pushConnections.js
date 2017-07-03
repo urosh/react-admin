@@ -22,10 +22,12 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let user = usersManagement.getUser(id);
 			if (!user) return;
 			
+			let io = marketAlerts.getSocketsConnection();
+
 			const machineHash = data[parametersList.MACHINE_HASH];
 			const language = data[parametersList.LANGUAGE];
 			const token = data[parametersList.TOKEN];
-			const socket = usersManagement.getSocket(data[parametersList.SOCKET_ID]);
+			const socket = usersManagement.getSocket(data[parametersList.SOCKET_ID], io);
 			
 			// Get push data array	
 			let pushData = user[parametersList.PUSH].filter(push => push[parametersList.TOKEN] !== token);
@@ -65,7 +67,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			// Update sockets by joining/leaving rooms	
 			const pairs = (data[parametersList.TAB_ACTIVE] && user[parametersList.MARKET_ALERT_ALLOW] ) ? user[parametersList.PAIRS] : [];
 
-			usersManagement.joinRooms(socket, pairs);
+			usersManagement.joinRooms(socket, pairs, io);
 		}
 	)
 
@@ -80,8 +82,9 @@ module.exports  = (marketAlerts, usersManagement) => {
 		],
 		function(data) {
 			const id = usersManagement.getUserId(data);
-			let user = usersManagement.getUsers(id);
-			
+			let user = usersManagement.getUser(id);
+			let io = marketAlerts.getSocketsConnection();
+
 			let pushData = user[parametersList.PUSH].filter(push => push[parametersList.TOKEN] !== data[parametersList.TOKEN]);
 			
 			user[parametersList.PUSH].map(browser => {
