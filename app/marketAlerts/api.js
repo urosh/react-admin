@@ -1,10 +1,8 @@
 "use strict";
 const config = require('../config');
+const parametersList = config.parametersList;
 
-module.exports  = (marketAlerts) => {
-	const parametersList = marketAlerts.getParametersList();
-	const usersManagement = marketAlerts.usersManagement;
-	
+module.exports  = (marketAlerts, usersManagement) => {
 
 	// Api methods for retrieving stats about users
 	marketAlerts.addEvent(

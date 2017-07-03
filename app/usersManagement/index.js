@@ -1,12 +1,7 @@
 "use strict";
-const parametersList = require('./parameterList').parametersList;
-const messageChannels = require('./parameterList').messageChannels;
-const globalPairs = require('../../config').globalPairs;
+const parametersList = require('../config').parametersList;
+const globalPairs = require('../config').globalPairs;
 let io;
-
-const init = i => {
-	io = i
-}
 
 const socketConnection = {
 	[parametersList.SOCKET_ID]: '',
@@ -103,11 +98,11 @@ const getUserId = data => {
  * @param array source
  * @return array
  */
-const getArrayDifference = (target, source) => {
+const getArrayDifference = (target, source, io) => {
 	return target.filter(t => source.indexOf(t) === -1);
 }
 
-const getSocket = socketId => io.sockets.connected[socketId];
+const getSocket = (socketId, io) => io.sockets.connected[socketId];
 /*
  * Helper function that sets correct pair format. It is used as a room for sockets
  * on different languages. 
@@ -139,12 +134,12 @@ const setInstrumentFormat = (socket, instrument) => {
  * @param array rooms. Rooms to join
  * @return void
  */
- const joinRooms = (socket, rooms) => {
+ const joinRooms = (socket, rooms, io) => {
 	if(!socket || !rooms) return;
 	
 	let recievedRooms = [];
-	let joinRooms = [];
-	let leaveRooms = [];
+	let join = [];
+	let leave = [];
 	
 	// Transform rooms array to correct format
 	rooms.forEach(room => {
@@ -153,14 +148,14 @@ const setInstrumentFormat = (socket, instrument) => {
 	
 	const currentRooms = [...Object.keys(io.sockets.adapter.rooms).filter(pair => pair.indexOf(parametersList.INSTRUMENT) > -1)];
 	
-	joinRooms = getArrayDifference(recievedRooms, currentRooms);
-	leaveRooms = getArrayDifference(currentRooms, recievedRooms);
+	join = getArrayDifference(recievedRooms, currentRooms);
+	leave = getArrayDifference(currentRooms, recievedRooms);
 	
-	joinRooms.forEach(room => {
+	join.forEach(room => {
 		socket.join(room);
 	});
 
-	leaveRooms.forEach(room => {
+	leave.forEach(room => {
 		socket.leave(room);
 	});
 		
@@ -220,7 +215,9 @@ const generateUserPairs = (data) => {
 }
 
 
-
+const init = () => {
+	
+}
 
 /*
  * Helper functions to get socket/push/browser object from users object. It is

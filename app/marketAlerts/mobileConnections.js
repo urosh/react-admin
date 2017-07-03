@@ -1,9 +1,9 @@
 "use strict";
-const config = require('../config');
 
-module.exports  = (marketAlerts) => {
-	const parametersList = marketAlerts.getParametersList();
-	const usersManagement = marketAlerts.usersManagement;
+const config = require('../config');
+const parametersList = config.parametersList;
+
+module.exports  = (marketAlerts, usersManagement) => {
 	
 	// Mobile App Api methods
 	marketAlerts.addEvent(

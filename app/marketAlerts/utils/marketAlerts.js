@@ -20,11 +20,11 @@
  * }
  * 
  */
-const constants = require('../config');
-const eventList = constants.eventList;
-const parametersList = constants.parametersList;
-const uidGenerator = require('../../utils/uidGenerator');
-const languages = constants.languages;
+const config = require('../../config');
+const eventList = config.eventList;
+const parametersList = config.parametersList;
+const uidGenerator = require('./uidGenerator');
+const languages = config.languages;
 
 const roundToTwo = value => (Math.round(value * 100) / 100);
 

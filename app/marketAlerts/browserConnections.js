@@ -1,9 +1,9 @@
 "use strict";
 const config = require('../config');
-
-module.exports = (marketAlerts) => {
-	const parametersList = marketAlerts.getParametersList();
-	const usersManagement = marketAlerts.usersManagement;
+const parametersList = config.parametersList;
+module.exports = (marketAlerts, usersManagement) => {
+	
+	
 	
 	marketAlerts.addEvent('connectBrowser', 
 		config.eventChannels.SOCKETS, 
@@ -18,6 +18,7 @@ module.exports = (marketAlerts) => {
 			parametersList.SERVER_ID
 		], 
 		function(data){
+			let io = marketAlerts.getSocketsConnection();
 			// Store user's data to variables for easier use
 			const id = usersManagement.getUserId(data);
 			const machineHash = data[parametersList.MACHINE_HASH];
@@ -29,7 +30,7 @@ module.exports = (marketAlerts) => {
 			
 			let sockets = [];
 			
-			let socket = usersManagement.getSocket(data[parametersList.SOCKET_ID]);
+			let socket = usersManagement.getSocket(data[parametersList.SOCKET_ID], io);
 			
 			// Update user's object with recieved data
 			users[id] = Object.assign({}, userModel, users[id], data);
@@ -59,7 +60,7 @@ module.exports = (marketAlerts) => {
 			
 			// Make socket join rooms 
 			if(user[parametersList.MARKET_ALERT_ALLOW]){
-				usersManagement.joinRooms(socket, user[parametersList.PAIRS]);
+				usersManagement.joinRooms(socket, user[parametersList.PAIRS], io);
 			}
 			
 			// Adding machine info
@@ -76,7 +77,6 @@ module.exports = (marketAlerts) => {
 		}
 	);
 
-
 	// Closing socket connection
 	marketAlerts.addEvent(
 		'disconnect', 
@@ -86,7 +86,8 @@ module.exports = (marketAlerts) => {
 		], 
 		function(data){
 			const socketId = data[parametersList.SOCKET_ID];
-			const user = usersManagement.getSocketUser(socketId);
+			let io = marketAlerts.getSocketsConnection();
+			const user = usersManagement.getSocketUser(socketId, io);
 			if(user){
 				// Removing socket's reference from user's object
 				user[parametersList.SOCKETS] = user[parametersList.SOCKETS].filter(socket => socket[parametersList.SOCKET_ID] !== socketId);
@@ -107,7 +108,8 @@ module.exports = (marketAlerts) => {
 		function(data) {
 			//usersManagement.browserTabVisibilityHandler(data);
 			const id = usersManagement.getUserId(data);
-			const socket = usersManagement.getSocket(data[parametersList.SOCKET_ID]);
+			let io = marketAlerts.getSocketsConnection();
+			const socket = usersManagement.getSocket(data[parametersList.SOCKET_ID], io);
 			let user = usersManagement.getUser(id);
 			let pushObject = usersManagement.getPushObject(id, data[parametersList.MACHINE_HASH]);
 			let socketObject = usersManagement.getSocketObject(id, data[parametersList.SOCKET_ID]);
@@ -126,7 +128,7 @@ module.exports = (marketAlerts) => {
 				if(user){
 					const pairs = (data[parametersList.TAB_ACTIVE] && user[parametersList.MARKET_ALERT_ALLOW] )? user[parametersList.PAIRS] : [];
 					
-					usersManagement.joinRooms(socket, pairs);
+					usersManagement.joinRooms(socket, pairs, io);
 				}
 			}
 
@@ -148,7 +150,7 @@ module.exports = (marketAlerts) => {
 			const id = usersManagement.getUserId(data);
 			let  user = usersManagement.getUser(id);
 			if(!user) return;
-
+			let io = marketAlerts.getSocketsConnection();
 			const marketAlertAllow = data[parametersList.MARKET_ALERT_ALLOW];
 			
 			// Update user's object
@@ -157,8 +159,8 @@ module.exports = (marketAlerts) => {
 			// Tell all sockets to leave rooms
 			
 			user[parametersList.SOCKETS].forEach(socketData => {
-				let socket = usersManagement.getSocket(socketData.SOCKET_ID);
-				usersManagement.joinRooms(socket, pairs);
+				let socket = usersManagement.getSocket(socketData.SOCKET_ID, io);
+				usersManagement.joinRooms(socket, pairs, io);
 			})
 
 			// Block push notifications
@@ -181,7 +183,7 @@ module.exports = (marketAlerts) => {
 			const id = usersManagement.getUserId(data);
 			let user = usersManagement.getUsers(id);
 			if (!user) return;
-
+			let io = marketAlerts.getSocketsConnection();
 			const instrument = parametersList.INSTRUMENT + '-' + data[parametersList.INSTRUMENT];
 			let pairs = user[parametersList.PAIRS].filter(pair => pair !== instrument);
 			
@@ -194,8 +196,8 @@ module.exports = (marketAlerts) => {
 			
 			// Join/Leave room 
 			user[parametersList.SOCKETS].forEach(socketData => {
-				let socket = usersManagement.getSocket(socketData.SOCKET_ID);
-				usersManagement.joinRooms(socket, pairs);
+				let socket = usersManagement.getSocket(socketData.SOCKET_ID, io);
+				usersManagement.joinRooms(socket, pairs, io);
 			})
 		}
 	)
