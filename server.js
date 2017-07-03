@@ -38,6 +38,7 @@ mongoose.Promise = require('bluebird');
 mongoose.connect(connectionString);
 
 marketAlerts.init({
+	name: 'Market Alerts',
 	useMssql: true,
 	socket: {
 		origins: marketAlertsConfig.socketOrigins,
@@ -71,10 +72,15 @@ marketAlerts.addEvent(
 	'get'
 )
 
-//const webeyezRedis = require('./lib/notifications')(http, app);
-/*webeyezRedis.init({
+const webeyezRedis = require('./lib/connections')(http, app);
+webeyezRedis.init({
+	name: 'webeyezRedis',
 	useMssql: false,
-})*/
+	redis: {
+		host: marketAlertsConfig.webeyezRedisHost,
+		port: marketAlertsConfig.webeyezRedisPort
+	},
+})
 
 const port = 3031;
 
