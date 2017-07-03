@@ -213,6 +213,8 @@ const messageChannels = {
 	MOBILE: 'mobile'
 }
 
+const webeyezRedisHost = process.env.WEBEYEZ_REDIS_IP;
+const webeyezRedisPort = process.env.WEBEYEZ_REDIS_PORT;
 
 module.exports = {
 	globalPairs,
@@ -225,5 +227,7 @@ module.exports = {
 	parametersList,
 	messageChannels,
 	eventList,
-	languages
+	languages,
+	webeyezRedisHost,
+	webeyezRedisPort
 }
