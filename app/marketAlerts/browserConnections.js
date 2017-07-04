@@ -25,6 +25,7 @@ module.exports = (marketAlerts, usersManagement) => {
 			const language = data[parametersList.LANGUAGE];
 			let users = usersManagement.getUsers();
 			let user;
+
 			// User's template 
 			const userModel = usersManagement.getUserModel();
 			
@@ -70,6 +71,7 @@ module.exports = (marketAlerts, usersManagement) => {
 				[parametersList.MACHINE_HASH]: machineHash,
 				[parametersList.LANGUAGE]: language,
 				[parametersList.PUSH_ENABLED]: false,
+				[parametersList.SERVER_ID]: data[parametersList.SERVER_ID],
 			});
 
 			user[parametersList.BROWSERS] = [...browsers];
