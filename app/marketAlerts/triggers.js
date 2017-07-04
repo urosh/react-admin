@@ -32,7 +32,7 @@ module.exports = (marketAlerts, usersManagement) => {
 		],
 		function(data) {
 			let processedData = marketAlertTranslate(data);
-			let io = marketAlerts.getIogetSocketsConnection();
+			let io = marketAlerts.getSocketsConnection();
 			Object.keys(languages)
 				.map(code => languages[code])
 				.forEach(language => {
@@ -48,7 +48,7 @@ module.exports = (marketAlerts, usersManagement) => {
 				});
 			
 			usersManagement.getPushUsers(processedData[parametersList.INSTRUMENT]).forEach(push => {
-
+				console.log(push);
 			})
 
 
