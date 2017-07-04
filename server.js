@@ -37,53 +37,69 @@ var connectionString = marketAlertsConfig.db.connection + dbName;
 mongoose.Promise = require('bluebird');
 mongoose.connect(connectionString);
 
-marketAlerts.init({
-	name: 'Market Alerts',
-	useMssql: true,
-	socket: {
-		origins: marketAlertsConfig.socketOrigins,
-		path: '/live/socket.io'
-	},
-	redis: {
-		sentinels: marketAlertsConfig.sentinels,
-		name: 'redis-cluster'
-	},
-	mssql: {
-		host: marketAlertsConfig.mssqlHost
-	}
-})
+const serverIdGenerator = require('./app/marketAlerts/utils/serverIdGenerator');
+
+serverIdGenerator()
+	.then(serverSettings => {
+		
+		usersManagement.setServerId(serverSettings[parametersList.SERVER_ID]);
+
+		marketAlerts.init({
+			name: 'Market Alerts',
+			serverID: serverSettings[parametersList.SERVER_ID],
+			useMssql: true,
+			socket: {
+				origins: marketAlertsConfig.socketOrigins,
+				path: '/live/socket.io'
+			},
+			redis: {
+				sentinels: marketAlertsConfig.sentinels,
+				name: 'redis-cluster'
+			},
+			mssql: {
+				host: marketAlertsConfig.mssqlHost
+			}
+		})
+
+		/*
+		 * TODO
+		 * Add some kind of cleaning function that will check when there are no connections
+		 * left for some user. Then we would delete user's object
+		 */
+		marketAlerts.addEvent(
+			'/test',
+			marketAlertsConfig.eventChannels.ROUTES,
+			[],
+			function(req, res) {
+				res.send(usersManagement.getUsers());
+			},
+			'get'
+		)
+
+		const webeyezRedis = require('./lib/connections')(http, app);
+		
+		webeyezRedis.init({
+			name: 'Webeyez Redis',
+			serverID: serverSettings[parametersList.SERVER_ID],
+			useMssql: false,
+			redis: {
+				host: marketAlertsConfig.webeyezRedisHost,
+				port: marketAlertsConfig.webeyezRedisPort
+			},
+		})
+
+		
+	}).catch(err => {
+		console.error((`There was an error while generating serverID. Server will not handle requests`));
+		console.log(err);
+	})
 
 require('./app/marketAlerts')(marketAlerts, usersManagement);
-
-
-
-/*
- * TODO
- * Add some kind of cleaning function that will check when there are no connections
- * left for some user. Then we would delete user's object
- */
-marketAlerts.addEvent(
-	'/test',
-	marketAlertsConfig.eventChannels.ROUTES,
-	[],
-	function(req, res) {
-		res.send(usersManagement.getUsers());
-	},
-	'get'
-)
-
-const webeyezRedis = require('./lib/connections')(http, app);
-webeyezRedis.init({
-	name: 'webeyezRedis',
-	useMssql: false,
-	redis: {
-		host: marketAlertsConfig.webeyezRedisHost,
-		port: marketAlertsConfig.webeyezRedisPort
-	},
-})
 
 const port = 3031;
 
 http.listen(port, () => {
 	console.log(`Server listening on port ${port}`.magenta.bold.bgWhite);
 })
+
+
