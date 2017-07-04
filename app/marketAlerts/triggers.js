@@ -32,23 +32,42 @@ module.exports = (marketAlerts, usersManagement) => {
 		],
 		function(data) {
 			let processedData = marketAlertTranslate(data);
+			
 			let io = marketAlerts.getSocketsConnection();
+			
 			Object.keys(languages)
 				.map(code => languages[code])
 				.forEach(language => {
-					const room = language + '-' + parametersList.INSTRUMENT + '-' + processedData[parametersList.INSTRUMENT];
-					io.sockets.in(room).emit('market-notification', {
-		            	message: processedData.socket[language],
-		            	url: processedData.action.socket[language],
-		            	title: processedData.title[language],
-		            	type: processedData.type,
-		            	triggerID: processedData.triggerID,
-		            	instrument: processedData.instrument
-		            });
+					const room = language + '-' + parametersList.INSTRUMENT + '-' + processedData.socket[language][parametersList.INSTRUMENT];
+					io.sockets.in(room).emit('market-notification', processedData.socket[language]);
 				});
 			
 			usersManagement.getPushUsers(processedData[parametersList.INSTRUMENT]).forEach(push => {
-				console.log(push);
+				console.log('We got here');
+				const language = push[parametersList.LANGUAGE];
+				console.log(processedData.push[language]);
+				/*const pushMessage = {
+					to: push[parametersList.TOKEN],
+					collapse_key: 'Market Alert',
+					data: {
+						title: processedData.title[language],
+						detail: processedData.push[language],
+						messageType: 'Market Alert',
+						socketMessage: processedData.socket[language],
+						pushUrl: processedData.action.push,
+						triggerID: triggerID,
+						machineHash: push[parametersList.MACHINE_HASH],
+						userID: push[parametersList.USER_ID],
+						userLoggedIn: push[parametersList.USER_ID],
+						pushServerUrl: processedData[parametersList.PUSH_SERVER_URL],
+						instrument: processedData[parametersList.INSTRUMENT],
+						token: push[parametersList.TOKEN],
+						messageType: processedData[parametersList.TYPE]
+					}
+				};
+*/
+				//console.log(pushMessage);
+				
 			})
 
 

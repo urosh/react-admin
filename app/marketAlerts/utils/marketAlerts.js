@@ -26,6 +26,36 @@ const parametersList = config.parametersList;
 const uidGenerator = require('./uidGenerator');
 const languages = config.languages;
 
+const pushMessageTemplate = {
+	to: '',
+	collapse_key: 'Market Alert',
+	data: {
+		title: '',
+		detail: '',
+		messageType: 'Market Alert',
+		socketMessage: '',
+		pushUrl: '',
+		triggerID: '',
+		machineHash: '',
+		userID: '',
+		userLoggedIn: '',
+		pushServerUrl: '',
+		instrument: '',
+		token: '',
+		messageType: ''
+	}
+};
+
+const socketMessageTemplate = {
+	message: '',
+	url: '',
+	title: '',
+	type: '',
+	triggerID: '',
+	instrument: ''
+};
+
+
 const roundToTwo = value => (Math.round(value * 100) / 100);
 
 const setInstrument = data => data[parametersList.BASE_CURR] + '/' + data[parametersList.NON_BASE_CURR];
@@ -49,28 +79,25 @@ const setNotificationAction = data =>  {
 
 const setEventDate = data =>  {
 	return 	data[parametersList.EVENT_DATE]
-				.split(' ')
-				.map(function(item){
-					if(item.indexOf('-') > -1){
-						return item.split('-').reverse().join('/');
-					}
-					return item;
-				}).join(' ');
+		.split(' ')
+		.map(function(item){
+			if(item.indexOf('-') > -1){
+				return item.split('-').reverse().join('/');
+			}
+			return item;
+		}).join(' ');
 }
 
+
+
 // Formating notification message based on recieved data
-const setPushMessage = (data, alertData) => {
+const setPushMessage = (data, language, inst) => {
 	const eventNumber = parseInt(data[parametersList.EVENT_TYPE_ID], 10);
-	const instrument = alertData[parametersList.INSTRUMENT];
+	const instrument = inst;
 
 	const instrumentPrice = Math.round(data[parametersList.NEW_VALUE] * 10000) / 10000;
 	
-	alertData.push = {
-		[languages.EN]: '',
-		[languages.PL]: '',
-		[languages.AR]: '',
-		[languages.ZH_HANS]: ''
-	}
+	
 	const date = setEventDate(data) + ' GMT';
 	let message = '';
 	if(eventNumber === 1 || eventNumber === 2) {
@@ -80,37 +107,19 @@ const setPushMessage = (data, alertData) => {
 		diff = sign + diff + '%';
 		
 		const message = instrument.toUpperCase() + ' at ' + instrumentPrice +  ' (' + diff + ') ' + '\n\n' + date;
-		
-		Object.keys(languages)
-			.map(language => languages[language])
-			.forEach(language => {
-				alertData.push[language] = message;
-			})
-	
+		return message;
 	}else{
-		Object.keys(languages)
-			.map(language => languages[language])
-			.forEach(language => {
-			alertData.push[language] = instrument.toUpperCase() + ' ' + eventList[eventNumber].message[language] + ' (' + instrumentPrice + ')' + '\n' + date;
-		})
+		return instrument.toUpperCase() + ' ' + eventList[eventNumber].message[language] + ' (' + instrumentPrice + ')' + '\n' + date;
 	}
-
 }
 
-const setSocketMessages = (data, alertData) => {
+const setSocketMessages = (data, language, inst) => {
 	const eventNumber = parseInt(data[parametersList.EVENT_TYPE_ID], 10);
-	const instrument = alertData[parametersList.INSTRUMENT];
+	const instrument = inst;
 
 	const instrumentPrice = Math.round(data[parametersList.NEW_VALUE] * 10000) / 10000;
 	
 	const date = '<span class="eventDate">' +  setEventDate(data) + ' GMT</span>';
-
-	alertData.socket = {
-		[languages.EN]: '',
-		[languages.PL]: '',
-		[languages.AR]: '',
-		[languages.ZH_HANS]: ''
-	}
 
 	let message;
 	
@@ -122,25 +131,16 @@ const setSocketMessages = (data, alertData) => {
 
 		message = '<span dir="ltr"><strong>' + instrument.toUpperCase() + ' at ' + instrumentPrice + '</strong> ' + ' (' + diff + ')</span> ';
 		
-		message = message + '<br>' + date;
-		Object.keys(languages)
-			.map(language => languages[language])
-			.forEach(language => {
-			alertData.socket[language] = message;
-		})
-
+		return message = message + '<br>' + date;
+	
 	}else{
-		Object.keys(languages)
-			.map(language => languages[language])
-			.forEach(language => {
-			alertData.socket[language] = '<strong>' + instrument.toUpperCase() + '</strong> ' + eventList[eventNumber].message[language] + ' (' + instrumentPrice + ')' + '<br>' + date;
-		})
+		return '<strong>' + instrument.toUpperCase() + '</strong> ' + eventList[eventNumber].message[language] + ' (' + instrumentPrice + ')' + '<br>' + date;
 	}
 }
 
 // Multilingual notification title, shoould go to the server
-const setNotificationTitle = (data) => {
-	data.title = {
+const setNotificationTitle = (data, language) => {
+	let title = {
 		[languages.EN]: '',
 		[languages.PL]: '',
 		[languages.AR]: '',
@@ -148,16 +148,18 @@ const setNotificationTitle = (data) => {
 	}
 	
 	if(data[parametersList.TEST_ENABLED]) {
-		data.title[languages.EN] = 'Testing Market Notification';
-		data.title[languages.PL] = 'Testing Notyfikacja z Rynku';
-		data.title[languages.AR] = 'testing إخطارات السوق';
-		data.title[languages.ZH_HANS] = 'Testing 市场价格提醒';
+		title[languages.EN] = 'Testing Market Notification';
+		title[languages.PL] = 'Testing Notyfikacja z Rynku';
+		title[languages.AR] = 'testing إخطارات السوق';
+		title[languages.ZH_HANS] = 'Testing 市场价格提醒';
 	}else{
-		data.title[languages.EN] = 'Market Notification';
-		data.title[languages.PL] = 'Notyfikacja z Rynku';
-		data.title[languages.AR] = 'إخطارات السوق';
-		data.title[languages.ZH_HANS] = '市场价格提醒';
+		title[languages.EN] = 'Market Notification';
+		title[languages.PL] = 'Notyfikacja z Rynku';
+		title[languages.AR] = 'إخطارات السوق';
+		title[languages.ZH_HANS] = '市场价格提醒';
 	}
+
+	return title[language];
 };
 
 
@@ -166,7 +168,21 @@ module.exports = function(requestData) {
 
 	// Default no error
 	var alertData = {};
-	    
+	
+	alertData.push = {
+		[languages.EN]: Object.assign({}, pushMessageTemplate),
+		[languages.PL]: Object.assign({}, pushMessageTemplate),
+		[languages.AR]: Object.assign({}, pushMessageTemplate),
+		[languages.ZH_HANS]: Object.assign({}, pushMessageTemplate)
+	};
+
+	alertData.socket = {
+		[languages.EN]: Object.assign({}, socketMessageTemplate),
+		[languages.PL]: Object.assign({}, socketMessageTemplate),
+		[languages.AR]: Object.assign({}, socketMessageTemplate),
+		[languages.ZH_HANS]: Object.assign({}, socketMessageTemplate),
+	};
+
     var eventNumber = parseInt(requestData[parametersList.EVENT_TYPE_ID], 10);
 	
 	if (typeof eventList[eventNumber] === 'undefined') {
@@ -178,31 +194,61 @@ module.exports = function(requestData) {
 		}
 	}
 
-	alertData[parametersList.TYPE] = eventList[eventNumber][parametersList.TYPE];
+	const instrument = setInstrument(requestData);
+	let currentLanguage;
+	const triggerID = uidGenerator();
+
+	Object.keys(alertData.push)
+		.forEach(language => {
+			alertData.push[language].data[parametersList.INSTRUMENT] = instrument;
+			alertData.push[language].data[parametersList.TYPE] = eventList[eventNumber][parametersList.TYPE];
+			alertData.push[language].data.detail = setPushMessage(requestData, language, instrument);
+			alertData.push[language].data['title'] = setNotificationTitle(requestData, language);
+			alertData.push[language].data['pushUrl'] = setNotificationAction(requestData).push;
+			alertData.push[language].data[parametersList.PUSH_SERVER_URL] = requestData.host;
+			alertData.push[language][parametersList.TRIGGER_ID] = triggerID;
+		})
+	
+	
+	Object.keys(alertData.socket)
+		.forEach(language => {
+			alertData.socket[language][parametersList.INSTRUMENT] = instrument;
+			alertData.socket[language][parametersList.TYPE] = eventList[eventNumber][parametersList.TYPE];
+			alertData.socket[language]['message'] = setSocketMessages(requestData, language, instrument);
+			alertData.socket[language]['title'] = setNotificationTitle(requestData, language);
+			alertData.socket[language]['url'] = setNotificationAction(requestData).socket[language];
+			alertData.socket[language][parametersList.TRIGGER_ID] = triggerID;
+		})
+
+	/*alertData[parametersList.TYPE] = eventList[eventNumber][parametersList.TYPE];
 
     alertData[parametersList.INSTRUMENT] = setInstrument(requestData);
 
-    alertData[parametersList.ACTION] = setNotificationAction(requestData);
+    */
 
-    alertData[parametersList.PRICE] = requestData[parametersList.NEW_VALUE];
+
+    /*alertData[parametersList.ACTION] = setNotificationAction(requestData);
+*/
+   /* alertData[parametersList.PRICE] = requestData[parametersList.NEW_VALUE];
 
     alertData[parametersList.CODE] = requestData[parametersList.EVENT_TYPE_ID];
 
-    alertData[parametersList.EVENTID]  = requestData[parametersList.EVENT_ID];
+    alertData[parametersList.EVENTID]  = requestData[parametersList.EVENT_ID];*/
     
-    alertData[parametersList.TEST_ENABLED]  = requestData[parametersList.TEST_ENABLED] ? true : false;
+   /* alertData[parametersList.TEST_ENABLED]  = requestData[parametersList.TEST_ENABLED] ? true : false;*/
 
-    setPushMessage(requestData, alertData);
+    
 
-    setNotificationTitle(alertData);
 
-    setSocketMessages(requestData, alertData);
-
-    alertData[parametersList.TRIGGER_RECIEVED_TIME] = new Date();
+    /*setNotificationTitle(alertData);
+*/
+   /* alertData[parametersList.TRIGGER_RECIEVED_TIME] = new Date();
     
     alertData[parametersList.TRIGGER_TYPE] = parametersList.MARKET_ALERT;
     
     alertData[parametersList.TRIGGER_ID] = uidGenerator();;
+	*/
+	
 
    	return alertData;
 };
