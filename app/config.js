@@ -194,7 +194,8 @@ const parametersList = {
 	TRIGGER_ID: 'triggerID',
 	TRIGGER_RECIEVED_TIME: 'triggerRecievedTime',
 	TRIGGER_TYPE: 'triggerType',
-	MARKET_ALERT: 'marketAlert'
+	MARKET_ALERT: 'marketAlert',
+	PUSH_SERVER_URL: 'pushServerUrl'
 
 }
 
