@@ -59,6 +59,12 @@ const user = {
 
 let users = {};
 
+let serverID;
+
+const setServerId = id => {
+	serverID = id;
+}
+
 /*
  * API function that gives access to the users object 
  */
@@ -134,7 +140,7 @@ const setInstrumentFormat = (socket, instrument) => {
  * @param array rooms. Rooms to join
  * @return void
  */
- const joinRooms = (socket, rooms, io) => {
+ const joinRooms = (socket, rooms) => {
 	if(!socket || !rooms) return;
 	
 	let recievedRooms = [];
@@ -146,7 +152,7 @@ const setInstrumentFormat = (socket, instrument) => {
 		recievedRooms = recievedRooms.concat(setInstrumentFormat(socket, room));
 	})
 	
-	const currentRooms = [...Object.keys(io.sockets.adapter.rooms).filter(pair => pair.indexOf(parametersList.INSTRUMENT) > -1)];
+	const currentRooms = [...Object.keys(socket.rooms).filter(pair => pair.indexOf(parametersList.INSTRUMENT) > -1)];
 	
 	join = getArrayDifference(recievedRooms, currentRooms);
 	leave = getArrayDifference(currentRooms, recievedRooms);
@@ -303,19 +309,38 @@ const getSocketUser = socketId => {
 }
 
 const getPushUsers = instrument => {
+	let userID;
 	let pushRegistrations = Object.keys(users)
-		.map(id => users[id])
+		.map(id => {
+			let user = Object.assign({}, users[id]);
+			user[parametersList.PUSH].forEach(push => push[parametersList.USER_ID] = id)
+			return user; 
+		})
 		.filter(user => user[parametersList.MARKET_ALERT_ALLOW])
 		.filter(user => user[parametersList.PUSH].length > 0)
 		.filter(user => user[parametersList.PAIRS].indexOf(parametersList.INSTRUMENT + '-' + instrument) > -1)
-		.map(user => user[parametersList.PUSH]);
+		.map(user => {
+			userID = user[parametersList.USER_ID];
+			return 	user[parametersList.PUSH];
+		})
+		/*.map(pr => pr.map(push => {
+				push[parametersList.USER_ID] = userID
+				return push;
+			})
+		);*/
+
+	
 	let push = [].concat.apply([], pushRegistrations);
 	
-	return push.filter(push => push[parametersList.PUSH_ACTIVE]);
+	return push.filter(push => push[parametersList.PUSH_ACTIVE])
+		.filter(push => push[parametersList.SERVER_ID] === serverID);
 }
+
+
 
 module.exports = {
 	init,
+	setServerId,
 	generateUserPairs,
 	joinRooms,
 	getUser,
