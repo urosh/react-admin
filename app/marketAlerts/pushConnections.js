@@ -67,7 +67,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			// Update sockets by joining/leaving rooms	
 			const pairs = (data[parametersList.TAB_ACTIVE] && user[parametersList.MARKET_ALERT_ALLOW] ) ? user[parametersList.PAIRS] : [];
 
-			usersManagement.joinRooms(socket, pairs, io);
+			usersManagement.joinRooms(socket, pairs);
 		}
 	)
 
@@ -84,10 +84,10 @@ module.exports  = (marketAlerts, usersManagement) => {
 			const id = usersManagement.getUserId(data);
 			let user = usersManagement.getUser(id);
 			let io = marketAlerts.getSocketsConnection();
-
+			
 			let pushData = user[parametersList.PUSH].filter(push => push[parametersList.TOKEN] !== data[parametersList.TOKEN]);
 			
-			user[parametersList.PUSH].map(browser => {
+			user[parametersList.PUSH].map(push => {
 				if(push[parametersList.MACHINE_HASH] === data[parametersList.MACHINE_HASH]){
 					push[parametersList.PUSH_ENABLED] = false;
 				}
