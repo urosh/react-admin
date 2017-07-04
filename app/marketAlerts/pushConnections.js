@@ -23,7 +23,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			if (!user) return;
 			
 			let io = marketAlerts.getSocketsConnection();
-
+			
 			const machineHash = data[parametersList.MACHINE_HASH];
 			const language = data[parametersList.LANGUAGE];
 			const token = data[parametersList.TOKEN];
@@ -36,7 +36,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 				[parametersList.MACHINE_HASH]: machineHash,
 				[parametersList.TOKEN]: token,
 				[parametersList.LANGUAGE]: language,
-				[parametersList.PUSH_ACTIVE]: user[parametersList.MARKET_ALERT_ALLOW] && !data[parametersList.TAB_ACTIVE]
+				[parametersList.PUSH_ACTIVE]: user[parametersList.MARKET_ALERT_ALLOW] && !data[parametersList.TAB_ACTIVE],
+				[parametersList.SERVER_ID]: data[parametersList.SERVER_ID]
 			})
 			user[parametersList.PUSH] = [...pushData];
 			
@@ -47,6 +48,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 				[parametersList.MACHINE_HASH]: machineHash,
 				[parametersList.LANGUAGE]: language,
 				[parametersList.PUSH_ENABLED]: true
+
 			})
 			
 			user[parametersList.BROWSERS] = [...browserData];
