@@ -128,7 +128,7 @@ module.exports = (marketAlerts, usersManagement) => {
 				if(user){
 					const pairs = (data[parametersList.TAB_ACTIVE] && user[parametersList.MARKET_ALERT_ALLOW] )? user[parametersList.PAIRS] : [];
 					
-					usersManagement.joinRooms(socket, pairs, io);
+					usersManagement.joinRooms(socket, pairs);
 				}
 			}
 
@@ -160,7 +160,7 @@ module.exports = (marketAlerts, usersManagement) => {
 			
 			user[parametersList.SOCKETS].forEach(socketData => {
 				let socket = usersManagement.getSocket(socketData.SOCKET_ID, io);
-				usersManagement.joinRooms(socket, pairs, io);
+				usersManagement.joinRooms(socket, pairs);
 			})
 
 			// Block push notifications
@@ -181,7 +181,7 @@ module.exports = (marketAlerts, usersManagement) => {
 		function(data) {
 			//usersManagement.updateInstrument(data);
 			const id = usersManagement.getUserId(data);
-			let user = usersManagement.getUsers(id);
+			let user = usersManagement.getUser(id);
 			if (!user) return;
 			let io = marketAlerts.getSocketsConnection();
 			const instrument = parametersList.INSTRUMENT + '-' + data[parametersList.INSTRUMENT];
@@ -197,7 +197,7 @@ module.exports = (marketAlerts, usersManagement) => {
 			// Join/Leave room 
 			user[parametersList.SOCKETS].forEach(socketData => {
 				let socket = usersManagement.getSocket(socketData.SOCKET_ID, io);
-				usersManagement.joinRooms(socket, pairs, io);
+				usersManagement.joinRooms(socket, pairs);
 			})
 		}
 	)
