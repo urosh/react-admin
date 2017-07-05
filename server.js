@@ -27,7 +27,11 @@ app.use(bodyParserJsonError());
 app.use(cors());
 
 const parametersList = require('./app/config').parametersList;
-const marketAlerts = require('./lib/connections')(http, app, parametersList);
+const connections = require('./lib/connections');
+
+const marketAlerts = new connections(http, app, parametersList);
+const webeyezRedis = new connections(http, app);
+
 const marketAlertsConfig = require('./app/config');
 const usersManagement = require('./app/usersManagement');
 
@@ -61,33 +65,16 @@ serverIdGenerator()
 			}
 		})
 
-		/*
-		 * TODO
-		 * Add some kind of cleaning function that will check when there are no connections
-		 * left for some user. Then we would delete user's object
-		 */
-		marketAlerts.addEvent(
-			'/test',
-			marketAlertsConfig.eventChannels.ROUTES,
-			[],
-			function(req, res) {
-				res.send(usersManagement.getUsers());
-			},
-			'get'
-		)
-
-		const webeyezRedis = require('./lib/connections')(http, app);
 		
 		webeyezRedis.init({
 			name: 'Webeyez Redis',
 			serverID: serverSettings[parametersList.SERVER_ID],
 			useMssql: false,
-			redis: {
+			/*redis: {
 				host: marketAlertsConfig.webeyezRedisHost,
 				port: marketAlertsConfig.webeyezRedisPort
-			},
+			},*/
 		})
-
 		
 	}).catch(err => {
 		console.error((`There was an error while generating serverID. Server will not handle requests`));
