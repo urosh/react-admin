@@ -134,6 +134,7 @@ const mssql = {
 
 const parametersList = {
 	SERVER_ID: 'serverID',
+	PROCESSING_SERVER_ID: 'processingServerID',
 	USER_ID: 'userID',
 	MACHINE_HASH: 'machineHash',
 	USER_LOGGED_IN: 'userLoggedIn',
@@ -195,7 +196,9 @@ const parametersList = {
 	TRIGGER_RECIEVED_TIME: 'triggerRecievedTime',
 	TRIGGER_TYPE: 'triggerType',
 	MARKET_ALERT: 'marketAlert',
-	PUSH_SERVER_URL: 'pushServerUrl'
+	PUSH_SERVER_URL: 'pushServerUrl',
+	NOTIFICATION_RECEIVED: 'notificationReceived',
+	PUSH_ID: 'pushID'
 
 }
 
