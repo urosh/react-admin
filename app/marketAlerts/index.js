@@ -4,4 +4,5 @@ module.exports = (marketAlerts, usersManagement) => {
 	require('./mobileConnections')(marketAlerts, usersManagement);
 	require('./pushConnections')(marketAlerts, usersManagement);
 	require('./triggers')(marketAlerts, usersManagement);
+	require('./tracking')(marketAlerts, usersManagement);
 }

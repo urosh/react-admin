@@ -1,6 +1,8 @@
 "use strict";
 const config = require('../config');
 const parametersList = config.parametersList;
+const _ = require('lodash');
+
 module.exports = (marketAlerts, usersManagement) => {
 	
 	
@@ -93,6 +95,8 @@ module.exports = (marketAlerts, usersManagement) => {
 			if(user){
 				// Removing socket's reference from user's object
 				user[parametersList.SOCKETS] = user[parametersList.SOCKETS].filter(socket => socket[parametersList.SOCKET_ID] !== socketId);
+					
+				
 			}
 		}
 	);
