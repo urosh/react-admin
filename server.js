@@ -42,6 +42,7 @@ mongoose.Promise = require('bluebird');
 mongoose.connect(connectionString);
 
 const serverIdGenerator = require('./app/marketAlerts/utils/serverIdGenerator');
+app.use('/admin', express.static('public'));
 
 serverIdGenerator()
 	.then(serverSettings => {

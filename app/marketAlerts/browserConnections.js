@@ -4,9 +4,6 @@ const parametersList = config.parametersList;
 const _ = require('lodash');
 
 module.exports = (marketAlerts, usersManagement) => {
-	
-	
-	
 	marketAlerts.addEvent('connectBrowser', 
 		config.eventChannels.SOCKETS, 
 		[
@@ -21,6 +18,8 @@ module.exports = (marketAlerts, usersManagement) => {
 		], 
 		function(data){
 			let io = marketAlerts.getSocketsConnection();
+			let pub =  marketAlerts.getRedisConnection();
+			
 			// Store user's data to variables for easier use
 			const id = usersManagement.getUserId(data);
 			const machineHash = data[parametersList.MACHINE_HASH];
@@ -77,7 +76,21 @@ module.exports = (marketAlerts, usersManagement) => {
 			});
 
 			user[parametersList.BROWSERS] = [...browsers];
+			
+			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
+				if(user[parametersList.USER_ID]){
+					pub.publish('tracking.user', JSON.stringify({
+						userID:  user[parametersList.USER_ID],
+						machineHash: user[parametersList.MACHINE_HASH],
+						loggedIn: true
 
+					}));
+				}else{
+					pub.publish('tracking.visitor', JSON.stringify({
+						machineHash: data[parametersList.MACHINE_HASH],
+					}));
+				}
+			}
 		}
 	);
 
@@ -91,12 +104,27 @@ module.exports = (marketAlerts, usersManagement) => {
 		function(data){
 			const socketId = data[parametersList.SOCKET_ID];
 			let io = marketAlerts.getSocketsConnection();
+			let pub =  marketAlerts.getRedisConnection();
 			const user = usersManagement.getSocketUser(socketId, io);
 			if(user){
 				// Removing socket's reference from user's object
-				user[parametersList.SOCKETS] = user[parametersList.SOCKETS].filter(socket => socket[parametersList.SOCKET_ID] !== socketId);
-					
+				let socketMachine;
+				user[parametersList.SOCKETS] = user[parametersList.SOCKETS].filter(socket => {
+					if(socket[parametersList.SOCKET_ID] === socketId){
+						socketMachine = socket[parametersList.MACHINE_HASH];
+						return false;
+					}
+					return false;
+				});
 				
+				if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
+					pub.publish('tracking.disconnect', JSON.stringify({
+						[parametersList.USER_ID]: user[parametersList.USER_ID],
+						[parametersList.USER_ID]: user[parametersList.USER_ID] ? true : false,
+						[parametersList.MACHINE_HASH]: socketMachine
+					}))
+				}
+
 			}
 		}
 	);

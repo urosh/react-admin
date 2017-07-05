@@ -23,7 +23,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			if (!user) return;
 			
 			let io = marketAlerts.getSocketsConnection();
-			
+			let pub = marketAlerts.getRedisConnection();
+
 			const machineHash = data[parametersList.MACHINE_HASH];
 			const language = data[parametersList.LANGUAGE];
 			const token = data[parametersList.TOKEN];
@@ -32,14 +33,15 @@ module.exports  = (marketAlerts, usersManagement) => {
 			// Get push data array	
 			let pushData = user[parametersList.PUSH].filter(push => push[parametersList.TOKEN] !== token);
 			// Add push data to the array
-			pushData.push({
+			let pushRegistration = {
 				[parametersList.MACHINE_HASH]: machineHash,
 				[parametersList.TOKEN]: token,
 				[parametersList.LANGUAGE]: language,
 				[parametersList.PUSH_ACTIVE]: user[parametersList.MARKET_ALERT_ALLOW] && !data[parametersList.TAB_ACTIVE],
 				[parametersList.SERVER_ID]: data[parametersList.SERVER_ID],
 				[parametersList.USER_ID]: data[parametersList.USER_ID]
-			})
+			}
+			pushData.push(pushRegistration)
 			user[parametersList.PUSH] = [...pushData];
 			
 			// Get and update browser's data
@@ -71,6 +73,11 @@ module.exports  = (marketAlerts, usersManagement) => {
 			const pairs = (data[parametersList.TAB_ACTIVE] && user[parametersList.MARKET_ALERT_ALLOW] ) ? user[parametersList.PAIRS] : [];
 
 			usersManagement.joinRooms(socket, pairs);
+
+			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
+				pub.publish('tracking.push.register', JSON.stringify(pushRegistration))
+			}
+
 		}
 	)
 
@@ -97,6 +104,15 @@ module.exports  = (marketAlerts, usersManagement) => {
 			});
 
 			user[parametersList.PUSH] = [...pushData];
+
+			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
+				pub.publish('tracking.disconnect', JSON.stringify(pushData))
+			}
+
+			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
+				pub.publish('tracking.push.register', JSON.stringify(data))
+			}
+
 		}
 	)
 
