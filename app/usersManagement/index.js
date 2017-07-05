@@ -304,36 +304,36 @@ const getSocketUser = socketId => {
 			if(prev[parametersList.SOCKET_ID]) return prev;
 			let res = current[parametersList.SOCKETS].filter(socket => socket[parametersList.SOCKET_ID] === socketId);
 			if(res.length) return current;
-			return {};
+			return null;
 		}, false)
 }
 
-const getPushUsers = instrument => {
+const getMarketAlertPushUsers = instrument => {
 	let userID;
 	let pushRegistrations = Object.keys(users)
-		.map(id => {
-			let user = Object.assign({}, users[id]);
-			user[parametersList.PUSH].forEach(push => push[parametersList.USER_ID] = id)
-			return user; 
-		})
+		.map(id => 	users[id])
 		.filter(user => user[parametersList.MARKET_ALERT_ALLOW])
 		.filter(user => user[parametersList.PUSH].length > 0)
 		.filter(user => user[parametersList.PAIRS].indexOf(parametersList.INSTRUMENT + '-' + instrument) > -1)
-		.map(user => {
-			userID = user[parametersList.USER_ID];
-			return 	user[parametersList.PUSH];
-		})
-		/*.map(pr => pr.map(push => {
-				push[parametersList.USER_ID] = userID
-				return push;
-			})
-		);*/
-
+		.map(user => user[parametersList.PUSH]);
 	
 	let push = [].concat.apply([], pushRegistrations);
 	
 	return push.filter(push => push[parametersList.PUSH_ACTIVE])
 		.filter(push => push[parametersList.SERVER_ID] === serverID);
+}
+
+const getMarketAlertMobileUsers = instrument => {
+	let userID;
+	let mobileRegistrations = Object.keys(users)
+		.map(id => 	users[id])
+		.filter(user => user[parametersList.MARKET_ALERT_ALLOW])
+		.filter(user => user[parametersList.MOBILES].length > 0)
+		.map(user => user[parametersList.MOBILES]);
+	
+	let mobiles = [].concat.apply([], mobileRegistrations);
+	
+	return mobiles.filter(push => push[parametersList.SERVER_ID] === serverID);
 }
 
 
@@ -356,5 +356,6 @@ module.exports = {
 	getSocketObject,
 	getSocketUser,
 	getSocket,
-	getPushUsers
+	getMarketAlertPushUsers,
+	getMarketAlertMobileUsers
 }

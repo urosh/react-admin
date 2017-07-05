@@ -25,7 +25,7 @@ const eventList = config.eventList;
 const parametersList = config.parametersList;
 const uidGenerator = require('./uidGenerator');
 const languages = config.languages;
-
+const _ = require('lodash');
 const pushMessageTemplate = {
 	to: '',
 	collapse_key: 'Market Alert',
@@ -53,6 +53,18 @@ const socketMessageTemplate = {
 	type: '',
 	triggerID: '',
 	instrument: ''
+};
+
+const mobileTemplate = {
+	to: '',
+	priority: 'high',
+	collapse_key: 'Market Alert',
+	data: {
+		screen: '1',
+		pair: '',
+		title: '',
+		detail: ''
+	}
 };
 
 
@@ -170,18 +182,25 @@ module.exports = function(requestData) {
 	var alertData = {};
 	
 	alertData.push = {
-		[languages.EN]: Object.assign({}, pushMessageTemplate),
-		[languages.PL]: Object.assign({}, pushMessageTemplate),
-		[languages.AR]: Object.assign({}, pushMessageTemplate),
-		[languages.ZH_HANS]: Object.assign({}, pushMessageTemplate)
+		[languages.EN]: _.cloneDeep(pushMessageTemplate),
+		[languages.PL]: _.cloneDeep(pushMessageTemplate),
+		[languages.AR]: _.cloneDeep(pushMessageTemplate),
+		[languages.ZH_HANS]: _.cloneDeep(pushMessageTemplate)
 	};
 
 	alertData.socket = {
-		[languages.EN]: Object.assign({}, socketMessageTemplate),
-		[languages.PL]: Object.assign({}, socketMessageTemplate),
-		[languages.AR]: Object.assign({}, socketMessageTemplate),
-		[languages.ZH_HANS]: Object.assign({}, socketMessageTemplate),
+		[languages.EN]: _.cloneDeep(socketMessageTemplate),
+		[languages.PL]: _.cloneDeep(socketMessageTemplate),
+		[languages.AR]: _.cloneDeep(socketMessageTemplate),
+		[languages.ZH_HANS]: _.cloneDeep(socketMessageTemplate),
 	};
+
+	alertData.mobile = {
+		[languages.EN]: _.cloneDeep(mobileTemplate),
+		[languages.PL]: _.cloneDeep(mobileTemplate),
+		[languages.AR]: _.cloneDeep(mobileTemplate),
+		[languages.ZH_HANS]: _.cloneDeep(mobileTemplate),
+	}
 
     var eventNumber = parseInt(requestData[parametersList.EVENT_TYPE_ID], 10);
 	
@@ -197,56 +216,40 @@ module.exports = function(requestData) {
 	const instrument = setInstrument(requestData);
 	let currentLanguage;
 	const triggerID = uidGenerator();
-
 	Object.keys(alertData.push)
 		.forEach(language => {
+			// Set push notification message
 			alertData.push[language].data[parametersList.INSTRUMENT] = instrument;
-			alertData.push[language].data[parametersList.TYPE] = eventList[eventNumber][parametersList.TYPE];
-			alertData.push[language].data.detail = setPushMessage(requestData, language, instrument);
+			alertData.push[language].data['messageType'] = eventList[eventNumber][parametersList.TYPE];
+			alertData.push[language].data['detail'] = setPushMessage(requestData, language, instrument);
 			alertData.push[language].data['title'] = setNotificationTitle(requestData, language);
 			alertData.push[language].data['pushUrl'] = setNotificationAction(requestData).push;
 			alertData.push[language].data[parametersList.PUSH_SERVER_URL] = requestData.host;
-			alertData.push[language][parametersList.TRIGGER_ID] = triggerID;
-		})
-	
-	
-	Object.keys(alertData.socket)
-		.forEach(language => {
+			alertData.push[language].data[parametersList.TRIGGER_ID] = triggerID;
+			alertData.push[language].data[parametersList.TRIGGER_TYPE] = parametersList.MARKET_ALERT;
+
+			// Set socket message
 			alertData.socket[language][parametersList.INSTRUMENT] = instrument;
 			alertData.socket[language][parametersList.TYPE] = eventList[eventNumber][parametersList.TYPE];
 			alertData.socket[language]['message'] = setSocketMessages(requestData, language, instrument);
 			alertData.socket[language]['title'] = setNotificationTitle(requestData, language);
 			alertData.socket[language]['url'] = setNotificationAction(requestData).socket[language];
 			alertData.socket[language][parametersList.TRIGGER_ID] = triggerID;
-		})
+			alertData.socket[language][parametersList.TRIGGER_TYPE] = parametersList.MARKET_ALERT;
+			
+			// Set mobile message
+			alertData.mobile[language].data['pair'] = instrument;
+			alertData.mobile[language].data['title'] = setNotificationTitle(requestData, language);
+			alertData.mobile[language].data['detail'] = setPushMessage(requestData, language, instrument);
+			alertData.mobile[language].data[parametersList.TRIGGER_ID] = triggerID;
+			alertData.mobile[language].data[parametersList.TRIGGER_TYPE] = parametersList.MARKET_ALERT;
+		});
 
-	/*alertData[parametersList.TYPE] = eventList[eventNumber][parametersList.TYPE];
+		alertData[parametersList.INSTRUMENT] = instrument;
 
-    alertData[parametersList.INSTRUMENT] = setInstrument(requestData);
-
-    */
-
-
-    /*alertData[parametersList.ACTION] = setNotificationAction(requestData);
-*/
-   /* alertData[parametersList.PRICE] = requestData[parametersList.NEW_VALUE];
-
-    alertData[parametersList.CODE] = requestData[parametersList.EVENT_TYPE_ID];
-
-    alertData[parametersList.EVENTID]  = requestData[parametersList.EVENT_ID];*/
-    
-   /* alertData[parametersList.TEST_ENABLED]  = requestData[parametersList.TEST_ENABLED] ? true : false;*/
-
-    
-
-
-    /*setNotificationTitle(alertData);
-*/
-   /* alertData[parametersList.TRIGGER_RECIEVED_TIME] = new Date();
-    
-    alertData[parametersList.TRIGGER_TYPE] = parametersList.MARKET_ALERT;
-    
-    alertData[parametersList.TRIGGER_ID] = uidGenerator();;
+	
+	/* alertData[parametersList.TRIGGER_RECIEVED_TIME] = new Date();
+    	alertData[parametersList.TRIGGER_ID] = uidGenerator();;
 	*/
 	
 

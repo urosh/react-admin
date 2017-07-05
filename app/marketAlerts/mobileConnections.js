@@ -2,6 +2,7 @@
 
 const config = require('../config');
 const parametersList = config.parametersList;
+const _ = require('lodash');
 
 module.exports  = (marketAlerts, usersManagement) => {
 	
@@ -27,7 +28,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let user;
 			users[id] = Object.assign({}, userModel, users[id]);
 			user = users[id];
-
+			
 			user[parametersList.USER_ID] = data[parametersList.USER_ID];
 
 			let mobiles = user[parametersList.MOBILES].filter(mobile => mobile[parametersList.TOKEN] !== data[parametersList.TOKEN] );
@@ -88,7 +89,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let oldId = user[parametersList.USER_ID] ? user[parametersList.USER_ID] : oldToken;
 			let newId = user[parametersList.USER_ID] ? user[parametersList.USER_ID] : newToken;
 			let mobileObject = usersManagement.getMobileObject(oldId, oldToken);
-			users[newId] = Object.assign({}, users[oldId]);
+			users[newId] = _.cloneDeep(users[oldId]);
 			
 			if(mobileObject) {
 				mobileObject[parametersList.TOKEN] = newToken;

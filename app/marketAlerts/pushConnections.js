@@ -37,7 +37,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 				[parametersList.TOKEN]: token,
 				[parametersList.LANGUAGE]: language,
 				[parametersList.PUSH_ACTIVE]: user[parametersList.MARKET_ALERT_ALLOW] && !data[parametersList.TAB_ACTIVE],
-				[parametersList.SERVER_ID]: data[parametersList.SERVER_ID]
+				[parametersList.SERVER_ID]: data[parametersList.SERVER_ID],
+				[parametersList.USER_ID]: data[parametersList.USER_ID]
 			})
 			user[parametersList.PUSH] = [...pushData];
 			

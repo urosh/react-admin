@@ -1,18 +1,15 @@
 "use strict";
 const config = require('../config');
-const parametersList =config.parametersList;
+const parametersList = config.parametersList;
 const marketAlertTranslate = require('./utils/marketAlerts');
 const languages = config.languages;
-var FCM = require('fcm-push');
-var serverKey = 'AIzaSyBuBkx25PYli0uCjdzhp20p9M6CqMibKyc';
-var fcm = new FCM(serverKey);
-
+const FCM = require('fcm-push');
+const serverKey = 'AIzaSyBuBkx25PYli0uCjdzhp20p9M6CqMibKyc';
+const fcm = new FCM(serverKey);
 const uidGenerator = require('./utils/uidGenerator');
-
+const _ = require('lodash');
 
 module.exports = (marketAlerts, usersManagement) => {
-	
-	
 	
 	marketAlerts.addEvent(
 		'marketAlertTrigger',
@@ -35,42 +32,55 @@ module.exports = (marketAlerts, usersManagement) => {
 			
 			let io = marketAlerts.getSocketsConnection();
 			
+			const instrument = processedData[parametersList.INSTRUMENT];
+
 			Object.keys(languages)
 				.map(code => languages[code])
 				.forEach(language => {
-					const room = language + '-' + parametersList.INSTRUMENT + '-' + processedData.socket[language][parametersList.INSTRUMENT];
+					const room = language + '-' + parametersList.INSTRUMENT + '-' + instrument;
+					
 					io.sockets.in(room).emit('market-notification', processedData.socket[language]);
 				});
-			
-			usersManagement.getPushUsers(processedData[parametersList.INSTRUMENT]).forEach(push => {
-				console.log('We got here');
-				const language = push[parametersList.LANGUAGE];
-				console.log(processedData.push[language]);
-				/*const pushMessage = {
-					to: push[parametersList.TOKEN],
-					collapse_key: 'Market Alert',
-					data: {
-						title: processedData.title[language],
-						detail: processedData.push[language],
-						messageType: 'Market Alert',
-						socketMessage: processedData.socket[language],
-						pushUrl: processedData.action.push,
-						triggerID: triggerID,
-						machineHash: push[parametersList.MACHINE_HASH],
-						userID: push[parametersList.USER_ID],
-						userLoggedIn: push[parametersList.USER_ID],
-						pushServerUrl: processedData[parametersList.PUSH_SERVER_URL],
-						instrument: processedData[parametersList.INSTRUMENT],
-						token: push[parametersList.TOKEN],
-						messageType: processedData[parametersList.TYPE]
+
+			usersManagement.getMarketAlertPushUsers(instrument)
+				.forEach(push => {
+					const language = push[parametersList.LANGUAGE];
+					let pushMessage =_.cloneDeep(processedData.push[language]);
+					pushMessage.to = push[parametersList.TOKEN];
+					pushMessage.data[parametersList.MACHINE_HASH] = push[parametersList.MACHINE_HASH];
+					pushMessage.data[parametersList.USER_ID] = push[parametersList.USER_ID];
+					pushMessage.data.userLoggedIn = push[parametersList.USER_ID];
+					pushMessage.data.token = push[parametersList.TOKEN];
+					pushMessage.pushServerUrl = 'https://lcl.live.new.com';
+					fcm.send(pushMessage, (err, response) => {
+						if(err){
+							console.log(`FCM-Sending message to browser: [${pushMessage.data.token}]`.red + ` Error: ${err}`);
+							const subscriptionData = _.cloneDeep(pushMessage.data);
+						}
+					})
+				});
+
+			usersManagement.getMarketAlertMobileUsers(instrument)
+				.forEach(mobile => {
+					const language = mobile[parametersList.LANGUAGE];
+					let mobileMessage =_.cloneDeep(processedData.mobile[language]);
+					mobileMessage.to = mobile[parametersList.TOKEN];
+					if(mobile.system === 'ios') {
+						mobileMessage['notification'] = {
+							title: mobileMessage.title,
+							body: mobileMessage.detail,
+							sound: 'default'
+						}
 					}
-				};
-*/
-				//console.log(pushMessage);
-				
-			})
-
-
+					fcm.send(mobileMessage, (err, response) => {
+					    if (err) {
+					    	console.log(`FCM-Sending market alert to mobile: [${mobileMessage.to}].  Error: ${err}`);
+					    	return;
+					    }
+					});
+					console.log(mobileMessage);
+				})
+			
 		},
 		'post',
 		'/live/market-trigger'
