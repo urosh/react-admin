@@ -20,32 +20,37 @@ var bodyParserJsonError = require('express-body-parser-json-error');
 const cors = require('cors');
 const socketIO = require('socket.io');
 
+const session = require('express-session');
+const RedisStore = require('connect-redis')(session);
 
+const parametersList = require('./app/config').parametersList;
+const Connections = require('./lib/connections');
+
+const marketAlerts = new Connections(http, app, parametersList);
+const webeyezRedis = new Connections(http, app);
+const directMessaging = new Connections(http, app, parametersList);
+
+const marketAlertsConfig = require('./app/config');
+const Users = require('./app/usersManagement');
+const usersManagement = new Users();
+
+const mongoose = require('mongoose');
+const dbName = marketAlertsConfig.db.name;
+const connectionString = marketAlertsConfig.db.connection + dbName;
+
+const serverIdGenerator = require('./app/marketAlerts/utils/serverIdGenerator');
 
 app.use(bodyParser.json());
 app.use(bodyParserJsonError());
 app.use(cors());
+app.set('trust proxy', 1);
 
-const parametersList = require('./app/config').parametersList;
-const connections = require('./lib/connections');
-
-const marketAlerts = new connections(http, app, parametersList);
-const webeyezRedis = new connections(http, app);
-
-const marketAlertsConfig = require('./app/config');
-const usersManagement = require('./app/usersManagement');
-
-var mongoose = require('mongoose');
-var dbName = marketAlertsConfig.db.name;
-var connectionString = marketAlertsConfig.db.connection + dbName;
 mongoose.Promise = require('bluebird');
 mongoose.connect(connectionString);
 
-const serverIdGenerator = require('./app/marketAlerts/utils/serverIdGenerator');
-app.use('/admin', express.static('public'));
-
 serverIdGenerator()
 	.then(serverSettings => {
+		usersManagement.init();
 		
 		usersManagement.setServerId(serverSettings[parametersList.SERVER_ID]);
 
@@ -64,25 +69,58 @@ serverIdGenerator()
 			mssql: {
 				host: marketAlertsConfig.mssqlHost
 			}
-		})
+		});
 
+		// Asign route handlers to routes
+		app.use(session({
+			store: new RedisStore({
+				client: marketAlerts.getRedisConnection() 
+			}),
+			secret: 'ii7Aighie5ph',
+			resave: false,
+			saveUninitialized : false,
+			cookie: {maxAge: 1800000 }
+		}));
+
+
+		app.use('/admin', express.static('public'));
+
+		
 		
 		webeyezRedis.init({
 			name: 'Webeyez Redis',
 			serverID: serverSettings[parametersList.SERVER_ID],
 			useMssql: false,
-			/*redis: {
+			redis: {
 				host: marketAlertsConfig.webeyezRedisHost,
 				port: marketAlertsConfig.webeyezRedisPort
-			},*/
+			},
+		});
+
+		directMessaging.init({
+			name: 'Direct Messaging',
+			serverID: serverSettings[parametersList.SERVER_ID],
+			useMssql: false,
+			socket: {
+				origins: 'lcl.live.new.com:*',
+				path: '/admin/socket.io'
+			},
+			redis: {
+				sentinels: marketAlertsConfig.sentinels,
+				name: 'redis-cluster'
+			}
 		})
 		
 	}).catch(err => {
 		console.error((`There was an error while generating serverID. Server will not handle requests`));
 		console.log(err);
 	})
-
+// Implementation of market alerts
 require('./app/marketAlerts')(marketAlerts, usersManagement);
+// Connecting to webeyez redis and updating user subscriptions
+require('./app/webeyezRedis')(webeyezRedis, usersManagement);
+// Adding direct messaging module and  admin panel 
+require('./app/directMessaging')(directMessaging, usersManagement);
 
 const port = 3031;
 
