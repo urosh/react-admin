@@ -1,0 +1,125 @@
+<div class="dashboard messages">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-sm-12 messages-header">
+				<h2>Send Messages</h2>
+			</div>
+			<div class="col-sm-12 col-md-8  dash-row">
+				<div class="row">
+					<div class="col-sm-12 col-lg-6 dash-row users-stats">
+						<div class="dashboard-items">
+							<div class="dash-title stats-title">Active Users List</div>
+							<div class="stats activeUsers">
+									 Active users<span>0</span>
+							</div>
+							<div class="stats loggedInUsers">
+								 Users <span>0</span>
+							</div>
+							<div class="stats loggedOutUsers">
+								 Visitors <span>0</span>
+							</div>
+							<div class="stats mobileAppUsers">
+								 Mobile app <span>0</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-12 col-lg-6 dash-row users-stats">
+						<div class="dashboard-items">
+							<div class="dash-title stats-title">Filtered users</div>
+							
+							<div class="stats overall">
+								Recipients <span>0</span>
+							</div>
+							<div class="stats recievingUsers alerts">
+								Alerts <span>0</span>
+							</div>
+							<div class="stats recievingUsers push">
+								Push <span>0</span>
+							</div>
+							<div class="stats recievingUsers mobileApp">
+								Mobile app <span>0</span>
+							</div>
+
+						</div>
+					</div>
+				
+					<div class="col-sm-12 col-lg-9 dash-row  user-groups">
+						<div class="dashboard-items">
+							<div class="dash-title ">Filter users</div>
+							<div class="select-container">
+							   	<select class="selectpicker cultures">
+			   			   		  	<option>All cultures</option>
+			   			   		  	<option>EU culture</option>
+			   			   		  	<option>AU culture</option>
+			   			   		  	<option>International</option>
+							   	</select>
+							</div>
+							<div class="select-container">
+								<select class="selectpicker users">
+								  	<option>Logged in</option>
+								  	<option>Logged out</option>
+									<option>All users</option>
+								</select>
+							</div>
+							<div class="select-container">
+								<select class="selectpicker test-users">
+								  	<option>All users</option>
+								  	<option>Test users</option>
+									<option>Non test users</option>
+								</select>
+							</div>
+
+						</div>
+					</div>
+					
+					<div class="col-sm-12 col-lg-3 dash-row  message-types">
+						<div class="dashboard-items">
+							<div class="dash-title">Message type</div>
+							<select class="selectpicker alert">
+							  	<option>All</option>
+							  	<option>Alert</option>
+							  	<option>Push</option>
+							</select>
+						</div>
+					</div>
+					<div class="col-sm-12 col-lg-12 dash-row messages-filter-holder">
+						<div class="dashboard-items">
+							<div class="dash-title">Select users</div>
+							<div class="user-filter-input">
+								<label for="user-id-filter" class="user-filter-label">Filter users by id</label>
+								<input type="text" id="user-id-filter" class="user-filter">
+							</div>
+							<div class="selected-user-list-container">
+							
+							</div>
+						</div>
+					</div>
+
+					<div class="col-sm-12 col-lg-12 dash-row messages-input-holder">
+						<div class="dashboard-items">
+							<div class="dash-title stats-title">Write messages</div>
+							<div class="row">
+							</div>
+							<div class="send-button">
+								<a href="#" class="btn message-btn">Send message</a>
+								<a href="#" class="btn message-preview-btn">Preview message</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-12 col-md-4  ">
+				<div class="row">
+					<div class="col-sm-12 col-lg-12 dash-row user-list-holder">
+						<div class="dashboard-items user-list-content">
+							<div class="dash-title stats-title">Message recipients id's</div>
+							<div class="user-list-container"></div>
+							
+						</div>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+</div>
