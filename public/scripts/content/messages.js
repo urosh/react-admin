@@ -24,7 +24,25 @@
 		username,
 		messageSubscription,
 		modalContent;
-
+	
+	var languages = [
+		{
+			code: "en",
+			value: "English"
+		},
+		{
+			code: "pl",
+			value: "Polish"
+		},
+		{
+			code: "ar",
+			value: "Arabic"
+		},
+		{
+			code: "zh-hans",
+			value: "Chinese"
+		}
+	];
 	
 	dashboardContent = $('#dashboard-content');
 	
@@ -48,17 +66,8 @@
 		        userListContainer = $('.user-list-container');
 		        userListContainer.on('click', '.user-id-button', selectUser);
 		        selectedUserListContainer = $('.selected-user-list-container');
-		        events.subscribe(eventNames.languages._SET_LANGUAGES_, function(data) {
-		        	languages = [];
-		        	
-		        	data.forEach(function(lang) {
-		        		languages.push(lang);
-		        	});
-		        	messagesInit();
-		        	
-		        });
-		        // Request list of languages
-		        events.publish(eventNames.languages._GET_LANGUAGES_, null);
+		        messagesInit();
+		        
 		    }
 		});
 	});
