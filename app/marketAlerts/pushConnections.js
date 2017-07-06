@@ -41,6 +41,10 @@ module.exports  = (marketAlerts, usersManagement) => {
 				[parametersList.SERVER_ID]: data[parametersList.SERVER_ID],
 				[parametersList.USER_ID]: data[parametersList.USER_ID]
 			}
+
+			// Remove any reference to the push registration from all other users
+			usersManagement.removePushRegistrations(token);
+			
 			pushData.push(pushRegistration)
 			user[parametersList.PUSH] = [...pushData];
 			
@@ -53,7 +57,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 				[parametersList.PUSH_ENABLED]: true
 
 			})
-			
+
+
 			user[parametersList.BROWSERS] = [...browserData];
 			
 			// Update user's socket information
@@ -73,6 +78,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			const pairs = (data[parametersList.TAB_ACTIVE] && user[parametersList.MARKET_ALERT_ALLOW] ) ? user[parametersList.PAIRS] : [];
 
 			usersManagement.joinRooms(socket, pairs);
+			
+			usersManagement.updateUserDatabaseRecord(user);
 
 			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
 				pub.publish('tracking.push.register', JSON.stringify(pushRegistration))
@@ -94,7 +101,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			const id = usersManagement.getUserId(data);
 			let user = usersManagement.getUser(id);
 			let io = marketAlerts.getSocketsConnection();
-			
+			let pub = marketAlerts.getRedisConnection();
 			let pushData = user[parametersList.PUSH].filter(push => push[parametersList.TOKEN] !== data[parametersList.TOKEN]);
 			
 			user[parametersList.PUSH].map(push => {
@@ -104,13 +111,9 @@ module.exports  = (marketAlerts, usersManagement) => {
 			});
 
 			user[parametersList.PUSH] = [...pushData];
-
+			usersManagement.updateUserDatabaseRecord(user);
 			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
-				pub.publish('tracking.disconnect', JSON.stringify(pushData))
-			}
-
-			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
-				pub.publish('tracking.push.register', JSON.stringify(data))
+				pub.publish('tracking.push.block', JSON.stringify(data))
 			}
 
 		}

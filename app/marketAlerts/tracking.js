@@ -34,7 +34,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			}
 		},
 		'post',
-		'/api/track/push/delivered'
+		'/api/track/push/delivered',
+		false
 	)
 	
 	marketAlerts.addEvent(
@@ -68,7 +69,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			}
 		},
 		'post',
-		'/api/track/push/clicked'
+		'/api/track/push/clicked',
+		false
 	)
 	
 	marketAlerts.addEvent(
@@ -102,7 +104,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			}
 		},
 		'post',
-		'/api/track/push/closed'
+		'/api/track/push/closed',
+		false
 	)
 
 	marketAlerts.addEvent(
@@ -112,6 +115,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parametersList.SOCKET_ID
 		], 
 		function(data){
+			let pub = marketAlerts.getRedisConnection();
+
 			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
 				data.notificationInfoRecieved = new Date();
 				pub.publish('tracking.notificationDelivered', JSON.stringify(data));
@@ -126,6 +131,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parametersList.SOCKET_ID
 		], 
 		function(data){
+			let pub = marketAlerts.getRedisConnection();
+
 			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
 				pub.publish('tracking.notificationAction', JSON.stringify(data));
 			}
@@ -139,6 +146,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parametersList.SOCKET_ID
 		], 
 		function(data){
+			let pub = marketAlerts.getRedisConnection();
+			
 			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
 				pub.publish('tracking.notificationVisible', JSON.stringify(data));
 			}

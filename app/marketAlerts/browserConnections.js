@@ -65,6 +65,8 @@ module.exports = (marketAlerts, usersManagement) => {
 				usersManagement.joinRooms(socket, user[parametersList.PAIRS], io);
 			}
 			
+			usersManagement.removeBrowserFromUser(machineHash);
+
 			// Adding machine info
 			let browsers = user[parametersList.BROWSERS].filter(machine => machine[parametersList.MACHINE_HASH] !== machineHash );
 			
@@ -191,9 +193,8 @@ module.exports = (marketAlerts, usersManagement) => {
 			user[parametersList.MARKET_ALERT_ALLOW] = marketAlertAllow;
 			const pairs = marketAlertAllow ? user[parametersList.PAIRS] : [];
 			// Tell all sockets to leave rooms
-			
 			user[parametersList.SOCKETS].forEach(socketData => {
-				let socket = usersManagement.getSocket(socketData.SOCKET_ID, io);
+				let socket = usersManagement.getSocket(socketData[parametersList.SOCKET_ID], io);
 				usersManagement.joinRooms(socket, pairs);
 			})
 

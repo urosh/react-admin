@@ -28,7 +28,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let user;
 			users[id] = Object.assign({}, userModel, users[id]);
 			user = users[id];
-			
+			user[parametersList.TOKEN] = data[parametersList.TOKEN];
 			user[parametersList.USER_ID] = data[parametersList.USER_ID];
 
 			let mobiles = user[parametersList.MOBILES].filter(mobile => mobile[parametersList.TOKEN] !== data[parametersList.TOKEN] );
@@ -44,10 +44,12 @@ module.exports  = (marketAlerts, usersManagement) => {
 
 			mobiles.push(data);
 			user[parametersList.MOBILES] = [...mobiles];
+			usersManagement.updateUserDatabaseRecord(user);
 
 		},
 		'post',
-		'/devices/mobile/connect'
+		'/devices/mobile/connect',
+		true
 	)
 
 	marketAlerts.addEvent(
@@ -65,9 +67,11 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let mobileObject = usersManagement.getMobileObject(data[parametersList.USER_ID], data[parametersList.TOKEN]);
 			if(!mobileObject) return;
 			mobileObject[parametersList.USER_ID] = null;
+			usersManagement.updateUserDatabaseRecord(user);
 		},
 		'post',
-		'/devices/mobile/logout'
+		'/devices/mobile/logout',
+		true
 	)
 
 	marketAlerts.addEvent(
@@ -96,12 +100,16 @@ module.exports  = (marketAlerts, usersManagement) => {
 			} 
 
 			if(!user[parametersList.USER_ID]) {
+				usersManagement.updateUserDatabaseRecord(users[oldToken]);
 				delete users[oldToken];
 			}
 
+			usersManagement.updateUserDatabaseRecord(user);
+
 		},
 		'post',
-		'/devices/mobile/update'
+		'/devices/mobile/update',
+		true
 	)
 
 	marketAlerts.addEvent(
@@ -119,7 +127,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 
 		},
 		'post',
-		'/devices/mobile/delete'
+		'/devices/mobile/delete',
+		true
 	)
 
 
