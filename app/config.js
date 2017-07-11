@@ -199,7 +199,9 @@ const parametersList = {
 	MARKET_ALERT: 'marketAlert',
 	PUSH_SERVER_URL: 'pushServerUrl',
 	NOTIFICATION_RECEIVED: 'notificationReceived',
-	PUSH_ID: 'pushID'
+	PUSH_ID: 'pushID',
+	USERNAME: 'username',
+	FILTERS: 'filters'
 
 }
 
