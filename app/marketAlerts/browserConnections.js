@@ -38,6 +38,7 @@ module.exports = (marketAlerts, usersManagement) => {
 			users[id] = Object.assign({}, userModel, users[id], data);
 			user = users[id];
 			user[parametersList.PAIRS] = usersManagement.generateUserPairs(data);
+
 			user[parametersList.SOCKETS].forEach(socket => {
 				socket[parametersList.SOCKET_ACTIVE] = false;
 			});
@@ -116,7 +117,7 @@ module.exports = (marketAlerts, usersManagement) => {
 						socketMachine = socket[parametersList.MACHINE_HASH];
 						return false;
 					}
-					return false;
+					return true;
 				});
 				
 				if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
@@ -128,6 +129,7 @@ module.exports = (marketAlerts, usersManagement) => {
 				}
 
 			}
+			usersManagement.cleanUsersObject();
 		}
 	);
 
@@ -147,26 +149,27 @@ module.exports = (marketAlerts, usersManagement) => {
 			let io = marketAlerts.getSocketsConnection();
 			const socket = usersManagement.getSocket(data[parametersList.SOCKET_ID], io);
 			let user = usersManagement.getUser(id);
+			
+			if(!user) return;
+
 			let pushObject = usersManagement.getPushObject(id, data[parametersList.MACHINE_HASH]);
 			let socketObject = usersManagement.getSocketObject(id, data[parametersList.SOCKET_ID]);
-
+			
 			// Updating push reference for a given browser
 			if(pushObject) {
-
 				// Updating socket reference in user's object
 				pushObject[parametersList.PUSH_ACTIVE] = user[parametersList.MARKET_ALERT_ALLOW] && !data[parametersList.TAB_ACTIVE];
-				socket[parametersList.SOCKET_ACTIVE] = user[parametersList.MARKET_ALERT_ALLOW] && data[parametersList.TAB_ACTIVE];
-				
-				if(socketObject){
-					socketObject[parametersList.SOCKET_ACTIVE] = data[parametersList.TAB_ACTIVE];
-				}
-
-				if(user){
-					const pairs = (data[parametersList.TAB_ACTIVE] && user[parametersList.MARKET_ALERT_ALLOW] )? user[parametersList.PAIRS] : [];
-					
-					usersManagement.joinRooms(socket, pairs);
-				}
 			}
+			socket[parametersList.SOCKET_ACTIVE] = user[parametersList.MARKET_ALERT_ALLOW] && data[parametersList.TAB_ACTIVE];
+				
+			if(socketObject){
+				socketObject[parametersList.SOCKET_ACTIVE] = data[parametersList.TAB_ACTIVE];
+			}
+
+			const pairs = (data[parametersList.TAB_ACTIVE] && user[parametersList.MARKET_ALERT_ALLOW] )? user[parametersList.PAIRS] : [];
+				
+			usersManagement.joinRooms(socket, pairs);
+			
 
 
 		}

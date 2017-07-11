@@ -18,20 +18,20 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parametersList.SERVER_ID,
 			parametersList.PUSH_ID
 		],
-		function(data) {
+		function(req, res) {
 			let pub = marketAlerts.getRedisConnection();
+			let data = req.body;
+			pub.publish('tracking.pushDelivered', JSON.stringify({
+				userID:  data[parametersList.USER_ID],
+				machineHash: data[parametersList.MACHINE_HASH],
+				userLoggedIn: data[parametersList.USER_LOGGED_IN],
+				triggerID: data[parametersList.TRIGGER_ID],
+				triggerType: data[parametersList.TRIGGER_TYPE],
+				notificationRecieved: data[parametersList.NOTIFICATION_RECEIVED],
+				pushID: data[parametersList.PUSH_ID]
+			}));
+			res.send('ok');
 
-			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
-				pub.publish('tracking.pushDelivered', JSON.stringify({
-					userID:  data[parametersList.USER_ID],
-					machineHash: data[parametersList.MACHINE_HASH],
-					userLoggedIn: data[parametersList.USER_LOGGED_IN],
-					triggerID: data[parametersList.TRIGGER_ID],
-					triggerType: data[parametersList.TRIGGER_TYPE],
-					notificationRecieved: data[parametersList.NOTIFICATION_RECEIVED],
-					pushID: data[parametersList.PUSH_ID]
-				}));
-			}
 		},
 		'post',
 		'/api/track/push/delivered',
@@ -51,22 +51,23 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parametersList.SERVER_ID,
 			parametersList.PUSH_ID
 		],
-		function(data) {
+		function(req, res) {
 			let pub = marketAlerts.getRedisConnection();
+			let data = req.body;
+			
+			pub.publish('tracking.pushClicked', JSON.stringify({
+				userID:  data[parametersList.USER_ID],
+				machineHash: data[parametersList.MACHINE_HASH],
+				userLoggedIn: data[parametersList.USER_LOGGED_IN],
+				triggerID: data[parametersList.TRIGGER_ID],
+				triggerType: data[parametersList.TRIGGER_TYPE],
+				notificationRecieved: data[parametersList.NOTIFICATION_RECEIVED],
+				pushID: data[parametersList.PUSH_ID],
+				action: 'clicked',
+				actionTime: new Date()
+			}));
 
-			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
-				pub.publish('tracking.pushClicked', JSON.stringify({
-					userID:  data[parametersList.USER_ID],
-					machineHash: data[parametersList.MACHINE_HASH],
-					userLoggedIn: data[parametersList.USER_LOGGED_IN],
-					triggerID: data[parametersList.TRIGGER_ID],
-					triggerType: data[parametersList.TRIGGER_TYPE],
-					notificationRecieved: data[parametersList.NOTIFICATION_RECEIVED],
-					pushID: data[parametersList.PUSH_ID],
-					action: 'clicked',
-					actionTime: new Date()
-				}));
-			}
+			res.send('ok')
 		},
 		'post',
 		'/api/track/push/clicked',
@@ -86,22 +87,24 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parametersList.SERVER_ID,
 			parametersList.PUSH_ID
 		],
-		function(data) {
+		function(req, res) {
 			let pub = marketAlerts.getRedisConnection();
+			let data = req.body;
+			
+			pub.publish('tracking.pushClosed', JSON.stringify({
+				userID:  data[parametersList.USER_ID],
+				machineHash: data[parametersList.MACHINE_HASH],
+				userLoggedIn: data[parametersList.USER_LOGGED_IN],
+				triggerID: data[parametersList.TRIGGER_ID],
+				triggerType: data[parametersList.TRIGGER_TYPE],
+				notificationRecieved: data[parametersList.NOTIFICATION_RECEIVED],
+				pushID: data[parametersList.PUSH_ID],
+				action: 'closed',
+				actionTime: new Date()
+			}));
 
-			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
-				pub.publish('tracking.pushClosed', JSON.stringify({
-					userID:  data[parametersList.USER_ID],
-					machineHash: data[parametersList.MACHINE_HASH],
-					userLoggedIn: data[parametersList.USER_LOGGED_IN],
-					triggerID: data[parametersList.TRIGGER_ID],
-					triggerType: data[parametersList.TRIGGER_TYPE],
-					notificationRecieved: data[parametersList.NOTIFICATION_RECEIVED],
-					pushID: data[parametersList.PUSH_ID],
-					action: 'closed',
-					actionTime: new Date()
-				}));
-			}
+			res.send('ok');
+			
 		},
 		'post',
 		'/api/track/push/closed',
@@ -116,11 +119,10 @@ module.exports  = (marketAlerts, usersManagement) => {
 		], 
 		function(data){
 			let pub = marketAlerts.getRedisConnection();
-
-			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
-				data.notificationInfoRecieved = new Date();
-				pub.publish('tracking.notificationDelivered', JSON.stringify(data));
-			}
+			
+			data.notificationInfoRecieved = new Date();
+			pub.publish('tracking.notificationDelivered', JSON.stringify(data));
+			
 		}
 	);
 	
@@ -132,11 +134,10 @@ module.exports  = (marketAlerts, usersManagement) => {
 		], 
 		function(data){
 			let pub = marketAlerts.getRedisConnection();
-
-			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
-				pub.publish('tracking.notificationAction', JSON.stringify(data));
-			}
+			pub.publish('tracking.notificationAction', JSON.stringify(data));
+			
 		}
+
 	);
 
 	marketAlerts.addEvent(
@@ -147,15 +148,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 		], 
 		function(data){
 			let pub = marketAlerts.getRedisConnection();
-			
-			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
-				pub.publish('tracking.notificationVisible', JSON.stringify(data));
-			}
+			pub.publish('tracking.notificationVisible', JSON.stringify(data));
 		}
 	);
-
-
-
-
 
 }

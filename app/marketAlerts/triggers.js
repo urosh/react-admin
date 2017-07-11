@@ -78,7 +78,7 @@ module.exports = (marketAlerts, usersManagement) => {
 					    	return;
 					    }
 					});
-					console.log(mobileMessage);
+					
 				})
 			
 		},

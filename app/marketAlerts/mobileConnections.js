@@ -124,7 +124,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let user = usersManagement.getMobileUser(token);
 			if(!user) return;
 			user[parametersList.MOBILES] = user[parametersList.MOBILES].filter(mobile => mobile[parametersList.TOKEN] !== token);
-
+			usersManagement.cleanUsersObject();
 		},
 		'post',
 		'/devices/mobile/delete',

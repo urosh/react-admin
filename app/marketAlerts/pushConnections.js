@@ -102,11 +102,11 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let user = usersManagement.getUser(id);
 			let io = marketAlerts.getSocketsConnection();
 			let pub = marketAlerts.getRedisConnection();
-			let pushData = user[parametersList.PUSH].filter(push => push[parametersList.TOKEN] !== data[parametersList.TOKEN]);
+			let pushData = user[parametersList.PUSH].filter(push => push[parametersList.MACHINE_HASH] !== data[parametersList.MACHINE_HASH]);
 			
-			user[parametersList.PUSH].map(push => {
-				if(push[parametersList.MACHINE_HASH] === data[parametersList.MACHINE_HASH]){
-					push[parametersList.PUSH_ENABLED] = false;
+			user[parametersList.BROWSERS].map(browser => {
+				if(browser[parametersList.MACHINE_HASH] === data[parametersList.MACHINE_HASH]){
+					browser[parametersList.PUSH_ENABLED] = false;
 				}
 			});
 
@@ -115,6 +115,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
 				pub.publish('tracking.push.block', JSON.stringify(data))
 			}
+			usersManagement.cleanUsersObject();
 
 		}
 	)
