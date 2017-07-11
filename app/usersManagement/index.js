@@ -36,6 +36,8 @@ module.exports = function(){
 
 	const user = {
 		[parametersList.USER_ID]: '',
+		[parametersList.MACHINE_HASH]: '',
+		[parametersList.TOKEN]: '',
 		[parametersList.USER_LOGGED_IN]: false,
 		[parametersList.PAIRS]: [],
 		[parametersList.TEST_ENABLED]: false,
@@ -135,7 +137,6 @@ module.exports = function(){
 	}
 
 	const getIdParameter = user => {
-		
 		if(user[parametersList.USER_ID]) {
 			return parametersList.USER_ID;
 		}else if(user[parametersList.MACHINE_HASH]){
@@ -242,7 +243,11 @@ module.exports = function(){
 				savedUsers.forEach(savedUser => {
 					let id = getUserId(savedUser);
 					if(!users[id]){
-						users[id] = _.cloneDeep(savedUser);
+						users[id] = {};
+						Object.keys(user)
+								.forEach(key => users[id][key] = savedUser[key])
+						users[id][parametersList.SOCKETS] = [];	
+						
 					}
 				})
 				console.log('[Users Management] retreiving data from the database');
@@ -385,7 +390,7 @@ module.exports = function(){
 		let parameter = getIdParameter(user), 
 			value = user[parameter];
 
-		console.log('Updating user in database: ', parameter, value);
+		//console.log('Updating user in database: ', parameter, value);
 
 		if(user[parametersList.PUSH].length === 0 && user[parametersList.MOBILES] === 0){
 			UsersModel
@@ -399,6 +404,72 @@ module.exports = function(){
 				})
 		}
 	}
+	
+	const getNumberOfUsers = () => Object.keys(users).length;
+	const getNumberOfLoggedOutUsers = () => {
+		return Object.keys(users)
+				.map(id => users[id])
+				.filter(user => !user[parametersList.USER_ID]).length;
+
+	}
+	const getNumberOfLoggedInUsers = () => {
+		return Object.keys(users)
+				.map(id => users[id])
+				.filter(user => user[parametersList.USER_ID]).length;
+	}
+	const getNumberOfMobileUsers = () => {
+		
+		return Object.keys(users)
+			.map(id => users[id])
+			.reduce((prev, current) => {
+				return prev + current[parametersList.MOBILES].length
+			}, 0);
+	}
+
+	const getUsersStats = () => {
+		let totalUsers, 
+			loggedInUsers, 
+			loggedOutUsers,
+			mobileUsers;
+		
+		loggedInUsers = getNumberOfLoggedInUsers();
+		loggedOutUsers = getNumberOfLoggedOutUsers();
+		mobileUsers = getNumberOfMobileUsers();
+		totalUsers = getNumberOfUsers();
+
+		var results = {
+			totalUsers,
+			loggedInUsers,
+			loggedOutUsers,
+			mobileUsers
+		};
+		
+		return results;
+	}
+	const cleanUsersObject = () => {
+		let ids = [];
+		Object.keys(users)
+			.forEach(id => {
+				let user = users[id];
+				if(user[parametersList.SOCKETS].length === 0 && user[parametersList.PUSH].length === 0 && user[parametersList.MOBILES].length === 0){
+					ids.push(id);
+				}
+			})
+		
+		ids.forEach(id => {
+			let idParameter = getIdParameter(users[id]);
+			delete users[id];
+			UsersModel.findOne({[idParameter]: id})
+				.exec()
+				.then(res => {
+					if(res){
+						res.remove()
+					}
+				});
+		})
+			
+	}
+
 	return {
 		init,
 		setServerId,
@@ -421,6 +492,8 @@ module.exports = function(){
 		getMarketAlertMobileUsers,
 		removePushRegistrations,
 		removeBrowserFromUser,
-		updateUserDatabaseRecord
+		updateUserDatabaseRecord,
+		getUsersStats,
+		cleanUsersObject
 	}
 }

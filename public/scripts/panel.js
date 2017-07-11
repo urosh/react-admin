@@ -51,6 +51,7 @@ window.onload = (function() {
 		        panelRow = $('.panel-row');
 		        $(panelRow[0]).addClass('active');
 		        // Initialize content
+
 		        setTimeout(function(){
 			        currentMenuItem = $(panelRow[0]).attr('data-panel');
 			        events.publish(eventNames[currentMenuItem]._INIT_, {username: username});
@@ -84,6 +85,7 @@ window.onload = (function() {
 		header.addClass('panel-active');
 		panelContent.addClass('active');
 		content.addClass('panel-active');
+
 		setTimeout(function(){
 			//panelContent.load('templates/panel.html');
 			$.ajax({
@@ -101,7 +103,14 @@ window.onload = (function() {
 			        currentMenuItem = $(panelRow[0]).attr('data-panel');
 			        $(panelRow[0]).addClass('active');
 			        // Initialize content
-			        events.publish(eventNames[currentMenuItem]._INIT_, {username: username});
+					setTimeout(function(){
+				        events.publish(eventNames[currentMenuItem]._INIT_, {username: username});
+				       	logoutButton.click(function(){
+			        		$.get('/admin/auth/logout', function(data){
+			        			window.location.reload(true);
+			        		})
+			        	})
+		        	}, 600)
 
 			        // Handle user click on the menu
 			        panelRow.click(function(e){

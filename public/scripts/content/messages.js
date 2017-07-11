@@ -91,7 +91,6 @@
 		$('.selectpicker').selectpicker({
 		  	size: 4
 		});
-		
 		if(!pushNotificationRegistered){
 			pushNotificationRegistered = true;	
 			registerPushNotifications();
@@ -442,6 +441,7 @@
 			$('.users-stats .loggedInUsers span').text(numberOfLoggedInUsers);
 			$('.users-stats .loggedOutUsers span').text(numberOfVisitors);
 			$('.users-stats .mobileAppUsers span').text(numberOfMobiles);
+
 			getRecipientStats();
 		});
 		// Update recipient stats when this happens

@@ -15,7 +15,7 @@
 	socket.on('connect', () => {
 		
 		if(username) {
-			socket.emit('adminRegister', { username: username });	
+			socket.emit('adminConnect', { username: username });	
 		}else{
 			$.get('/admin/auth/status', handleAdminConnect);
 		}
@@ -27,6 +27,7 @@
 		if(!panelInitialized){
 			if(data.access === "allowed"){
 				username = data.username;
+				socket.emit('adminConnect', { username: username });	
 				events.publish(eventNames.admin.SHOW_PANEL, data);
 			}else{
 				events.publish(eventNames.admin.SHOW_LOGIN, data);
@@ -60,7 +61,6 @@
 	events.subscribe(eventNames.admin._PUSH_REGSITER_, function(data){
 
 		data.username = username;
-		console.log(data);
 		socket.emit('adminPushRegister', data);
 	});
 
@@ -74,7 +74,7 @@
 	// that used to communicate with the admin. 
 	events.subscribe(eventNames.authentication._LOGIN_, function(data) {
 		username = data.username;
-		socket.emit('adminRegister', data);	
+		socket.emit('adminConnect', data);	
 	});
 
 

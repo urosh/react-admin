@@ -44,6 +44,7 @@ app.use(bodyParser.json());
 app.use(bodyParserJsonError());
 app.use(cors());
 app.set('trust proxy', 1);
+		
 
 mongoose.Promise = require('bluebird');
 mongoose.connect(connectionString);
@@ -51,7 +52,7 @@ mongoose.connect(connectionString);
 serverIdGenerator()
 	.then(serverSettings => {
 		usersManagement.init();
-		
+
 		usersManagement.setServerId(serverSettings[parametersList.SERVER_ID]);
 
 		marketAlerts.init({
@@ -71,7 +72,11 @@ serverIdGenerator()
 			}
 		});
 
-		// Asign route handlers to routes
+		
+
+
+		app.use('/admin', express.static('public'));
+		
 		app.use(session({
 			store: new RedisStore({
 				client: marketAlerts.getRedisConnection() 
@@ -81,10 +86,6 @@ serverIdGenerator()
 			saveUninitialized : false,
 			cookie: {maxAge: 1800000 }
 		}));
-
-
-		app.use('/admin', express.static('public'));
-
 		
 		
 		webeyezRedis.init({
