@@ -119,11 +119,7 @@ const sentinels = [
 const socketOrigins = 'www.easymarkets.com:* chn.easymarkets.com:* prp.easymarkets.com:* prpchn.easymarkets.com:* lcl.easymarkets.com:* pushprp.easymarkets.com:* notify.easymarkets.com:*';
 
 const eventChannels = {
-	SOCKETS : 'sockets',
-	ROUTES : 'routes',
-	REDIS: 'redis',
-	POST: 'post',
-	GET: 'get'
+	
 };
 
 const mssqlHost = 'mssql://' + process.env.MSSQL_USER + ':' + process.env.MSSQL_PASS + '@' + process.env.MSSQL_IP + ':' + process.env.MSSQL_PORT + '/EZFX_MC';
@@ -132,78 +128,6 @@ const mssql = {
 	host: mssqlHost
 };
 
-
-const parametersList = {
-	SERVER_ID: 'serverID',
-	PROCESSING_SERVER_ID: 'processingServerID',
-	USER_ID: 'userID',
-	MACHINE_HASH: 'machineHash',
-	USER_LOGGED_IN: 'userLoggedIn',
-	TEST_ENABLED: 'testEnabled',
-	TEST: 'test',
-	MARKET_ALERT_ALLOW: 'marketAlertAllow',
-	LANGUAGE: 'language',
-	CULTURE: 'culture',
-	PAIRS: 'pairs',
-	TOKEN: 'token',
-	OLD_TOKEN: 'oldToken',
-	NEW_TOKEN: 'newToken',
-	SYSTEM: 'system',
-	SOCKET_ID: 'socketID',
-	SOCKET_ACTIVE: 'socketActive',
-	TAB_ACTIVE: 'tabActive',
-	INSTRUMENT: 'instrument',
-	INSTRUMENT_STATUS: 'instrumentStatus',
-	PUSH_ENABLED: 'pushEnabled',
-	PUSH_ACTIVE: 'pushActive',
-	NOTIFICATION_DELIVERY_METHOD: 'notificationDeliveryMethod',
-	ACCOUNT_BASE_CURRENCY: 'accountBaseCurrency',
-	ALLOW_DEPOSIT: 'allowDeposit',
-	ALLOW_WITHDRAWAL: 'allowWithdrawal',
-	ALLOWED_CANCELLATION: 'allowedCancellation',
-	COUNTRY_NAME: 'countryName',
-	COUNTRY_ID: 'countryID',
-	DEFAULT_PORTAL: 'defaultPortal',
-	DEMO_EXPIRATION_DAYS: 'demoExpirationDays',
-	HAS_CREDIT_CARD: 'hasCreditCard',
-	HAS_MT4_ACCOUNT: 'hasMts4Account',
-	IS_ACTIVE: 'isActive',
-	IS_ACCOUNT_CLOSED: 'isAccountClosed',
-	WITHDRAWAL_AVAILABLE: 'withdrawalAvailable',
-	PUSH: 'push',
-	SOCKETS: 'socket',
-	BROWSERS: 'browser',
-	MOBILES: 'mobile',
-	METHOD: 'method',
-	URL: 'url',
-	DATA: 'data',
-	ROW_ID: 'row_id',
-	EVENT_ID: 'event_id',
-	EVENT_DATE: 'event_date',
-	BASE_CURR: 'base_curr',
-	NON_BASE_CURR: 'non_base_curr',
-	EVENT_TYPE_ID: 'event_type_id',
-	NEW_VALUE: 'new_value',
-	OLD_VALUE: 'old_value',
-	LAST_EVENT_DATE: 'last_event_date',
-	DIFFERENCE: 'difference',
-	EVENT_DESCRIPTION: 'event_description',
-	TYPE: 'type',
-	ACTION: 'action',
-	PRICE: 'price',
-	CODE: 'code',
-	EVENTID: 'eventID',
-	TRIGGER_ID: 'triggerID',
-	TRIGGER_RECIEVED_TIME: 'triggerRecievedTime',
-	TRIGGER_TYPE: 'triggerType',
-	MARKET_ALERT: 'marketAlert',
-	PUSH_SERVER_URL: 'pushServerUrl',
-	NOTIFICATION_RECEIVED: 'notificationReceived',
-	PUSH_ID: 'pushID',
-	USERNAME: 'username',
-	FILTERS: 'filters'
-
-}
 
 
 const languages = {
@@ -214,14 +138,17 @@ const languages = {
 }
 
 
-const messageChannels = {
+/*const messageChannels = {
 	BROWSER: 'browser',
 	PUSH: 'push',
 	MOBILE: 'mobile'
-}
+}*/
 
 const webeyezRedisHost = process.env.WEBEYEZ_REDIS_IP;
 const webeyezRedisPort = process.env.WEBEYEZ_REDIS_PORT;
+
+const ADMIN_FCM_SERVER_KEY = 'AIzaSyAP8CDwT4ANSrCZvcaZMRHw1_Dt4dH1wBA';
+const CLIENT_FCM_SERVER_KEY = 'AIzaSyBuBkx25PYli0uCjdzhp20p9M6CqMibKyc';
 
 module.exports = {
 	globalPairs,
@@ -230,11 +157,10 @@ module.exports = {
 	mssqlHost,
 	sentinels,
 	socketOrigins,
-	eventChannels,
-	parametersList,
-	messageChannels,
 	eventList,
 	languages,
 	webeyezRedisHost,
-	webeyezRedisPort
+	webeyezRedisPort,
+	ADMIN_FCM_SERVER_KEY,
+	CLIENT_FCM_SERVER_KEY
 }

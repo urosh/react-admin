@@ -1,21 +1,18 @@
 "use strict";
-const config = require('../config');
-const parametersList = config.parametersList;
+const parameters = require('../parameters');
 
 module.exports = (directMessaging) => {
 
 	// Mobile App Api methods
 	directMessaging.addEvent(
 		'/admin/auth/status',
-		config.eventChannels.ROUTES,
-		[
-			
-		],
+		parameters.messageChannels.ROUTES,
+		[],
 		function(req, res) {
 			if(req.session && req.session.username){
 				res.send({
-					'access': 'allowed',
-					'username': req.session.username
+					[parameters.admin.ACCESS]: 'allowed',
+					[parameters.admin.USERNAME]: req.session[parameters.admin.USERNAME]
 				});
 			}else{
 				res.send({
@@ -23,46 +20,36 @@ module.exports = (directMessaging) => {
 				});
 			}
 		},
-		'get'
+		[parameters.messageChannels.GET]
 		
 	)
 
 	directMessaging.addEvent(
 		'adminLogin',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[
-			'username',
-			'password'
+			[parameters.admin.USERNAME],
+			[parameters.admin.PASSWORD]
 		],
 		function(req, res) {
-			req.session.username = 'uros';
+			req.session[parameters.admin.USERNAME] = 'uros';
 			res.send('Welcome');
 		},
-		'post',
+		[parameters.messageChannels.POST],
 		'/admin/auth/login',
 		false
 	)
-
-	/*directMessaging.addEvent(
-		'/api/fetch/languages',
-		config.eventChannels.ROUTES,
-		[],
-		function(req, res) {
-			res.send(config.languages);
-		},
-		'get'
-	)*/
 	
 	directMessaging.addEvent(
 		'/admin/auth/logout',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			req.session.destroy(function(err) {
   				res.send('logout');
 			})
 		},
-		'get'
+		[parameters.messageChannels.GET]
 	)
 
 }

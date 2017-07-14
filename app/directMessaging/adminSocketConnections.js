@@ -19,8 +19,10 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 			
 			let users = adminManagement.getUsers();
 
-			user = users[username] = Object.assign({}, userModel, data);
+			users[username] = Object.assign({}, userModel, data);
 			
+			user = users[username];
+
 			user[parametersList.SOCKETS].forEach(socket => {
 				socket[parametersList.SOCKET_ACTIVE] = false;
 			});
@@ -44,7 +46,7 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 				socket[parametersList.USERNAME] = data[parametersList.USERNAME];
 				socket.join('admin');
 				socket.join(data[parametersList.USERNAME]);
-			}	
+			}
 
 		}
 	)
@@ -58,11 +60,10 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 			parametersList.TOKEN
 		],
 		function(data) {
-			let user = adminManagement.getUser(user[data[parametersList.USERNAME]]);
+			let user = adminManagement.getUser(data[parametersList.USERNAME]);
 			if(!user) return;
 			user[parametersList.TOKEN] = data[parametersList.TOKEN];
 			user[parametersList.SERVER_ID] = data[parametersList.SERVER_ID];		
-
 		}
 	)
 

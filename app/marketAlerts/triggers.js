@@ -3,9 +3,7 @@ const config = require('../config');
 const parametersList = config.parametersList;
 const marketAlertTranslate = require('./utils/marketAlerts');
 const languages = config.languages;
-const FCM = require('fcm-push');
-const serverKey = 'AIzaSyBuBkx25PYli0uCjdzhp20p9M6CqMibKyc';
-const fcm = new FCM(serverKey);
+const fcm = new require('fcm-push')(config.CLIENT_FCM_SERVER_KEY);
 const uidGenerator = require('./utils/uidGenerator');
 const _ = require('lodash');
 
@@ -38,7 +36,6 @@ module.exports = (marketAlerts, usersManagement) => {
 				.map(code => languages[code])
 				.forEach(language => {
 					const room = language + '-' + parametersList.INSTRUMENT + '-' + instrument;
-					
 					io.sockets.in(room).emit('market-notification', processedData.socket[language]);
 				});
 

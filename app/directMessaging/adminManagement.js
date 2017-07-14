@@ -1,30 +1,23 @@
 "use strict";
-const config = require('../config');
-const parametersList = config.parametersList;
+const parameters = require('../parameters');
 
 
 module.exports = () => {
-	const admin = {
-		[parametersList.USERNAME]: '',
-		[parametersList.SOCKETS]: [],
-		[parametersList.SERVER_ID]: '',
-		[parametersList.TOKEN]: ''
+	const adminModel = {
+		[parameters.admin.USERNAME]: '',
+		[parameters.messageChannels.SOCKETS]: [],
+		[parameters.general.SERVER_ID]: '',
+		[parameters.user.TOKEN]: ''
 	}
 
 	let users = {};
-	const getUsers = () => admin;
+	const getUsers = () => users;
 	
-	const getUser = username => {
-		return Object.keys(users)
-			.map(id => users[id])
-			.filter(user => user[parametersList.USERNAME] === username);
-	}
+	const getUser = username => users[username];
 
-	const getUserModel = () => admin;
+	const getUserModel = () => adminModel;
 	
 	const getSocket = (socketId, io) => io.sockets.connected[socketId];
-	
-	
 
 	return {
 		getUsers,

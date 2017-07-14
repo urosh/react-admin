@@ -263,7 +263,7 @@
 				break;
 			}
 		}
-
+		filters.selectedUsers = selectedUsers;
 
 	}
 
@@ -296,7 +296,7 @@
 				title: {},
 				text: {}
 			},
-			sockets: {
+			socket: {
 				title: {},
 				text: {}
 			},
@@ -320,8 +320,8 @@
 			message.push.title[lang.code] = 'Client Notification';
 			message.push.text[lang.code] = pushText;
 			if(pushText !== '') message.messageEmptymessageEmpty = false;
-			message.sockets.title[lang.code] = 'Client Notification';
-			message.sockets.text[lang.code] = htmlText;
+			message.socket.title[lang.code] = 'Client Notification';
+			message.socket.text[lang.code] = htmlText;
 		});
 		return message;
 	}
@@ -452,6 +452,7 @@
 	// Called when we want to update recipients stats
 	function getRecipientStats() {
 		prepareFilters();
+
 		events.publish(eventNames.recipientStats._REQUEST_, filters);
 	}
 	
@@ -492,13 +493,14 @@
 		}else{
 			userListChanged = true;
 		}
-
+		
+		//console.log('We are here and user list changed ', userListChanged);
 		if(userListChanged){
 			oldList = [];
 			userList.forEach(function(user) {
-				oldList.concat([user]);
+				oldList = oldList.concat([user]);
 			})
-	        // emit new array
+			// emit new array
 			userList$.onNext(userList);
 		}
  
@@ -549,7 +551,7 @@
 			selectedUserListContainer.append('<div id="'+ userID +'-holder" class="user-id-holder"><span class="user-id-value">'+ userID +'</span><i id="'+ userID +'-remove-button" data-userID="' + userID + '" class="fa fa-times-circle "></i></div>');
 			$('#' + userID +'-remove-button').on('click', function() {
 				$(this).off();
-
+				
 				selectedUsers = selectedUsers.filter(function(id) {
 					return id !== userID;
 				});

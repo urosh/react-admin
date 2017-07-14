@@ -1,5 +1,5 @@
 "use strict";
-const parametersList = require('../config').parametersList;
+const parameters = require('../parameters');
 const globalPairs = require('../config').globalPairs;
 let io;
 const UsersModel = require('../../models/user');
@@ -7,59 +7,59 @@ const _ = require('lodash');
 
 module.exports = function(){
 	const socketConnection = {
-		[parametersList.SOCKET_ID]: '',
-		[parametersList.SOCKET_ACTIVE]: '',
-		[parametersList.LANGUAGE]: '',
-		[parametersList.MACHINE_HASH]: ''
+		[parameters.user.SOCKET_ID]: '',
+		[parameters.user.SOCKET_ACTIVE]: '',
+		[parameters.user.LANGUAGE]: '',
+		[parameters.user.MACHINE_HASH]: ''
 	};
 
 	const browser = {
-		[parametersList.MACHINE_HASH]: '',
-		[parametersList.TOKEN]: '',
-		[parametersList.LANGUAGE]: '',
-		[parametersList.PUSH_ENABLED]: false,
-		[parametersList.TEST_ENABLED]: false,
-		[parametersList.PUSH_ACTIVE]: false
+		[parameters.user.MACHINE_HASH]: '',
+		[parameters.user.TOKEN]: '',
+		[parameters.user.LANGUAGE]: '',
+		[parameters.user.PUSH_ENABLED]: false,
+		[parameters.user.TEST_ENABLED]: false,
+		[parameters.user.PUSH_ACTIVE]: false
 	}
 
 	const push = {
-		[parametersList.MACHINE_HASH]: '',
-		[parametersList.TOKEN]: '',
-		[parametersList.LANGUAGE]: '',
-		[parametersList.PUSH_ACTIVE]: false
+		[parameters.user.MACHINE_HASH]: '',
+		[parameters.user.TOKEN]: '',
+		[parameters.user.LANGUAGE]: '',
+		[parameters.user.PUSH_ACTIVE]: false
 	}
 
 	const mobile = {
-		[parametersList.TOKEN]: '',
-		[parametersList.LANGUAGE]: ''
+		[parameters.user.TOKEN]: '',
+		[parameters.user.LANGUAGE]: ''
 	}
 
 	const user = {
-		[parametersList.USER_ID]: '',
-		[parametersList.MACHINE_HASH]: '',
-		[parametersList.TOKEN]: '',
-		[parametersList.USER_LOGGED_IN]: false,
-		[parametersList.PAIRS]: [],
-		[parametersList.TEST_ENABLED]: false,
-		[parametersList.MARKET_ALERT_ALLOW]: true,
-		[parametersList.CULTURE]: 'eu',
-		[parametersList.ACCOUNT_BASE_CURRENCY]: null,
-		[parametersList.ALLOW_DEPOSIT]: null,
-		[parametersList.ALLOW_WITHDRAWAL]: null,
-		[parametersList.ALLOWED_CANCELLATION]: null,
-		[parametersList.COUNTRY_NAME]: null,
-		[parametersList.COUNTRY_ID]: null,
-		[parametersList.DEFAULT_PORTAL]: null,
-		[parametersList.DEMO_EXPIRATION_DAYS]: null,
-		[parametersList.HAS_CREDIT_CARD]: null,
-		[parametersList.HAS_MT4_ACCOUNT]: null,
-		[parametersList.IS_ACTIVE]: null,
-		[parametersList.IS_ACCOUNT_CLOSED]: null,
-		[parametersList.WITHDRAWAL_AVAILABLE]: null,
-		[parametersList.PUSH]: [],
-		[parametersList.SOCKETS]: [],
-		[parametersList.BROWSERS]: [],
-		[parametersList.MOBILES]: [],
+		[parameters.user.USER_ID]: '',
+		[parameters.user.MACHINE_HASH]: '',
+		[parameters.user.TOKEN]: '',
+		[parameters.user.USER_LOGGED_IN]: false,
+		[parameters.user.PAIRS]: [],
+		[parameters.user.TEST_ENABLED]: false,
+		[parameters.user.MARKET_ALERT_ALLOW]: true,
+		[parameters.user.CULTURE]: 'eu',
+		[parameters.user.ACCOUNT_BASE_CURRENCY]: null,
+		[parameters.user.ALLOW_DEPOSIT]: null,
+		[parameters.user.ALLOW_WITHDRAWAL]: null,
+		[parameters.user.ALLOWED_CANCELLATION]: null,
+		[parameters.user.COUNTRY_NAME]: null,
+		[parameters.user.COUNTRY_ID]: null,
+		[parameters.user.DEFAULT_PORTAL]: null,
+		[parameters.user.DEMO_EXPIRATION_DAYS]: null,
+		[parameters.user.HAS_CREDIT_CARD]: null,
+		[parameters.user.HAS_MT4_ACCOUNT]: null,
+		[parameters.user.IS_ACTIVE]: null,
+		[parameters.user.IS_ACCOUNT_CLOSED]: null,
+		[parameters.user.WITHDRAWAL_AVAILABLE]: null,
+		[parameters.messageChannels.PUSH]: [],
+		[parameters.messageChannels.SOCKETS]: [],
+		[parameters.messageChannels.BROWSERS]: [],
+		[parameters.messageChannels.MOBILES]: [],
 	}
 
 	let users = {};
@@ -83,7 +83,7 @@ module.exports = function(){
 		return Object.keys(users)
 			.map(id => users[id])
 			.filter(user => {
-				return (user[parametersList.MOBILES].filter(mobile => mobile[parametersList.TOKEN] === token)).length
+				return (user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.user.TOKEN] === token)).length
 			})[0]
 	}
 	/* 
@@ -96,7 +96,7 @@ module.exports = function(){
 	 * @return string id. 
 	 */
 	const getUserId = data => {
-		return data[parametersList.USER_ID] || data[parametersList.MACHINE_HASH] || data[parametersList.TOKEN];
+		return data[parameters.user.USER_ID] || data[parameters.user.MACHINE_HASH] || data[parameters.user.TOKEN];
 	}
 
 	/*
@@ -125,10 +125,10 @@ module.exports = function(){
 	 */
 	const setInstrumentFormat = (socket, instrument) => {
 		let rooms = [];
-		if(instrument.indexOf(parametersList.INSTRUMENT) > -1) {
-			rooms.push(socket[parametersList.LANGUAGE] + '-' + instrument);
-			if(socket[parametersList.TEST_ENABLED]) {
-				rooms.push(parametersList.TEST + '-' + socket[parametersList.LANGUAGE] + '-' + instrument)
+		if(instrument.indexOf(parameters.user.INSTRUMENT) > -1) {
+			rooms.push(socket[parameters.user.LANGUAGE] + '-' + instrument);
+			if(socket[parameters.user.TEST_ENABLED]) {
+				rooms.push(parameters.general.TEST + '-' + socket[parametersList.LANGUAGE] + '-' + instrument)
 			}
 		}else{
 			rooms.push(instrument);
@@ -137,12 +137,12 @@ module.exports = function(){
 	}
 
 	const getIdParameter = user => {
-		if(user[parametersList.USER_ID]) {
-			return parametersList.USER_ID;
-		}else if(user[parametersList.MACHINE_HASH]){
-			return parametersList.MACHINE_HASH;
+		if(user[parameters.user.USER_ID]) {
+			return parameters.user.USER_ID;
+		}else if(user[parameters.user.MACHINE_HASH]){
+			return parameters.user.MACHINE_HASH;
 		}else{
-			return parametersList.TOKEN;
+			return parameters.user.TOKEN;
 		}
 	}
 	/*
@@ -166,7 +166,7 @@ module.exports = function(){
 			recievedRooms = recievedRooms.concat(setInstrumentFormat(socket, room));
 		})
 		
-		const currentRooms = [...Object.keys(socket.rooms).filter(pair => pair.indexOf(parametersList.INSTRUMENT) > -1)];
+		const currentRooms = [...Object.keys(socket.rooms).filter(pair => pair.indexOf(parameters.user.INSTRUMENT) > -1)];
 		
 		join = getArrayDifference(recievedRooms, currentRooms);
 		leave = getArrayDifference(currentRooms, recievedRooms);
@@ -192,29 +192,29 @@ module.exports = function(){
 	 */ 
 	const generateUserPairs = (data) => {
 		let pairs = [];
-		const userLoggedIn = data[parametersList.USER_LOGGED_IN];
-		const language = data[parametersList.LANGUAGE];
-		const culture = data[parametersList.CULTURE];
-		const usersPairs = data[parametersList.PAIRS];
-		const machineHash = data[parametersList.MACHINE_HASH];
-		const userId = data[parametersList.USER_ID];
-		const marketAlertAllow = data[parametersList.MARKET_ALERT_ALLOW];
-		const testEnabled = data[parametersList.TEST_ENABLED];
+		const userLoggedIn = data[parameters.user.USER_LOGGED_IN];
+		const language = data[parameters.user.LANGUAGE];
+		const culture = data[parameters.user.CULTURE];
+		const usersPairs = data[parameters.user.PAIRS];
+		const machineHash = data[parameters.user.MACHINE_HASH];
+		const userId = data[parameters.user.USER_ID];
+		const marketAlertAllow = data[parameters.user.MARKET_ALERT_ALLOW];
+		const testEnabled = data[parameters.user.TEST_ENABLED];
 
 		// If user is logged out add machine hast to pairs, to be able to 
 		// target logged out users
 		if(!userLoggedIn){
-			pairs.push(machineHash);
+			pairs.push(language + '-' + machineHash);
 		}else{
 			// Add user id, to be able to target users
-			pairs.push(userId);
+			pairs.push(language + '-' + userId);
 		}
 		// If market alerts are not allowed 
 		if(!marketAlertAllow) return pairs;
 		
 		// Add global pairs
 		globalPairs.forEach(pair => {
-			pairs.push(parametersList.INSTRUMENT + '-' + pair);
+			pairs.push(parameters.user.INSTRUMENT + '-' + pair);
 		});
 		
 		// For logged out users its enough
@@ -226,8 +226,8 @@ module.exports = function(){
 		pairs.push(language + '-' + culture)
 		
 		usersPairs.forEach(pair => {
-			if(pairs.indexOf(parametersList.INSTRUMENT + '-' + pair) === -1){
-				pairs.push(parametersList.INSTRUMENT + '-' + pair);
+			if(pairs.indexOf(parameters.user.INSTRUMENT + '-' + pair) === -1){
+				pairs.push(parameters.user.INSTRUMENT + '-' + pair);
 			}
 		})
 
@@ -246,7 +246,7 @@ module.exports = function(){
 						users[id] = {};
 						Object.keys(user)
 								.forEach(key => users[id][key] = savedUser[key])
-						users[id][parametersList.SOCKETS] = [];	
+						users[id][parameters.messageChannels.SOCKETS] = [];	
 						
 					}
 				})
@@ -266,25 +266,25 @@ module.exports = function(){
 	const getSocketObject = (id, socketId) => {
 		const user = users[id];
 		if(!user) return null;
-		return user[parametersList.SOCKETS].filter(socket => socket[parametersList.SOCKET_ID] === socketId)[0];
+		return user[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.user.SOCKET_ID] === socketId)[0];
 	}
 
 	const getPushObject = (id, machineHash) => {
 		const user = users[id];
 		if(!user) return null;
-		return user[parametersList.PUSH].filter(machine => machine[parametersList.MACHINE_HASH] === machineHash)[0];
+		return user[parameters.messageChannels.PUSH].filter(machine => machine[parameters.user.MACHINE_HASH] === machineHash)[0];
 	}
 
 	const getBrowserObject = (id, machineHash) => {
 		const user = users[id];
 		if(!user) return null;
-		return user[parametersList.BROWSERS].filter(machine => machine[parametersList.MACHINE_HASH] === machineHash)[0];
+		return user[parameters.messageChannels.BROWSERS].filter(machine => machine[parameters.user.MACHINE_HASH] === machineHash)[0];
 	}
 
 	const getMobileObject = (id, token) => {
 		const user = users[id];
 		if(!user) return null;
-		return user[parametersList.MOBILES].filter(mobile => mobile[parametersList.TOKEN] === token)[0];
+		return user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.user.TOKEN] === token)[0];
 	}
 
 	const getMobileObjectFromToken = token => {
@@ -293,8 +293,8 @@ module.exports = function(){
 		return Object.keys(users)
 			.map(id => users[id])
 			.reduce((prev, current) => {
-				if(prev[parametersList.TOKEN]) return prev;
-				let res = current[parametersList.MOBILES].filter(mobile => mobile[parametersList.TOKEN] === token);
+				if(prev[parameters.user.TOKEN]) return prev;
+				let res = current[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.user.TOKEN] === token);
 				if(res.length) return res[0];
 				return {};
 			}, false)
@@ -306,8 +306,8 @@ module.exports = function(){
 		return Object.keys(users)
 			.map(id => users[id])
 			.reduce((prev, current) => {
-				if(prev[parametersList.MACHINE_HASH]) return prev;
-				let res = current[parametersList.BROWSERS].filter(browser => browser.parametersList[MACHINE_HASH] === machineHash);
+				if(prev[parameters.user.MACHINE_HASH]) return prev;
+				let res = current[parameters.messageChannels.BROWSERS].filter(browser => browser[parameters.user.MACHINE_HASH] === machineHash);
 				if(res.length) return res[0];
 				return {};
 			}, false)
@@ -319,8 +319,8 @@ module.exports = function(){
 		return Object.keys(users)
 			.map(id => users[id])
 			.reduce((prev, current) => {
-				if(prev[parametersList.SOCKET_ID]) return prev;
-				let res = current[parametersList.SOCKETS].filter(socket => socket[parametersList.SOCKET_ID] === id);
+				if(prev[parameters.user.SOCKET_ID]) return prev;
+				let res = current[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.user.SOCKET_ID] === id);
 				if(res.length) return res[0];
 				return {};
 			}, false)
@@ -331,7 +331,7 @@ module.exports = function(){
 			.map(id => users[id])
 			.reduce((prev, current) => {
 				if(prev) return prev;
-				let res = current[parametersList.SOCKETS].filter(socket => socket[parametersList.SOCKET_ID] === socketId);
+				let res = current[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.user.SOCKET_ID] === socketId);
 				if(res.length) return current;
 				return null;
 			}, false)
@@ -341,28 +341,28 @@ module.exports = function(){
 		let userID;
 		let pushRegistrations = Object.keys(users)
 			.map(id => 	users[id])
-			.filter(user => user[parametersList.MARKET_ALERT_ALLOW])
-			.filter(user => user[parametersList.PUSH].length > 0)
-			.filter(user => user[parametersList.PAIRS].indexOf(parametersList.INSTRUMENT + '-' + instrument) > -1)
-			.map(user => user[parametersList.PUSH]);
+			.filter(user => user[parameters.user.MARKET_ALERT_ALLOW])
+			.filter(user => user[parameters.messageChannels.PUSH].length > 0)
+			.filter(user => user[parameters.user.PAIRS].indexOf(parameters.user.INSTRUMENT + '-' + instrument) > -1)
+			.map(user => user[parameters.messageChannels.PUSH]);
 		
 		let push = [].concat.apply([], pushRegistrations);
 		
-		return push.filter(push => push[parametersList.PUSH_ACTIVE])
-			.filter(push => push[parametersList.SERVER_ID] === serverID);
+		return push.filter(push => push[parameters.user.PUSH_ACTIVE])
+			.filter(push => push[parameters.general.SERVER_ID] === serverID);
 	}
 
 	const getMarketAlertMobileUsers = instrument => {
 		let userID;
 		let mobileRegistrations = Object.keys(users)
 			.map(id => 	users[id])
-			.filter(user => user[parametersList.MARKET_ALERT_ALLOW])
-			.filter(user => user[parametersList.MOBILES].length > 0)
-			.map(user => user[parametersList.MOBILES]);
+			.filter(user => user[parameters.user.MARKET_ALERT_ALLOW])
+			.filter(user => user[parameters.messageChannels.MOBILES].length > 0)
+			.map(user => user[parameters.messageChannels.MOBILES]);
 		
 		let mobiles = [].concat.apply([], mobileRegistrations);
 		
-		return mobiles.filter(push => push[parametersList.SERVER_ID] === serverID);
+		return mobiles.filter(push => push[parameters.general.SERVER_ID] === serverID);
 	}
 
 	const removePushRegistrations = token => {
@@ -371,7 +371,7 @@ module.exports = function(){
 		Object.keys(users)
 			.map(id => users[id])
 			.map(user => {
-				user[parametersList.PUSH] = user[parametersList.PUSH].filter(push => push[parametersList.TOKEN] !== token);
+				user[parameters.messageChannels.PUSH] = user[parameters.messageChannels.PUSH].filter(push => push[parameters.user.TOKEN] !== token);
 				return user;
 			});
 	}
@@ -381,7 +381,7 @@ module.exports = function(){
 		Object.keys(users)
 			.map(id => users[id])
 			.map(user => {
-				user[parametersList.BROWSERS] = user[parametersList.BROWSERS].filter(browser => browser[parametersList.MACHINE_HASH] !== machineHash);
+				user[parameters.messageChannels.BROWSERS] = user[parameters.messageChannels.BROWSERS].filter(browser => browser[parameters.user.MACHINE_HASH] !== machineHash);
 				return user;
 			});
 	}
@@ -392,7 +392,7 @@ module.exports = function(){
 
 		//console.log('Updating user in database: ', parameter, value);
 
-		if(user[parametersList.PUSH].length === 0 && user[parametersList.MOBILES] === 0){
+		if(user[parameters.messageChannels.PUSH].length === 0 && user[parameters.messageChannels.MOBILES] === 0){
 			UsersModel
 				.remove({ [parameter]: value });
 		}else{
@@ -409,20 +409,20 @@ module.exports = function(){
 	const getNumberOfLoggedOutUsers = () => {
 		return Object.keys(users)
 				.map(id => users[id])
-				.filter(user => !user[parametersList.USER_ID]).length;
+				.filter(user => !user[parameters.user.USER_ID]).length;
 
 	}
 	const getNumberOfLoggedInUsers = () => {
 		return Object.keys(users)
 				.map(id => users[id])
-				.filter(user => user[parametersList.USER_ID]).length;
+				.filter(user => user[parameters.user.USER_ID]).length;
 	}
 	const getNumberOfMobileUsers = () => {
 		
 		return Object.keys(users)
 			.map(id => users[id])
 			.reduce((prev, current) => {
-				return prev + current[parametersList.MOBILES].length
+				return prev + current[parameters.messageChannels.MOBILES].length
 			}, 0);
 	}
 
@@ -451,7 +451,7 @@ module.exports = function(){
 		Object.keys(users)
 			.forEach(id => {
 				let user = users[id];
-				if(user[parametersList.SOCKETS].length === 0 && user[parametersList.PUSH].length === 0 && user[parametersList.MOBILES].length === 0){
+				if(user[parameters.messageChannels.SOCKETS].length === 0 && user[parameters.messageChannels.PUSH].length === 0 && user[parameters.messageChannels.MOBILES].length === 0){
 					ids.push(id);
 				}
 			})

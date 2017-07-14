@@ -1,19 +1,19 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const parametersList = require('../app/config').parametersList;
+const parameters = require('../app/parameters');
 
 const usersSchema = new Schema({
-	[parametersList.USER_ID]: String,
-	[parametersList.USER_LOGGED_IN]: Boolean,
-	[parametersList.MACHINE_HASH]: String,
-	[parametersList.TOKEN]: String,
-	[parametersList.PAIRS]: Array,
-	[parametersList.TEST_ENABLED]: Boolean,
-	[parametersList.MARKET_ALERT_ALLOW]: Boolean,
-	[parametersList.PUSH]: Array,
-	[parametersList.SOCKETS]: Array,
-	[parametersList.BROWSERS]: Array,
-	[parametersList.MOBILES]: Array
+	[parameters.user.USER_ID]: String,
+	[parameters.user.USER_LOGGED_IN]: Boolean,
+	[parameters.user.MACHINE_HASH]: String,
+	[parameters.user.TOKEN]: String,
+	[parameters.user.PAIRS]: Array,
+	[parameters.user.TEST_ENABLED]: Boolean,
+	[parameters.user.MARKET_ALERT_ALLOW]: Boolean,
+	[parameters.messageChannels.PUSH]: Array,
+	[parameters.messageChannels.SOCKETS]: Array,
+	[parameters.messageChannels.BROWSERS]: Array,
+	[parameters.messageChannels.MOBILES]: Array
 });
 
 module.exports = mongoose.model('Users', usersSchema);
