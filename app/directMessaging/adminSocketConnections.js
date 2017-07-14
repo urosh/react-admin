@@ -1,19 +1,18 @@
 "use strict";
-const config = require('../config');
-const parametersList = config.parametersList;
+const parameters = require('../parameters');
 
 module.exports = (directMessaging, usersManagement, adminManagement) => {
 	directMessaging.addEvent(
 		'adminConnect',
 		config.eventChannels.SOCKETS,
 		[
-			parametersList.USERNAME,
-			parametersList.SOCKET_ID
+			parameters.user.USERNAME,
+			parameters.user.SOCKET_ID
 		],
 		function(data) {
 			let user;
-			const username = data[parametersList.USERNAME];
-			const socketId = data[parametersList.SOCKET_ID];
+			const username = data[parameters.admin.USERNAME];
+			const socketId = data[parameters.user.SOCKET_ID];
 
 			const userModel = adminManagement.getUserModel();
 			
@@ -23,29 +22,29 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 			
 			user = users[username];
 
-			user[parametersList.SOCKETS].forEach(socket => {
-				socket[parametersList.SOCKET_ACTIVE] = false;
+			user[parameters.messageChannels.SOCKETS].forEach(socket => {
+				socket[parameters.user.SOCKET_ACTIVE] = false;
 			});
 			
 			let sockets = [];
 			
-			sockets = user[parametersList.SOCKETS].filter(socket => socket[parametersList.SOCKET_ID] !== data[parametersList.SOCKET_ID]);
+			sockets = user[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.user.SOCKET_ID] !== data[parameters.user.SOCKET_ID]);
 
 			sockets.push({
-				[parametersList.SOCKET_ID]: data[parametersList.SOCKET_ID],
-				[parametersList.SOCKET_ACTIVE]: true,
-				[parametersList.USERNAME]: data[parametersList.USERNAME]
+				[parameters.user.SOCKET_ID]: data[parameters.user.SOCKET_ID],
+				[parameters.user.SOCKET_ACTIVE]: true,
+				[parameters.admin.USERNAME]: data[parameters.admin.USERNAME]
 			});
 			let io = directMessaging.getSocketsConnection();
-			let socket = adminManagement.getSocket(data[parametersList.SOCKET_ID], io);
+			let socket = adminManagement.getSocket(data[parameters.user.SOCKET_ID], io);
 			
 
-			user[parametersList.SOCKETS] = [...sockets];
+			user[parameters.messageChannels.SOCKETS] = [...sockets];
 			
 			if(socket){
-				socket[parametersList.USERNAME] = data[parametersList.USERNAME];
-				socket.join('admin');
-				socket.join(data[parametersList.USERNAME]);
+				socket[parameters.admin.USERNAME] = data[parameters.admin.USERNAME];
+				socket.join(parameters.admin.ADMIN);
+				socket.join(data[parameters.admin.USERNAME]);
 			}
 
 		}
@@ -56,14 +55,14 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 		'adminPushRegister',
 		config.eventChannels.SOCKETS,
 		[
-			parametersList.USERNAME,
-			parametersList.TOKEN
+			parameters.admin.USERNAME,
+			parameters.user.TOKEN
 		],
 		function(data) {
-			let user = adminManagement.getUser(data[parametersList.USERNAME]);
+			let user = adminManagement.getUser(data[parameters.admin.USERNAME]);
 			if(!user) return;
-			user[parametersList.TOKEN] = data[parametersList.TOKEN];
-			user[parametersList.SERVER_ID] = data[parametersList.SERVER_ID];		
+			user[parameters.user.TOKEN] = data[parameters.user.TOKEN];
+			user[parameters.general.SERVER_ID] = data[parameters.general.SERVER_ID];		
 		}
 	)
 

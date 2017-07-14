@@ -1,6 +1,5 @@
 "use strict";
-const config = require('../config');
-const parametersList = config.parametersList;
+const parameters = require('../parameters');
 const userFiltering = require('./utils/usersFiltering')();
 
 module.exports = (directMessaging, usersManagement) => {
@@ -8,10 +7,10 @@ module.exports = (directMessaging, usersManagement) => {
 
 	directMessaging.addEvent(
 		'recipientStats',
-		config.eventChannels.SOCKETS,
+		parameters.messageChannels.SOCKETS,
 		[
-			parametersList.USERNAME,
-			parametersList.FILTERS
+			parameters.admin.USERNAME,
+			parameters.admin.FILTERS
 		],
 		function(data) {
 			let users = usersManagement.getUsers();
@@ -22,7 +21,7 @@ module.exports = (directMessaging, usersManagement) => {
 			let io = directMessaging.getSocketsConnection();
 			const usersStats = userFiltering.getUsersList(usersManagement, filters);
 
-			io.sockets.in(data.username).emit('recipientStats', usersStats);
+			io.sockets.in(data.username).emit(parameters.RECIPIENT_STATS, usersStats);
 		}
 	)
 

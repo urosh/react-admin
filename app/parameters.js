@@ -66,7 +66,9 @@ const admin = {
 	USERNAME: 'username',
 	FILTERS: 'filters',
 	PASSWORD: 'password',
-	ACCESS: 'access'
+	ACCESS: 'access',
+	ADMIN: 'admin',
+	RECIPIENT_STATS: 'recipientStats'
 };
 const directMessaging = {};
 const messageChannels = {

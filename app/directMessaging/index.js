@@ -1,6 +1,4 @@
 "use strict";
-const config = require('../config');
-const parametersList = config.parametersList;
 
 module.exports = function(directMessaging, usersManagement){
 	
@@ -10,6 +8,7 @@ module.exports = function(directMessaging, usersManagement){
 	require('./adminSocketConnections')(directMessaging, usersManagement, adminManagement);
 	require('./messageTriggers')(directMessaging, usersManagement, adminManagement);
 	require('./messageRecipientsFiltering')(directMessaging, usersManagement);
+	
 	let io;
 	
 	setInterval(() => {
@@ -19,7 +18,6 @@ module.exports = function(directMessaging, usersManagement){
 		io.sockets.in('admin').emit('userUpdate', usersManagement.getUsersStats());
 		
 	}, 500);
-
 
 	return {};
 }
