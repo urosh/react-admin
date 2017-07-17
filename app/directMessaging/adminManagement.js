@@ -7,7 +7,7 @@ module.exports = () => {
 		[parameters.admin.USERNAME]: '',
 		[parameters.messageChannels.SOCKETS]: [],
 		[parameters.general.SERVER_ID]: '',
-		[parameters.user.TOKEN]: ''
+		[parameters.messageChannels.TOKEN]: ''
 	}
 
 	let users = {};

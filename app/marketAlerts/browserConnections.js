@@ -1,20 +1,19 @@
 "use strict";
-const config = require('../config');
-const parametersList = config.parametersList;
+const parameters = require('../parameters');
 const _ = require('lodash');
 
 module.exports = (marketAlerts, usersManagement) => {
 	marketAlerts.addEvent('connectBrowser', 
-		config.eventChannels.SOCKETS, 
+		parameters.messageChannels.SOCKETS, 
 		[
-			parametersList.MACHINE_HASH,
-			parametersList.USER_ID,
-			parametersList.TEST_ENABLED,
-			parametersList.MARKET_ALERT_ALLOW,
-			parametersList.LANGUAGE,
-			parametersList.PAIRS,
-			parametersList.SOCKET_ID,
-			parametersList.SERVER_ID
+			parameters.messageChannels.MACHINE_HASH,
+			parameters.user.USER_ID,
+			parameters.user.TEST_ENABLED,
+			parameters.user.MARKET_ALERT_ALLOW,
+			parameters.user.LANGUAGE,
+			parameters.user.PAIRS,
+			parameters.messageChannels.SOCKET_ID,
+			parameters.general.SERVER_ID
 		], 
 		function(data){
 			let io = marketAlerts.getSocketsConnection();
@@ -22,8 +21,8 @@ module.exports = (marketAlerts, usersManagement) => {
 			
 			// Store user's data to variables for easier use
 			const id = usersManagement.getUserId(data);
-			const machineHash = data[parametersList.MACHINE_HASH];
-			const language = data[parametersList.LANGUAGE];
+			const machineHash = data[parameters.messageChannels.MACHINE_HASH];
+			const language = data[parameters.user.LANGUAGE];
 			let users = usersManagement.getUsers();
 			let user;
 
@@ -32,65 +31,62 @@ module.exports = (marketAlerts, usersManagement) => {
 			
 			let sockets = [];
 			
-			let socket = usersManagement.getSocket(data[parametersList.SOCKET_ID], io);
+			let socket = usersManagement.getSocket(data[parameters.messageChannels.SOCKET_ID], io);
 			
 			// Update user's object with recieved data
 			users[id] = Object.assign({}, userModel, users[id], data);
 			user = users[id];
-			user[parametersList.PAIRS] = usersManagement.generateUserPairs(data);
+			user[parameters.user.PAIRS] = usersManagement.generateUserPairs(data);
 
-			/*user[parametersList.SOCKETS].forEach(socket => {
-				socket[parametersList.SOCKET_ACTIVE] = false;
-			});*/
 			
 			// Making sure we avoid duplicates. We only want to modify the socket with given id
-			sockets = user[parametersList.SOCKETS].filter(socket => socket[parametersList.SOCKET_ID] !== data[parametersList.SOCKET_ID]);
+			sockets = user[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] !== data[parameters.messageChannels.SOCKET_ID]);
 
 			sockets.push({
-				[parametersList.SOCKET_ID]: data[parametersList.SOCKET_ID],
-				[parametersList.LANGUAGE]: data[parametersList.LANGUAGE],
-				[parametersList.MACHINE_HASH]: machineHash,
-				[parametersList.SOCKET_ACTIVE]: true
+				[parameters.messageChannels.SOCKET_ID]: data[parameters.messageChannels.SOCKET_ID],
+				[parameters.user.LANGUAGE]: data[parameters.user.LANGUAGE],
+				[parameters.messageChannels.MACHINE_HASH]: machineHash,
+				[parameters.messageChannels.SOCKET_ACTIVE]: true
 			})
 
-			user[parametersList.SOCKETS] = [...sockets];
+			user[parameters.messageChannels.SOCKETS] = [...sockets];
 			
 			// Add user's reference to the socket	
-			socket[parametersList.MACHINE_HASH] = machineHash;
-			socket[parametersList.USER_ID] = data[parametersList.USER_ID];
-			socket[parametersList.LANGUAGE] = data[parametersList.LANGUAGE];
-			socket[parametersList.TEST_ENABLED] = data[parametersList.TEST_ENABLED];
+			socket[parameters.messageChannels.MACHINE_HASH] = machineHash;
+			socket[parameters.user.USER_ID] = data[parameters.user.USER_ID];
+			socket[parameters.user.LANGUAGE] = data[parameters.user.LANGUAGE];
+			socket[parameters.user.TEST_ENABLED] = data[parameters.user.TEST_ENABLED];
 			
 			// Make socket join rooms 
-			if(user[parametersList.MARKET_ALERT_ALLOW]){
-				usersManagement.joinRooms(socket, user[parametersList.PAIRS], io);
+			if(user[parameters.user.MARKET_ALERT_ALLOW]){
+				usersManagement.joinRooms(socket, user[parameters.user.PAIRS], io);
 			}
 			
 			//usersManagement.removeBrowserFromUser(machineHash);
 
 			// Adding machine info
-			let browsers = user[parametersList.BROWSERS].filter(machine => machine[parametersList.MACHINE_HASH] !== machineHash );
+			let browsers = user[parameters.messageChannels.BROWSERS].filter(machine => machine[parameters.messageChannels.MACHINE_HASH] !== machineHash );
 			
 			browsers.push({
-				[parametersList.MACHINE_HASH]: machineHash,
-				[parametersList.LANGUAGE]: language,
-				[parametersList.PUSH_ENABLED]: false,
-				[parametersList.SERVER_ID]: data[parametersList.SERVER_ID],
+				[parameters.messageChannels.MACHINE_HASH]: machineHash,
+				[parameters.user.LANGUAGE]: language,
+				[parameters.messageChannels.PUSH_ENABLED]: false,
+				[parameters.general.SERVER_ID]: data[parameters.general.SERVER_ID],
 			});
 
-			user[parametersList.BROWSERS] = [...browsers];
+			user[parameters.messageChannels.BROWSERS] = [...browsers];
 			
-			if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
-				if(user[parametersList.USER_ID]){
+			if(data[parameters.general.PROCESSING_SERVER_ID] === data[parameters.general.SERVER_ID]){
+				if(user[parameters.user.USER_ID]){
 					pub.publish('tracking.user', JSON.stringify({
-						userID:  user[parametersList.USER_ID],
-						machineHash: user[parametersList.MACHINE_HASH],
+						userID:  user[parameters.user.USER_ID],
+						machineHash: user[parameters.messageChannels.MACHINE_HASH],
 						loggedIn: true
 
 					}));
 				}else{
 					pub.publish('tracking.visitor', JSON.stringify({
-						machineHash: data[parametersList.MACHINE_HASH],
+						machineHash: data[parameters.messageChannels.MACHINE_HASH],
 					}));
 				}
 			}
@@ -100,31 +96,31 @@ module.exports = (marketAlerts, usersManagement) => {
 	// Closing socket connection
 	marketAlerts.addEvent(
 		'disconnect', 
-		config.eventChannels.SOCKETS, 
+		parameters.messageChannels.SOCKETS, 
 		[
-			parametersList.SOCKET_ID
+			parameters.messageChannels.SOCKET_ID
 		], 
 		function(data){
-			const socketId = data[parametersList.SOCKET_ID];
+			const socketId = data[parameters.messageChannels.SOCKET_ID];
 			let io = marketAlerts.getSocketsConnection();
 			let pub =  marketAlerts.getRedisConnection();
 			const user = usersManagement.getSocketUser(socketId, io);
 			if(user){
 				// Removing socket's reference from user's object
 				let socketMachine;
-				user[parametersList.SOCKETS] = user[parametersList.SOCKETS].filter(socket => {
-					if(socket[parametersList.SOCKET_ID] === socketId){
-						socketMachine = socket[parametersList.MACHINE_HASH];
+				user[parameters.messageChannels.SOCKETS] = user[parameters.messageChannels.SOCKETS].filter(socket => {
+					if(socket[parameters.messageChannels.SOCKET_ID] === socketId){
+						socketMachine = socket[parameters.messageChannels.MACHINE_HASH];
 						return false;
 					}
 					return true;
 				});
 				
-				if(data[parametersList.PROCESSING_SERVER_ID] === data[parametersList.SERVER_ID]){
+				if(data[parameters.general.PROCESSING_SERVER_ID] === data[parameters.general.SERVER_ID]){
 					pub.publish('tracking.disconnect', JSON.stringify({
-						[parametersList.USER_ID]: user[parametersList.USER_ID],
-						[parametersList.USER_ID]: user[parametersList.USER_ID] ? true : false,
-						[parametersList.MACHINE_HASH]: socketMachine
+						[parameters.user.USER_ID]: user[parameters.user.USER_ID],
+						[parameters.user.USER_ID]: user[parameters.user.USER_ID] ? true : false,
+						[parametersListparameters.messageChannels.MACHINE_HASH]: socketMachine
 					}))
 				}
 
@@ -137,32 +133,32 @@ module.exports = (marketAlerts, usersManagement) => {
 	// Browser tab active event handler
 	marketAlerts.addEvent(
 		'tabVisibilityChange',
-		config.eventChannels.SOCKETS,
+		parameters.messageChannels.SOCKETS,
 		[
-			parametersList.USER_ID,
-			parametersList.MACHINE_HASH,
-			parametersList.TAB_ACTIVE,
+			parameters.messageChannels.USER_ID,
+			parameters.messageChannels.MACHINE_HASH,
+			parameters.messageChannels.TAB_ACTIVE,
 		],
 		function(data) {
 			//usersManagement.browserTabVisibilityHandler(data);
 			const id = usersManagement.getUserId(data);
 			let io = marketAlerts.getSocketsConnection();
-			const socket = usersManagement.getSocket(data[parametersList.SOCKET_ID], io);
+			const socket = usersManagement.getSocket(data[parameters.messageChannels.SOCKET_ID], io);
 			let user = usersManagement.getUser(id);
 			
 			if(!user) return;
 
-			let pushObject = usersManagement.getPushObject(id, data[parametersList.MACHINE_HASH]);
-			let socketObject = usersManagement.getSocketObject(id, data[parametersList.SOCKET_ID]);
+			let pushObject = usersManagement.getPushObject(id, data[parameters.messageChannels.MACHINE_HASH]);
+			let socketObject = usersManagement.getSocketObject(id, data[parameters.messageChannels.SOCKET_ID]);
 			// Updating push reference for a given browser
 			if(pushObject) {
 				// Updating socket reference in user's object
-				pushObject[parametersList.PUSH_ACTIVE] = user[parametersList.MARKET_ALERT_ALLOW] && !data[parametersList.TAB_ACTIVE];
-				socket[parametersList.SOCKET_ACTIVE] = user[parametersList.MARKET_ALERT_ALLOW] && data[parametersList.TAB_ACTIVE];
+				pushObject[parameters.messageChannels.PUSH_ACTIVE] = user[parameters.user.MARKET_ALERT_ALLOW] && !data[parameters.messageChannels.TAB_ACTIVE];
+				socket[parameters.messageChannels.SOCKET_ACTIVE] = user[parameters.user.MARKET_ALERT_ALLOW] && data[parameters.messageChannels.TAB_ACTIVE];
 				if(socketObject){
-					socketObject[parametersList.SOCKET_ACTIVE] = data[parametersList.TAB_ACTIVE];
+					socketObject[parameters.messageChannels.SOCKET_ACTIVE] = data[parameters.messageChannels.TAB_ACTIVE];
 				}
-				const pairs = (data[parametersList.TAB_ACTIVE] && user[parametersList.MARKET_ALERT_ALLOW] )? user[parametersList.PAIRS] : [];
+				const pairs = (data[parameters.messageChannels.TAB_ACTIVE] && user[parameters.user.MARKET_ALERT_ALLOW] )? user[parameters.user.PAIRS] : [];
 				
 				usersManagement.joinRooms(socket, pairs);
 			}
@@ -173,10 +169,10 @@ module.exports = (marketAlerts, usersManagement) => {
 
 	marketAlerts.addEvent(
 		'updateMarketAlertsSubscription',
-		config.eventChannels.SOCKETS,
+		parameters.messageChannels.SOCKETS,
 		[
-			parametersList.USER_ID,
-			parametersList.MARKET_ALERT_ALLOW
+			parameters.user.USER_ID,
+			parameters.user.MARKET_ALERT_ALLOW
 		],
 		function(data) {
 			//usersManagement.updateMarketAlertSubscription(data);
@@ -184,19 +180,19 @@ module.exports = (marketAlerts, usersManagement) => {
 			let  user = usersManagement.getUser(id);
 			if(!user) return;
 			let io = marketAlerts.getSocketsConnection();
-			const marketAlertAllow = data[parametersList.MARKET_ALERT_ALLOW];
+			const marketAlertAllow = data[parameters.user.MARKET_ALERT_ALLOW];
 			
 			// Update user's object
-			user[parametersList.MARKET_ALERT_ALLOW] = marketAlertAllow;
-			const pairs = marketAlertAllow ? user[parametersList.PAIRS] : [];
+			user[parameters.user.MARKET_ALERT_ALLOW] = marketAlertAllow;
+			const pairs = marketAlertAllow ? user[parameters.user.PAIRS] : [];
 			// Tell all sockets to leave rooms
-			user[parametersList.SOCKETS].forEach(socketData => {
-				let socket = usersManagement.getSocket(socketData[parametersList.SOCKET_ID], io);
+			user[parameters.messageChannels.SOCKETS].forEach(socketData => {
+				let socket = usersManagement.getSocket(socketData[parameters.messageChannels.SOCKET_ID], io);
 				usersManagement.joinRooms(socket, pairs);
 			})
 
 			// Block push notifications
-			user[parametersList.PUSH].map(push => push[parametersList.PUSH_ACTIVE] = marketAlertAllow);
+			user[parameters.messageChannels.PUSH].map(push => push[parameters.messageChannels.PUSH_ACTIVE] = marketAlertAllow);
 
 		}
 	)
@@ -204,11 +200,11 @@ module.exports = (marketAlerts, usersManagement) => {
 
 	marketAlerts.addEvent(
 		'instrumentUpdate',
-		config.eventChannels.SOCKETS,
+		parameters.messageChannels.SOCKETS,
 		[
-			parametersList.USER_ID,
-			parametersList.INSTRUMENT,
-			parametersList.INSTRUMENT_STATUS
+			parameters.user.USER_ID,
+			parameters.user.INSTRUMENT,
+			parameters.user.INSTRUMENT_STATUS
 		],
 		function(data) {
 			//usersManagement.updateInstrument(data);
@@ -216,18 +212,18 @@ module.exports = (marketAlerts, usersManagement) => {
 			let user = usersManagement.getUser(id);
 			if (!user) return;
 			let io = marketAlerts.getSocketsConnection();
-			const instrument = parametersList.INSTRUMENT + '-' + data[parametersList.INSTRUMENT];
-			let pairs = user[parametersList.PAIRS].filter(pair => pair !== instrument);
+			const instrument = parameters.user.INSTRUMENT + '-' + data[parameters.user.INSTRUMENT];
+			let pairs = user[parameters.user.PAIRS].filter(pair => pair !== instrument);
 			
-			if(data[parametersList.INSTRUMENT_STATUS]) {
+			if(data[parameters.user.INSTRUMENT_STATUS]) {
 				pairs.push(instrument);
 			}
 
 			// Update pairs array
-			user[parametersList.PAIRS] = [...pairs];
+			user[parameters.user.PAIRS] = [...pairs];
 			
 			// Join/Leave room 
-			user[parametersList.SOCKETS].forEach(socketData => {
+			user[parameters.messageChannels.SOCKETS].forEach(socketData => {
 				let socket = usersManagement.getSocket(socketData.SOCKET_ID, io);
 				usersManagement.joinRooms(socket, pairs);
 			})

@@ -4,15 +4,15 @@ const parameters = require('../parameters');
 module.exports = (directMessaging, usersManagement, adminManagement) => {
 	directMessaging.addEvent(
 		'adminConnect',
-		config.eventChannels.SOCKETS,
+		parameters.messageChannels.SOCKETS,
 		[
 			parameters.user.USERNAME,
-			parameters.user.SOCKET_ID
+			parameters.messageChannels.SOCKET_ID
 		],
 		function(data) {
 			let user;
 			const username = data[parameters.admin.USERNAME];
-			const socketId = data[parameters.user.SOCKET_ID];
+			const socketId = data[parameters.messageChannels.SOCKET_ID];
 
 			const userModel = adminManagement.getUserModel();
 			
@@ -23,20 +23,20 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 			user = users[username];
 
 			user[parameters.messageChannels.SOCKETS].forEach(socket => {
-				socket[parameters.user.SOCKET_ACTIVE] = false;
+				socket[parameters.messageChannels.SOCKET_ACTIVE] = false;
 			});
 			
 			let sockets = [];
 			
-			sockets = user[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.user.SOCKET_ID] !== data[parameters.user.SOCKET_ID]);
+			sockets = user[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] !== data[parameters.messageChannels.SOCKET_ID]);
 
 			sockets.push({
-				[parameters.user.SOCKET_ID]: data[parameters.user.SOCKET_ID],
-				[parameters.user.SOCKET_ACTIVE]: true,
+				[parameters.messageChannels.SOCKET_ID]: data[parameters.messageChannels.SOCKET_ID],
+				[parameters.messageChannels.SOCKET_ACTIVE]: true,
 				[parameters.admin.USERNAME]: data[parameters.admin.USERNAME]
 			});
 			let io = directMessaging.getSocketsConnection();
-			let socket = adminManagement.getSocket(data[parameters.user.SOCKET_ID], io);
+			let socket = adminManagement.getSocket(data[parameters.messageChannels.SOCKET_ID], io);
 			
 
 			user[parameters.messageChannels.SOCKETS] = [...sockets];
@@ -53,15 +53,15 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 
 	directMessaging.addEvent(
 		'adminPushRegister',
-		config.eventChannels.SOCKETS,
+		parameters.messageChannels.SOCKETS,
 		[
 			parameters.admin.USERNAME,
-			parameters.user.TOKEN
+			parameters.messageChannels.TOKEN
 		],
 		function(data) {
 			let user = adminManagement.getUser(data[parameters.admin.USERNAME]);
 			if(!user) return;
-			user[parameters.user.TOKEN] = data[parameters.user.TOKEN];
+			user[parameters.messageChannels.TOKEN] = data[parameters.messageChannels.TOKEN];
 			user[parameters.general.SERVER_ID] = data[parameters.general.SERVER_ID];		
 		}
 	)

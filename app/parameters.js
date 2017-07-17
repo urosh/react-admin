@@ -16,6 +16,13 @@ const marketAlerts = {
 	PRICE: 'price',
 	CODE: 'code',
 	EVENTID: 'eventID',
+	TITLE: 'title',
+	DETAIL: 'detail',
+	MESSAGE: 'message',
+	SOCKET_MESSAGE: 'socketMessage',
+	PUSH_URL: 'pushUrl',
+	MESSAGE_TYPE: 'messageType'
+
 };
 
 const general = {
@@ -25,29 +32,21 @@ const general = {
 	METHOD: 'method',
 	URL: 'url',
 	DATA: 'data',
+	SCREEN: 'screen'
 }
 
 const user = {
 	USER_ID: 'userID',
-	MACHINE_HASH: 'machineHash',
+	
 	USER_LOGGED_IN: 'userLoggedIn',
 	TEST_ENABLED: 'testEnabled',
 	MARKET_ALERT_ALLOW: 'marketAlertAllow',
 	LANGUAGE: 'language',
 	CULTURE: 'culture',
 	PAIRS: 'pairs',
-	TOKEN: 'token',
-	OLD_TOKEN: 'oldToken',
-	NEW_TOKEN: 'newToken',
-	SYSTEM: 'system',
-	SOCKET_ID: 'socketID',
-	SOCKET_ACTIVE: 'socketActive',
-	TAB_ACTIVE: 'tabActive',
+	
 	INSTRUMENT: 'instrument',
 	INSTRUMENT_STATUS: 'instrumentStatus',
-	PUSH_ENABLED: 'pushEnabled',
-	PUSH_ACTIVE: 'pushActive',
-	NOTIFICATION_DELIVERY_METHOD: 'notificationDeliveryMethod',
 	ACCOUNT_BASE_CURRENCY: 'accountBaseCurrency',
 	ALLOW_DEPOSIT: 'allowDeposit',
 	ALLOW_WITHDRAWAL: 'allowWithdrawal',
@@ -79,7 +78,19 @@ const messageChannels = {
 	ROUTES : 'routes',
 	REDIS: 'redis',
 	POST: 'post',
-	GET: 'get'
+	GET: 'get',
+	SOCKET_ID: 'socketID',
+	SOCKET_ACTIVE: 'socketActive',
+	TAB_ACTIVE: 'tabActive',
+	PUSH_ENABLED: 'pushEnabled',
+	PUSH_ACTIVE: 'pushActive',
+	NOTIFICATION_DELIVERY_METHOD: 'notificationDeliveryMethod',
+	TOKEN: 'token',
+	OLD_TOKEN: 'oldToken',
+	NEW_TOKEN: 'newToken',
+	MACHINE_HASH: 'machineHash',
+	SYSTEM: 'system',
+
 }
 
 const tracking = {

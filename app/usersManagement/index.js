@@ -7,37 +7,37 @@ const _ = require('lodash');
 
 module.exports = function(){
 	const socketConnection = {
-		[parameters.user.SOCKET_ID]: '',
-		[parameters.user.SOCKET_ACTIVE]: '',
+		[parameters.messageChannels.SOCKET_ID]: '',
+		[parameters.messageChannels.SOCKET_ACTIVE]: '',
 		[parameters.user.LANGUAGE]: '',
-		[parameters.user.MACHINE_HASH]: ''
+		[parameters.messageChannels.MACHINE_HASH]: ''
 	};
 
 	const browser = {
-		[parameters.user.MACHINE_HASH]: '',
-		[parameters.user.TOKEN]: '',
+		[parameters.messageChannels.MACHINE_HASH]: '',
+		[parameters.messageChannels.TOKEN]: '',
 		[parameters.user.LANGUAGE]: '',
-		[parameters.user.PUSH_ENABLED]: false,
+		[parameters.messageChannels.PUSH_ENABLED]: false,
 		[parameters.user.TEST_ENABLED]: false,
-		[parameters.user.PUSH_ACTIVE]: false
+		[parameters.messageChannels.PUSH_ACTIVE]: false
 	}
 
 	const push = {
-		[parameters.user.MACHINE_HASH]: '',
-		[parameters.user.TOKEN]: '',
+		[parameters.messageChannels.MACHINE_HASH]: '',
+		[parameters.messageChannels.TOKEN]: '',
 		[parameters.user.LANGUAGE]: '',
-		[parameters.user.PUSH_ACTIVE]: false
+		[parameters.messageChannels.PUSH_ACTIVE]: false
 	}
 
 	const mobile = {
-		[parameters.user.TOKEN]: '',
+		[parameters.messageChannels.TOKEN]: '',
 		[parameters.user.LANGUAGE]: ''
 	}
 
 	const user = {
 		[parameters.user.USER_ID]: '',
-		[parameters.user.MACHINE_HASH]: '',
-		[parameters.user.TOKEN]: '',
+		[parameters.messageChannels.MACHINE_HASH]: '',
+		[parameters.messageChannels.TOKEN]: '',
 		[parameters.user.USER_LOGGED_IN]: false,
 		[parameters.user.PAIRS]: [],
 		[parameters.user.TEST_ENABLED]: false,
@@ -83,7 +83,7 @@ module.exports = function(){
 		return Object.keys(users)
 			.map(id => users[id])
 			.filter(user => {
-				return (user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.user.TOKEN] === token)).length
+				return (user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] === token)).length
 			})[0]
 	}
 	/* 
@@ -96,7 +96,7 @@ module.exports = function(){
 	 * @return string id. 
 	 */
 	const getUserId = data => {
-		return data[parameters.user.USER_ID] || data[parameters.user.MACHINE_HASH] || data[parameters.user.TOKEN];
+		return data[parameters.user.USER_ID] || data[parameters.messageChannels.MACHINE_HASH] || data[parameters.messageChannels.TOKEN];
 	}
 
 	/*
@@ -128,7 +128,7 @@ module.exports = function(){
 		if(instrument.indexOf(parameters.user.INSTRUMENT) > -1) {
 			rooms.push(socket[parameters.user.LANGUAGE] + '-' + instrument);
 			if(socket[parameters.user.TEST_ENABLED]) {
-				rooms.push(parameters.general.TEST + '-' + socket[parametersList.LANGUAGE] + '-' + instrument)
+				rooms.push(parameters.general.TEST + '-' + socket[parameters.user.LANGUAGE] + '-' + instrument)
 			}
 		}else{
 			rooms.push(instrument);
@@ -139,10 +139,10 @@ module.exports = function(){
 	const getIdParameter = user => {
 		if(user[parameters.user.USER_ID]) {
 			return parameters.user.USER_ID;
-		}else if(user[parameters.user.MACHINE_HASH]){
-			return parameters.user.MACHINE_HASH;
+		}else if(user[parameters.messageChannels.MACHINE_HASH]){
+			return parameters.messageChannels.MACHINE_HASH;
 		}else{
-			return parameters.user.TOKEN;
+			return parameters.messageChannels.TOKEN;
 		}
 	}
 	/*
@@ -196,7 +196,7 @@ module.exports = function(){
 		const language = data[parameters.user.LANGUAGE];
 		const culture = data[parameters.user.CULTURE];
 		const usersPairs = data[parameters.user.PAIRS];
-		const machineHash = data[parameters.user.MACHINE_HASH];
+		const machineHash = data[parameters.messageChannels.MACHINE_HASH];
 		const userId = data[parameters.user.USER_ID];
 		const marketAlertAllow = data[parameters.user.MARKET_ALERT_ALLOW];
 		const testEnabled = data[parameters.user.TEST_ENABLED];
@@ -266,25 +266,25 @@ module.exports = function(){
 	const getSocketObject = (id, socketId) => {
 		const user = users[id];
 		if(!user) return null;
-		return user[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.user.SOCKET_ID] === socketId)[0];
+		return user[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] === socketId)[0];
 	}
 
 	const getPushObject = (id, machineHash) => {
 		const user = users[id];
 		if(!user) return null;
-		return user[parameters.messageChannels.PUSH].filter(machine => machine[parameters.user.MACHINE_HASH] === machineHash)[0];
+		return user[parameters.messageChannels.PUSH].filter(machine => machine[parameters.messageChannels.MACHINE_HASH] === machineHash)[0];
 	}
 
 	const getBrowserObject = (id, machineHash) => {
 		const user = users[id];
 		if(!user) return null;
-		return user[parameters.messageChannels.BROWSERS].filter(machine => machine[parameters.user.MACHINE_HASH] === machineHash)[0];
+		return user[parameters.messageChannels.BROWSERS].filter(machine => machine[parameters.messageChannels.MACHINE_HASH] === machineHash)[0];
 	}
 
 	const getMobileObject = (id, token) => {
 		const user = users[id];
 		if(!user) return null;
-		return user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.user.TOKEN] === token)[0];
+		return user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] === token)[0];
 	}
 
 	const getMobileObjectFromToken = token => {
@@ -293,8 +293,8 @@ module.exports = function(){
 		return Object.keys(users)
 			.map(id => users[id])
 			.reduce((prev, current) => {
-				if(prev[parameters.user.TOKEN]) return prev;
-				let res = current[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.user.TOKEN] === token);
+				if(prev[parameters.messageChannels.TOKEN]) return prev;
+				let res = current[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] === token);
 				if(res.length) return res[0];
 				return {};
 			}, false)
@@ -306,8 +306,8 @@ module.exports = function(){
 		return Object.keys(users)
 			.map(id => users[id])
 			.reduce((prev, current) => {
-				if(prev[parameters.user.MACHINE_HASH]) return prev;
-				let res = current[parameters.messageChannels.BROWSERS].filter(browser => browser[parameters.user.MACHINE_HASH] === machineHash);
+				if(prev[parameters.messageChannels.MACHINE_HASH]) return prev;
+				let res = current[parameters.messageChannels.BROWSERS].filter(browser => browser[parameters.messageChannels.MACHINE_HASH] === machineHash);
 				if(res.length) return res[0];
 				return {};
 			}, false)
@@ -319,8 +319,8 @@ module.exports = function(){
 		return Object.keys(users)
 			.map(id => users[id])
 			.reduce((prev, current) => {
-				if(prev[parameters.user.SOCKET_ID]) return prev;
-				let res = current[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.user.SOCKET_ID] === id);
+				if(prev[parameters.messageChannels.SOCKET_ID]) return prev;
+				let res = current[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] === id);
 				if(res.length) return res[0];
 				return {};
 			}, false)
@@ -331,7 +331,7 @@ module.exports = function(){
 			.map(id => users[id])
 			.reduce((prev, current) => {
 				if(prev) return prev;
-				let res = current[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.user.SOCKET_ID] === socketId);
+				let res = current[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] === socketId);
 				if(res.length) return current;
 				return null;
 			}, false)
@@ -348,7 +348,7 @@ module.exports = function(){
 		
 		let push = [].concat.apply([], pushRegistrations);
 		
-		return push.filter(push => push[parameters.user.PUSH_ACTIVE])
+		return push.filter(push => push[parameters.messageChannels.PUSH_ACTIVE])
 			.filter(push => push[parameters.general.SERVER_ID] === serverID);
 	}
 
@@ -371,7 +371,7 @@ module.exports = function(){
 		Object.keys(users)
 			.map(id => users[id])
 			.map(user => {
-				user[parameters.messageChannels.PUSH] = user[parameters.messageChannels.PUSH].filter(push => push[parameters.user.TOKEN] !== token);
+				user[parameters.messageChannels.PUSH] = user[parameters.messageChannels.PUSH].filter(push => push[parameters.messageChannels.TOKEN] !== token);
 				return user;
 			});
 	}
@@ -381,7 +381,7 @@ module.exports = function(){
 		Object.keys(users)
 			.map(id => users[id])
 			.map(user => {
-				user[parameters.messageChannels.BROWSERS] = user[parameters.messageChannels.BROWSERS].filter(browser => browser[parameters.user.MACHINE_HASH] !== machineHash);
+				user[parameters.messageChannels.BROWSERS] = user[parameters.messageChannels.BROWSERS].filter(browser => browser[parameters.messageChannels.MACHINE_HASH] !== machineHash);
 				return user;
 			});
 	}

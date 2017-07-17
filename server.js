@@ -23,12 +23,12 @@ const socketIO = require('socket.io');
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 
-const parametersList = require('./app/config').parametersList;
+const parameters = require('./app/parameters')
 const Connections = require('./lib/connections');
 
-const marketAlerts = new Connections(http, app, parametersList);
+const marketAlerts = new Connections(http, app, parameters);
 const webeyezRedis = new Connections(http, app);
-const directMessaging = new Connections(http, app, parametersList);
+const directMessaging = new Connections(http, app, parameters);
 
 const marketAlertsConfig = require('./app/config');
 const Users = require('./app/usersManagement');
@@ -53,11 +53,11 @@ serverIdGenerator()
 	.then(serverSettings => {
 		usersManagement.init();
 
-		usersManagement.setServerId(serverSettings[parametersList.SERVER_ID]);
+		usersManagement.setServerId(serverSettings[parameters.general.SERVER_ID]);
 
 		marketAlerts.init({
 			name: 'Market Alerts',
-			serverID: serverSettings[parametersList.SERVER_ID],
+			serverID: serverSettings[parameters.general.SERVER_ID],
 			useMssql: true,
 			socket: {
 				origins: marketAlertsConfig.socketOrigins,
@@ -90,7 +90,7 @@ serverIdGenerator()
 		
 		webeyezRedis.init({
 			name: 'Webeyez Redis',
-			serverID: serverSettings[parametersList.SERVER_ID],
+			serverID: serverSettings[parameters.general.SERVER_ID],
 			useMssql: false,
 			redis: {
 				host: marketAlertsConfig.webeyezRedisHost,
@@ -100,7 +100,7 @@ serverIdGenerator()
 
 		directMessaging.init({
 			name: 'Direct Messaging',
-			serverID: serverSettings[parametersList.SERVER_ID],
+			serverID: serverSettings[parameters.general.SERVER_ID],
 			useMssql: false,
 			socket: {
 				origins: 'lcl.live.new.com:*',

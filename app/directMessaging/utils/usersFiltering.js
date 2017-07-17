@@ -25,7 +25,7 @@ module.exports = () => {
 			.filter(user => {
 				return user[parameters.messageChannels.SOCKETS].reduce((prev, curr) => {
 						if(prev) return true;
-						return curr[parameters.user.SOCKET_ACTIVE];
+						return curr[parameters.messageChannels.SOCKET_ACTIVE];
 					}, false);
 			})
 			.filter(user => (!filters.selectedUsers.length || filters.selectedUsers.indexOf(user[parameters.user.USER_ID]) > -1))
@@ -46,7 +46,7 @@ module.exports = () => {
 				return user[parameters.messageChannels.SOCKETS]
 					.reduce((prev, curr) => {
 						if(prev) return true;
-						return curr[parameters.user.SOCKET_ACTIVE];
+						return curr[parameters.messageChannels.SOCKET_ACTIVE];
 					}, false);
 			})
 			.filter(user => !filters.selectedUsers.length);
@@ -56,7 +56,7 @@ module.exports = () => {
 			.filter(user => {
 				return user[parameters.messageChannels.PUSH].reduce((prev, curr) => {
 						if(prev) return true;
-						return curr[parameters.user.PUSH_ACTIVE];
+						return curr[parameters.messageChannels.PUSH_ACTIVE];
 					}, false);
 			})
 			.filter(user => {

@@ -1,7 +1,6 @@
 "use strict";
 
-const config = require('../config');
-const parametersList = config.parametersList;
+const parameters = require('../parameters');
 const _ = require('lodash');
 
 module.exports  = (marketAlerts, usersManagement) => {
@@ -9,14 +8,14 @@ module.exports  = (marketAlerts, usersManagement) => {
 	// Mobile App Api methods
 	marketAlerts.addEvent(
 		'mobileConnect',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[
-			parametersList.USER_ID,
-			parametersList.LANGUAGE,
-			parametersList.CULTURE,
-			parametersList.TOKEN,
-			parametersList.SYSTEM,
-			parametersList.NOTIFICATION_DELIVERY_METHOD
+			parameters.user.USER_ID,
+			parameters.user.LANGUAGE,
+			parameters.user.CULTURE,
+			parameters.messageChannels.TOKEN,
+			parameters.messageChannels.SYSTEM,
+			parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD
 		],
 		function(data) {
 			// Mobile registration function
@@ -28,22 +27,22 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let user;
 			users[id] = Object.assign({}, userModel, users[id]);
 			user = users[id];
-			user[parametersList.TOKEN] = data[parametersList.TOKEN];
-			user[parametersList.USER_ID] = data[parametersList.USER_ID];
+			user[parameters.messageChannels.TOKEN] = data[parameters.messageChannels.TOKEN];
+			user[parameters.user.USER_ID] = data[parameters.user.USER_ID];
 
-			let mobiles = user[parametersList.MOBILES].filter(mobile => mobile[parametersList.TOKEN] !== data[parametersList.TOKEN] );
+			let mobiles = user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] !== data[parameters.messageChannels.TOKEN] );
 			
 			// Remove all references to the current mobile device
 			Object.keys(users)
 				.map(id => users[id])
 				.map(user => {
-					user[parametersList.MOBILES] = user[parametersList.MOBILES].filter(mobile => {
-						mobile[parametersList.TOKEN] !== data[parametersList.TOKEN];
+					user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile => {
+						mobile[parameters.messageChannels.TOKEN] !== data[parameters.messageChannels.TOKEN];
 					});
 				});
 
 			mobiles.push(data);
-			user[parametersList.MOBILES] = [...mobiles];
+			user[parameters.messageChannels.MOBILES] = [...mobiles];
 			usersManagement.updateUserDatabaseRecord(user);
 
 		},
@@ -54,19 +53,19 @@ module.exports  = (marketAlerts, usersManagement) => {
 
 	marketAlerts.addEvent(
 		'mobileLogout',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[
-			parametersList.TOKEN,
-			parametersList.USER_ID,
+			parameters.messageChannels.TOKEN,
+			parameters.user.USER_ID,
 		],
 		function(data) {
 			// Mobile registration function
 			//usersManagement.mobileLogout(data);
 			let mobileData;
 			let users = usersManagement.getUsers();
-			let mobileObject = usersManagement.getMobileObject(data[parametersList.USER_ID], data[parametersList.TOKEN]);
+			let mobileObject = usersManagement.getMobileObject(data[parameters.user.USER_ID], data[parameters.messageChannels.TOKEN]);
 			if(!mobileObject) return;
-			mobileObject[parametersList.USER_ID] = null;
+			mobileObject[parameters.user.USER_ID] = null;
 			usersManagement.updateUserDatabaseRecord(user);
 		},
 		'post',
@@ -76,30 +75,30 @@ module.exports  = (marketAlerts, usersManagement) => {
 
 	marketAlerts.addEvent(
 		'mobileTokenUpdate',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[
-			parametersList.OLD_TOKEN,
-			parametersList.NEW_TOKEN,
+			parameters.messageChannels.OLD_TOKEN,
+			parameters.messageChannels.NEW_TOKEN,
 		],
 		function(data) {
 			// Mobile registration function
-			const oldToken = data[parametersList.OLD_TOKEN];
-			const newToken = data[parametersList.NEW_TOKEN];
+			const oldToken = data[parameters.messageChannels.OLD_TOKEN];
+			const newToken = data[parameters.messageChannels.NEW_TOKEN];
 			let users = usersManagement.getUsers();
 			let user = usersManagement.getMobileUser(oldToken);
 			
 			if(!user) return;
 			
-			let oldId = user[parametersList.USER_ID] ? user[parametersList.USER_ID] : oldToken;
-			let newId = user[parametersList.USER_ID] ? user[parametersList.USER_ID] : newToken;
+			let oldId = user[parameters.user.USER_ID] ? user[parameters.user.USER_ID] : oldToken;
+			let newId = user[parameters.user.USER_ID] ? user[parameters.user.USER_ID] : newToken;
 			let mobileObject = usersManagement.getMobileObject(oldId, oldToken);
 			users[newId] = _.cloneDeep(users[oldId]);
 			
 			if(mobileObject) {
-				mobileObject[parametersList.TOKEN] = newToken;
+				mobileObject[parameters.messageChannels.TOKEN] = newToken;
 			} 
 
-			if(!user[parametersList.USER_ID]) {
+			if(!user[parameters.user.USER_ID]) {
 				usersManagement.updateUserDatabaseRecord(users[oldToken]);
 				delete users[oldToken];
 			}
@@ -114,16 +113,16 @@ module.exports  = (marketAlerts, usersManagement) => {
 
 	marketAlerts.addEvent(
 		'mobileDelete',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[
-			parametersList.TOKEN
+			parameters.messageChannels.TOKEN
 		],
 		function(data) {
 			// Mobile registration function
-			const token = data[parametersList.TOKEN];
+			const token = data[parameters.messageChannels.TOKEN];
 			let user = usersManagement.getMobileUser(token);
 			if(!user) return;
-			user[parametersList.MOBILES] = user[parametersList.MOBILES].filter(mobile => mobile[parametersList.TOKEN] !== token);
+			user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] !== token);
 			usersManagement.cleanUsersObject();
 		},
 		'post',

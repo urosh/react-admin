@@ -1,7 +1,7 @@
 "use strict";
 
 const config = require('../config');
-const parametersList = config.parametersList;
+const parameters = require('../parameters');
 const languages = config.languages;
 const _ = require('lodash');
 const uidGenerator = require('./utils/uidGenerator');
@@ -22,30 +22,30 @@ const clientMessageValidation = (data) => {
 	}
 	var requestData = data.body;
 	
-	if(!requestData[parametersList.FILTERS]) {
+	if(!requestData[parameters.admin.FILTERS]) {
 		return {
 			error: 'Filters are not defined'
 		}
 	};
 
 	
-	if(!requestData[parametersList.PUSH]) {
+	if(!requestData[parameters.messageChannels.PUSH]) {
 		return {
 			error: 'Bad data format recieved.'
 		}
 	}
 
-	if(!requestData[parametersList.SOCKETS]) {
+	if(!requestData[parameters.messageChannels.SOCKETS]) {
 		return {
 			error: 'Bad data format recieved.'
 		}
 	}
 
 	Object.keys(requestData.push.title).forEach(lang => {
-		if(requestData[parametersList.PUSH].text[lang] !== ''){
-			requestData[parametersList.PUSH].text[lang] = requestData[parametersList.PUSH].text[lang];
-			requestData[parametersList.SOCKETS].text[lang] = requestData[parametersList.SOCKETS].text[lang];
-			requestData[parametersList.PUSH].title[lang] = setEventDate() + ' GMT';
+		if(requestData[parameters.messageChannels.PUSH].text[lang] !== ''){
+			requestData[parameters.messageChannels.PUSH].text[lang] = requestData[parameters.messageChannels.PUSH].text[lang];
+			requestData[parameters.messageChannels.SOCKETS].text[lang] = requestData[parameters.messageChannels.SOCKETS].text[lang];
+			requestData[parameters.messageChannels.PUSH].title[lang] = setEventDate() + ' GMT';
 		}
 	});
 	
@@ -59,9 +59,9 @@ const clientMessageValidation = (data) => {
 
 const formatAlertMessage = (message, language) => {
 	return {
-		message: message[parametersList.SOCKETS].text[language],
+		message: message[parameters.messageChannels.SOCKETS].text[language],
         url: message.action[language],
-        title: message[parametersList.SOCKETS].title[language],
+        title: message[parameters.messageChannels.SOCKETS].title[language],
         triggerID: message.triggerID,
         messageTime: message.messageTime
 	}
@@ -71,8 +71,8 @@ const formatPushMessage = (message, language, user, push) => {
 	let result = {
 		collapse_key: 'Client Message',
 		data: {
-			title: message[parametersList.PUSH].title[language],
-			detail: message[parametersList.PUSH].text[language],
+			title: message[parameters.messageChannels.PUSH].title[language],
+			detail: message[parameters.messageChannels.PUSH].text[language],
 			pushUrl: message.action[language],
 			triggerID: message.triggerID,
 			messageType: 'Client Message',
@@ -80,11 +80,11 @@ const formatPushMessage = (message, language, user, push) => {
 		}
 	}
 	if(user) {
-		result.data[parametersList.TOKEN] = push[parametersList.TOKEN];
-		result.to = push[parametersList.TOKEN];
+		result.data[parameters.messageChannels.TOKEN] = push[parameters.messageChannels.TOKEN];
+		result.to = push[parameters.messageChannels.TOKEN];
 	}
 	if(push) {
-		result.data[parametersList.MACHINE_HASH] = push[parametersList.MACHINE_HASH];
+		result.data[parameters.messageChannels.MACHINE_HASH] = push[parameters.messageChannels.MACHINE_HASH];
 
 	}
 	return result;
@@ -96,11 +96,11 @@ module.exports  = (directMessaging, usersManagement, adminManagement) => {
 	// Mobile App Api methods
 	directMessaging.addEvent(
 		'messagePreview',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[
-			parametersList.FILTERS,
-			parametersList.PUSH,
-			parametersList.SOCKETS
+			parameters.admin.FILTERS,
+			parameters.messageChannels.PUSH,
+			parameters.messageChannels.SOCKETS
 		],
 		function(req, res) {
 			
@@ -117,18 +117,18 @@ module.exports  = (directMessaging, usersManagement, adminManagement) => {
 			Object.keys(languages).forEach(code => {
 
 				let language = languages[code];
-				if(message[parametersList.SOCKETS].text[language]){
+				if(message[parameters.messageChannels.SOCKETS].text[language]){
 					var socketMessage = formatAlertMessage(message, language);
 					io.sockets.in(message.adminUsername).emit('clientNotificationPreview', socketMessage);
 				}
 
-				if(adminUser[parametersList.TOKEN] && message[parametersList.PUSH].text[language]){
+				if(adminUser[parameters.messageChannels.TOKEN] && message[parameters.messageChannels.PUSH].text[language]){
 					var notificationMessage = formatPushMessage(message, language);
-					notificationMessage.to = adminUser[parametersList.TOKEN];
+					notificationMessage.to = adminUser[parameters.messageChannels.TOKEN];
 					
 					adminFcm.send(notificationMessage, function(err, response){
 					    if (err) {
-					    	console.log(`FCM-Sending message to browser: [${adminUser[parametersList.TOKEN]}]`.red + ` Error: ${err}`);
+					    	console.log(`FCM-Sending message to browser: [${adminUser[parameters.messageChannels.TOKEN]}]`.red + ` Error: ${err}`);
 					    	return;
 					    }
 					});
@@ -143,10 +143,10 @@ module.exports  = (directMessaging, usersManagement, adminManagement) => {
 	
 	directMessaging.addEvent(
 		'messageSend',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[
-			parametersList.TOKEN,
-			parametersList.USER_ID,
+			parameters.messageChannels.TOKEN,
+			parameters.user.USER_ID,
 		],
 		function(req, res) {
 			let message = clientMessageValidation(req);
@@ -160,18 +160,18 @@ module.exports  = (directMessaging, usersManagement, adminManagement) => {
 				.map(code => languages[code])
 				.forEach(language => {
 					// Send alerts
-					if(message[parametersList.SOCKETS].text[language]){
+					if(message[parameters.messageChannels.SOCKETS].text[language]){
 						recipients.userInfo.alerts.forEach(user => {
 							let messageData = formatAlertMessage(message, language);
-							let room = language + '-' + user[parametersList.USER_ID]
+							let room = language + '-' + user[parameters.user.USER_ID]
 							io.sockets.in(room).emit('client-notification', messageData);						
 						})
 					}
 
-					if(message[parametersList.PUSH].text[language]){
+					if(message[parameters.messageChannels.PUSH].text[language]){
 						recipients.userInfo.push.forEach(user => {
-							user[parametersList.PUSH].forEach(push => {
-								if(push[parametersList.LANGUAGE] === language && push[parametersList.PUSH_ACTIVE]){
+							user[parameters.messageChannels.PUSH].forEach(push => {
+								if(push[parameters.user.LANGUAGE] === language && push[parameters.messageChannels.PUSH_ACTIVE]){
 									let notificationMessage = formatPushMessage(message, language, user, push);
 									clientFcm.send(notificationMessage, function(err, response){
 									    if (err) {

@@ -1,19 +1,18 @@
 "use strict";
-const config = require('../config');
-const parametersList = config.parametersList;
+const parameters = require('../parameters');
 
 module.exports  = (marketAlerts, usersManagement) => {
 
 	// Api methods for retrieving stats about users
 	marketAlerts.addEvent(
 		'/api/fetch/users',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			const users = usersManagement.getUsers();
 			const loggedInUsers = Object.keys(users)
 				.map(id => users[id])
-				.filter(user => user[parametersList.USER_ID]);
+				.filter(user => user[parameters.user.USER_ID]);
 			res.send(loggedInUsers);
 		},
 		'get'
@@ -22,13 +21,13 @@ module.exports  = (marketAlerts, usersManagement) => {
 	// Api methods for retrieving list of logged out users
 	marketAlerts.addEvent(
 		'/api/fetch/visitors',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			const users = usersManagement.getUsers();
 			const loggedOutUsers = Object.keys(users)
 				.map(id => users[id])
-				.filter(user => !user[parametersList.USER_ID]);
+				.filter(user => !user[parameters.user.USER_ID]);
 			res.send(loggedOutUsers);
 		},
 		'get'
@@ -38,13 +37,13 @@ module.exports  = (marketAlerts, usersManagement) => {
 	// Api method for retrieving a list of users with push notifications enabled
 	marketAlerts.addEvent(
 		'/api/fetch/push',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			const users = usersManagement.getUsers();
 			const pushUsers = Object.keys(users)
 				.map(id => users[id])
-				.filter(user => user[parametersList.PUSH].length);
+				.filter(user => user[parameters.messageChannels.PUSH].length);
 			res.send(pushUsers);
 		},
 		'get'
@@ -53,13 +52,13 @@ module.exports  = (marketAlerts, usersManagement) => {
 	// Api method for retrieving a list of mobile app users
 	marketAlerts.addEvent(
 		'/api/fetch/mobiles',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			const users = usersManagement.getUsers();
 			const mobileUsers = Object.keys(users)
 				.map(id => users[id])
-				.filter(user => user[parametersList.MOBILES].length);
+				.filter(user => user[parameters.messageChannels.MOBILES].length);
 			res.send(mobileUsers);
 		},
 		'get'
@@ -67,7 +66,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	
 	marketAlerts.addEvent(
 		'/test',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			res.send(usersManagement.getUsers());

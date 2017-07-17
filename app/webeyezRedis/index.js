@@ -1,10 +1,9 @@
 "use strict";
-const config = require('../config');
-const parametersList = config.parametersList;
+const parameters = require('../parameters');
 
 module.exports = function(webeyezRedis, usersManagement){
 	webeyezRedis.addEvent('UserSettingsChanged', 
-		config.eventChannels.REDIS, 
+		parameters.messageChannels.REDIS, 
 		[],
 		function(data) {
 			console.log('We received event from webeyezRedis');

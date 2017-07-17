@@ -5,8 +5,8 @@ const parameters = require('../app/parameters');
 const usersSchema = new Schema({
 	[parameters.user.USER_ID]: String,
 	[parameters.user.USER_LOGGED_IN]: Boolean,
-	[parameters.user.MACHINE_HASH]: String,
-	[parameters.user.TOKEN]: String,
+	[parameters.messageChannels.MACHINE_HASH]: String,
+	[parameters.messageChannels.TOKEN]: String,
 	[parameters.user.PAIRS]: Array,
 	[parameters.user.TEST_ENABLED]: Boolean,
 	[parameters.user.MARKET_ALERT_ALLOW]: Boolean,

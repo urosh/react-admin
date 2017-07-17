@@ -1,34 +1,33 @@
 "use strict";
-const config = require('../config');
-const parametersList = config.parametersList;
+const parameters = require('../parameters');
 
 module.exports  = (marketAlerts, usersManagement) => {
 	
 	// Api methods for retrieving stats about users
 	marketAlerts.addEvent(
 		'pushDelivered',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[
-			parametersList.USER_ID,
-			parametersList.MACHINE_HASH,
-			parametersList.USER_LOGGED_IN,
-			parametersList.TRIGGER_ID,
-			parametersList.TRIGGER_TYPE,
-			parametersList.NOTIFICATION_RECEIVED,
-			parametersList.SERVER_ID,
-			parametersList.PUSH_ID
+			parameters.user.USER_ID,
+			parameters.messageChannels.MACHINE_HASH,
+			parameters.user.USER_LOGGED_IN,
+			parameters.tracking.TRIGGER_ID,
+			parameters.tracking.TRIGGER_TYPE,
+			parameters.tracking.NOTIFICATION_RECEIVED,
+			parameters.general.SERVER_ID,
+			parameters.tracking.PUSH_ID
 		],
 		function(req, res) {
 			let pub = marketAlerts.getRedisConnection();
 			let data = req.body;
 			pub.publish('tracking.pushDelivered', JSON.stringify({
-				userID:  data[parametersList.USER_ID],
-				machineHash: data[parametersList.MACHINE_HASH],
-				userLoggedIn: data[parametersList.USER_LOGGED_IN],
-				triggerID: data[parametersList.TRIGGER_ID],
-				triggerType: data[parametersList.TRIGGER_TYPE],
-				notificationRecieved: data[parametersList.NOTIFICATION_RECEIVED],
-				pushID: data[parametersList.PUSH_ID]
+				userID:  data[parameters.user.USER_ID],
+				machineHash: data[parameters.messageChannels.MACHINE_HASH],
+				userLoggedIn: data[parameters.user.USER_LOGGED_IN],
+				triggerID: data[parameters.tracking.TRIGGER_ID],
+				triggerType: data[parameters.tracking.TRIGGER_TYPE],
+				notificationRecieved: data[parameters.tracking.NOTIFICATION_RECEIVED],
+				pushID: data[parameters.tracking.PUSH_ID]
 			}));
 			res.send('ok');
 
@@ -40,29 +39,29 @@ module.exports  = (marketAlerts, usersManagement) => {
 	
 	marketAlerts.addEvent(
 		'pushClicked',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[
-			parametersList.USER_ID,
-			parametersList.MACHINE_HASH,
-			parametersList.USER_LOGGED_IN,
-			parametersList.TRIGGER_ID,
-			parametersList.TRIGGER_TYPE,
-			parametersList.NOTIFICATION_RECEIVED,
-			parametersList.SERVER_ID,
-			parametersList.PUSH_ID
+			parameters.user.USER_ID,
+			parameters.messageChannels.MACHINE_HASH,
+			parameters.user.USER_LOGGED_IN,
+			parameters.tracking.TRIGGER_ID,
+			parameters.tracking.TRIGGER_TYPE,
+			parameters.tracking.NOTIFICATION_RECEIVED,
+			parameters.general.SERVER_ID,
+			parameters.tracking.PUSH_ID
 		],
 		function(req, res) {
 			let pub = marketAlerts.getRedisConnection();
 			let data = req.body;
 			
 			pub.publish('tracking.pushClicked', JSON.stringify({
-				userID:  data[parametersList.USER_ID],
-				machineHash: data[parametersList.MACHINE_HASH],
-				userLoggedIn: data[parametersList.USER_LOGGED_IN],
-				triggerID: data[parametersList.TRIGGER_ID],
-				triggerType: data[parametersList.TRIGGER_TYPE],
-				notificationRecieved: data[parametersList.NOTIFICATION_RECEIVED],
-				pushID: data[parametersList.PUSH_ID],
+				userID:  data[parameters.user.USER_ID],
+				machineHash: data[parameters.messageChannels.MACHINE_HASH],
+				userLoggedIn: data[parameters.user.USER_LOGGED_IN],
+				triggerID: data[parameters.tracking.TRIGGER_ID],
+				triggerType: data[parameters.tracking.TRIGGER_TYPE],
+				notificationRecieved: data[parameters.tracking.NOTIFICATION_RECEIVED],
+				pushID: data[parameters.tracking.PUSH_ID],
 				action: 'clicked',
 				actionTime: new Date()
 			}));
@@ -76,29 +75,29 @@ module.exports  = (marketAlerts, usersManagement) => {
 	
 	marketAlerts.addEvent(
 		'pushClicked',
-		config.eventChannels.ROUTES,
+		parameters.messageChannels.ROUTES,
 		[
-			parametersList.USER_ID,
-			parametersList.MACHINE_HASH,
-			parametersList.USER_LOGGED_IN,
-			parametersList.TRIGGER_ID,
-			parametersList.TRIGGER_TYPE,
-			parametersList.NOTIFICATION_RECEIVED,
-			parametersList.SERVER_ID,
-			parametersList.PUSH_ID
+			parameters.user.USER_ID,
+			parameters.messageChannels.MACHINE_HASH,
+			parameters.user.USER_LOGGED_IN,
+			parameters.tracking.TRIGGER_ID,
+			parameters.tracking.TRIGGER_TYPE,
+			parameters.tracking.NOTIFICATION_RECEIVED,
+			parameters.general.SERVER_ID,
+			parameters.tracking.PUSH_ID
 		],
 		function(req, res) {
 			let pub = marketAlerts.getRedisConnection();
 			let data = req.body;
 			
 			pub.publish('tracking.pushClosed', JSON.stringify({
-				userID:  data[parametersList.USER_ID],
-				machineHash: data[parametersList.MACHINE_HASH],
-				userLoggedIn: data[parametersList.USER_LOGGED_IN],
-				triggerID: data[parametersList.TRIGGER_ID],
-				triggerType: data[parametersList.TRIGGER_TYPE],
-				notificationRecieved: data[parametersList.NOTIFICATION_RECEIVED],
-				pushID: data[parametersList.PUSH_ID],
+				userID:  data[parameters.user.USER_ID],
+				machineHash: data[parameters.messageChannels.MACHINE_HASH],
+				userLoggedIn: data[parameters.user.USER_LOGGED_IN],
+				triggerID: data[parameters.tracking.TRIGGER_ID],
+				triggerType: data[parameters.tracking.TRIGGER_TYPE],
+				notificationRecieved: data[parameters.tracking.NOTIFICATION_RECEIVED],
+				pushID: data[parameters.tracking.PUSH_ID],
 				action: 'closed',
 				actionTime: new Date()
 			}));
@@ -113,9 +112,9 @@ module.exports  = (marketAlerts, usersManagement) => {
 
 	marketAlerts.addEvent(
 		'notificationDelivered', 
-		config.eventChannels.SOCKETS, 
+		parameters.messageChannels.SOCKETS, 
 		[
-			parametersList.SOCKET_ID
+			parameters.messageChannels.SOCKET_ID
 		], 
 		function(data){
 			let pub = marketAlerts.getRedisConnection();
@@ -128,9 +127,9 @@ module.exports  = (marketAlerts, usersManagement) => {
 	
 	marketAlerts.addEvent(
 		'notificationAction', 
-		config.eventChannels.SOCKETS, 
+		parameters.messageChannels.SOCKETS, 
 		[
-			parametersList.SOCKET_ID
+			parameters.messageChannels.SOCKET_ID
 		], 
 		function(data){
 			let pub = marketAlerts.getRedisConnection();
@@ -142,9 +141,9 @@ module.exports  = (marketAlerts, usersManagement) => {
 
 	marketAlerts.addEvent(
 		'notificationVisible', 
-		config.eventChannels.SOCKETS, 
+		parameters.messageChannels.SOCKETS, 
 		[
-			parametersList.SOCKET_ID
+			parameters.messageChannels.SOCKET_ID
 		], 
 		function(data){
 			let pub = marketAlerts.getRedisConnection();
