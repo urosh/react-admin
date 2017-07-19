@@ -176,7 +176,7 @@ const setNotificationTitle = (data, language) => {
 
 // Translate recieved data to a format used on client side
 module.exports = function(requestData) {
-
+	
 	// Default no error
 	var alertData = {};
 	
@@ -224,6 +224,7 @@ module.exports = function(requestData) {
 			alertData.push[language].data['title'] = setNotificationTitle(requestData, language);
 			alertData.push[language].data['pushUrl'] = setNotificationAction(requestData).push;
 			alertData.push[language].data[parameters.tracking.PUSH_SERVER_URL] = requestData.host;
+
 			alertData.push[language].data[parameters.tracking.TRIGGER_ID] = triggerID;
 			alertData.push[language].data[parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
 
@@ -244,8 +245,8 @@ module.exports = function(requestData) {
 			alertData.mobile[language].data[parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
 		});
 
-		alertData[parameters.user.INSTRUMENT] = instrument;
-
-   	return alertData;
+	alertData[parameters.user.INSTRUMENT] = instrument;
+	alertData[parameters.user.INSTRUMENT] = instrument;
+	return alertData;
 };
 

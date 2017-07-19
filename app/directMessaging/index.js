@@ -3,7 +3,6 @@
 module.exports = function(directMessaging, usersManagement){
 	
 	let adminManagement = require('./adminManagement')();
-
 	require('./adminAuthentication')(directMessaging);
 	require('./adminSocketConnections')(directMessaging, usersManagement, adminManagement);
 	require('./messageTriggers')(directMessaging, usersManagement, adminManagement);

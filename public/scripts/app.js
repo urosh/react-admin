@@ -12,8 +12,8 @@
 	});
 
 	// When admin socket connects, still we have nothing to do, or we do?
-	socket.on('connect', () => {
-		
+	socket.on('connect', function(data) {
+		console.log(data);
 		if(username) {
 			socket.emit('adminConnect', { username: username });	
 		}else{
@@ -21,6 +21,10 @@
 		}
 	});
 	
+	socket.on('connected', function(data){
+		console.log('connected');
+		console.log(data);
+	})
 	var panelInitialized = false;
 	
 	function handleAdminConnect(data) {

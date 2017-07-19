@@ -4,9 +4,8 @@ const parameters = require('../parameters');
 module.exports  = (marketAlerts, usersManagement) => {
 	
 	// Api methods for retrieving stats about users
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'pushDelivered',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
@@ -37,9 +36,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 		false
 	)
 	
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'pushClicked',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
@@ -73,9 +71,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 		false
 	)
 	
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'pushClicked',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
@@ -110,9 +107,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 		false
 	)
 
-	marketAlerts.addEvent(
+	marketAlerts.addSocketInEvent(
 		'notificationDelivered', 
-		parameters.messageChannels.SOCKETS, 
 		[
 			parameters.messageChannels.SOCKET_ID
 		], 
@@ -122,12 +118,12 @@ module.exports  = (marketAlerts, usersManagement) => {
 			data.notificationInfoRecieved = new Date();
 			pub.publish('tracking.notificationDelivered', JSON.stringify(data));
 			
-		}
+		},
+		false
 	);
 	
-	marketAlerts.addEvent(
+	marketAlerts.addSocketInEvent(
 		'notificationAction', 
-		parameters.messageChannels.SOCKETS, 
 		[
 			parameters.messageChannels.SOCKET_ID
 		], 
@@ -135,20 +131,21 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let pub = marketAlerts.getRedisConnection();
 			pub.publish('tracking.notificationAction', JSON.stringify(data));
 			
-		}
+		},
+		false
 
 	);
 
-	marketAlerts.addEvent(
+	marketAlerts.addSocketInEvent(
 		'notificationVisible', 
-		parameters.messageChannels.SOCKETS, 
 		[
 			parameters.messageChannels.SOCKET_ID
 		], 
 		function(data){
 			let pub = marketAlerts.getRedisConnection();
 			pub.publish('tracking.notificationVisible', JSON.stringify(data));
-		}
+		},
+		false
 	);
 
 }

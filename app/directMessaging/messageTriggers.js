@@ -94,9 +94,8 @@ module.exports  = (directMessaging, usersManagement, adminManagement) => {
 	
 	const usersFiltering = require('./utils/usersFiltering')(usersManagement);
 	// Mobile App Api methods
-	directMessaging.addEvent(
+	directMessaging.addHttpInEvent(
 		'messagePreview',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.admin.FILTERS,
 			parameters.messageChannels.PUSH,
@@ -141,9 +140,8 @@ module.exports  = (directMessaging, usersManagement, adminManagement) => {
 		false
 	)
 	
-	directMessaging.addEvent(
+	directMessaging.addHttpInEvent(
 		'messageSend',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.messageChannels.TOKEN,
 			parameters.user.USER_ID,

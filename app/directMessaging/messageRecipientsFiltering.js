@@ -5,9 +5,8 @@ const userFiltering = require('./utils/usersFiltering')();
 module.exports = (directMessaging, usersManagement) => {
 	
 
-	directMessaging.addEvent(
+	directMessaging.addSocketInEvent(
 		'recipientStats',
-		parameters.messageChannels.SOCKETS,
 		[
 			parameters.admin.USERNAME,
 			parameters.admin.FILTERS
@@ -22,7 +21,8 @@ module.exports = (directMessaging, usersManagement) => {
 			const usersStats = userFiltering.getUsersList(usersManagement, filters);
 
 			io.sockets.in(data.username).emit(parameters.admin.RECIPIENT_STATS, usersStats);
-		}
+		},
+		false
 	)
 
 

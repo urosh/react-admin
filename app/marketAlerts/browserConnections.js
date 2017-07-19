@@ -3,8 +3,7 @@ const parameters = require('../parameters');
 const _ = require('lodash');
 
 module.exports = (marketAlerts, usersManagement) => {
-	marketAlerts.addEvent('connectBrowser', 
-		parameters.messageChannels.SOCKETS, 
+	marketAlerts.addSocketInEvent('connectBrowser', 
 		[
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.user.USER_ID,
@@ -90,13 +89,13 @@ module.exports = (marketAlerts, usersManagement) => {
 					}));
 				}
 			}
-		}
+		},
+		true
 	);
 
 	// Closing socket connection
-	marketAlerts.addEvent(
+	marketAlerts.addSocketInEvent(
 		'disconnect', 
-		parameters.messageChannels.SOCKETS, 
 		[
 			parameters.messageChannels.SOCKET_ID
 		], 
@@ -120,22 +119,22 @@ module.exports = (marketAlerts, usersManagement) => {
 					pub.publish('tracking.disconnect', JSON.stringify({
 						[parameters.user.USER_ID]: user[parameters.user.USER_ID],
 						[parameters.user.USER_ID]: user[parameters.user.USER_ID] ? true : false,
-						[parametersListparameters.messageChannels.MACHINE_HASH]: socketMachine
+						[parameters.messageChannels.MACHINE_HASH]: socketMachine
 					}))
 				}
 
 			}
 			usersManagement.cleanUsersObject();
-		}
+		},
+		true
 	);
 
 
 	// Browser tab active event handler
-	marketAlerts.addEvent(
+	marketAlerts.addSocketInEvent(
 		'tabVisibilityChange',
-		parameters.messageChannels.SOCKETS,
 		[
-			parameters.messageChannels.USER_ID,
+			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.messageChannels.TAB_ACTIVE,
 		],
@@ -162,14 +161,14 @@ module.exports = (marketAlerts, usersManagement) => {
 				
 				usersManagement.joinRooms(socket, pairs);
 			}
-		}
+		},
+		true
 	)
 
 
 
-	marketAlerts.addEvent(
+	marketAlerts.addSocketInEvent(
 		'updateMarketAlertsSubscription',
-		parameters.messageChannels.SOCKETS,
 		[
 			parameters.user.USER_ID,
 			parameters.user.MARKET_ALERT_ALLOW
@@ -194,13 +193,13 @@ module.exports = (marketAlerts, usersManagement) => {
 			// Block push notifications
 			user[parameters.messageChannels.PUSH].map(push => push[parameters.messageChannels.PUSH_ACTIVE] = marketAlertAllow);
 
-		}
+		},
+		true
 	)
 
 
-	marketAlerts.addEvent(
+	marketAlerts.addSocketInEvent(
 		'instrumentUpdate',
-		parameters.messageChannels.SOCKETS,
 		[
 			parameters.user.USER_ID,
 			parameters.user.INSTRUMENT,
@@ -224,10 +223,39 @@ module.exports = (marketAlerts, usersManagement) => {
 			
 			// Join/Leave room 
 			user[parameters.messageChannels.SOCKETS].forEach(socketData => {
-				let socket = usersManagement.getSocket(socketData.SOCKET_ID, io);
+				let socket = usersManagement.getSocket(socketData[parameters.messageChannels.SOCKET_ID], io);
 				usersManagement.joinRooms(socket, pairs);
 			})
-		}
+		},
+		true
+	)
+
+	marketAlerts.addSocketInEvent(
+		'setMachineInfo',
+		[
+			[parameters.messageChannels.MACHINE_HASH], 
+			[parameters.tracking.USER_AGENT], 
+			[parameters.tracking.IP], 
+			[parameters.tracking.COUNTRY], 
+			[parameters.tracking.LATITUDE], 
+			[parameters.tracking.LONGITUDE], 
+			[parameters.tracking.REGION]
+		],
+		function(data) {
+			let pub =  marketAlerts.getRedisConnection();
+			let io = marketAlerts.getSocketsConnection();
+			
+			pub.publish('tracking.machine', JSON.stringify(data));
+			var startTime = new Date();
+			let socket = usersManagement.getSocket(data[parameters.messageChannels.SOCKET_ID], io);
+
+			socket.emit('latency-check', data, Date.now(), function(startTime, user) {
+			    var latency = Date.now() - startTime;
+			    data.socketLatency = latency;
+				pub.publish('tracking.machine.latency', JSON.stringify(data));
+			});
+		},
+		false
 	)
 }
 

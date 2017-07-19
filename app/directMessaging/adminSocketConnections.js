@@ -1,12 +1,10 @@
 "use strict";
 const parameters = require('../parameters');
-
 module.exports = (directMessaging, usersManagement, adminManagement) => {
-	directMessaging.addEvent(
+	directMessaging.addSocketInEvent(
 		'adminConnect',
-		parameters.messageChannels.SOCKETS,
 		[
-			parameters.user.USERNAME,
+			parameters.admin.USERNAME,
 			parameters.messageChannels.SOCKET_ID
 		],
 		function(data) {
@@ -47,13 +45,13 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 				socket.join(data[parameters.admin.USERNAME]);
 			}
 
-		}
+		},
+		true
 	)
 
 
-	directMessaging.addEvent(
+	directMessaging.addSocketInEvent(
 		'adminPushRegister',
-		parameters.messageChannels.SOCKETS,
 		[
 			parameters.admin.USERNAME,
 			parameters.messageChannels.TOKEN
@@ -63,7 +61,8 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 			if(!user) return;
 			user[parameters.messageChannels.TOKEN] = data[parameters.messageChannels.TOKEN];
 			user[parameters.general.SERVER_ID] = data[parameters.general.SERVER_ID];		
-		}
+		},
+		true
 	)
 
 

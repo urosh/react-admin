@@ -71,7 +71,7 @@ serverIdGenerator()
 				host: marketAlertsConfig.mssqlHost
 			}
 		});
-
+		
 		
 
 
@@ -111,7 +111,7 @@ serverIdGenerator()
 				name: 'redis-cluster'
 			}
 		})
-		
+
 	}).catch(err => {
 		console.error((`There was an error while generating serverID. Server will not handle requests`));
 		console.log(err);

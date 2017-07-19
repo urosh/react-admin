@@ -4,9 +4,8 @@ const parameters = require('../parameters');
 module.exports  = (marketAlerts, usersManagement) => {
 
 	// Api methods for retrieving stats about users
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'/api/fetch/users',
-		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			const users = usersManagement.getUsers();
@@ -19,9 +18,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 	)
 	
 	// Api methods for retrieving list of logged out users
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'/api/fetch/visitors',
-		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			const users = usersManagement.getUsers();
@@ -35,9 +33,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 	
 
 	// Api method for retrieving a list of users with push notifications enabled
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'/api/fetch/push',
-		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			const users = usersManagement.getUsers();
@@ -50,9 +47,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 	)
 	
 	// Api method for retrieving a list of mobile app users
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'/api/fetch/mobiles',
-		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			const users = usersManagement.getUsers();
@@ -64,15 +60,12 @@ module.exports  = (marketAlerts, usersManagement) => {
 		'get'
 	)
 	
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'/test',
-		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			res.send(usersManagement.getUsers());
 		},
 		'get'
 	)
-
-
 }

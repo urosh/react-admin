@@ -6,9 +6,8 @@ const _ = require('lodash');
 module.exports  = (marketAlerts, usersManagement) => {
 	
 	// Mobile App Api methods
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'mobileConnect',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.user.USER_ID,
 			parameters.user.LANGUAGE,
@@ -51,9 +50,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 		true
 	)
 
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'mobileLogout',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.messageChannels.TOKEN,
 			parameters.user.USER_ID,
@@ -73,9 +71,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 		true
 	)
 
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'mobileTokenUpdate',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.messageChannels.OLD_TOKEN,
 			parameters.messageChannels.NEW_TOKEN,
@@ -111,9 +108,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 		true
 	)
 
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'mobileDelete',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.messageChannels.TOKEN
 		],

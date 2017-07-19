@@ -3,15 +3,15 @@ const config = require('../config');
 const parameters = require('../parameters');
 const marketAlertTranslate = require('./utils/marketAlerts');
 const languages = config.languages;
-const fcm = new require('fcm-push')(config.CLIENT_FCM_SERVER_KEY);
+const FCM = require('fcm-push');
+const fcm = new FCM(config.CLIENT_FCM_SERVER_KEY);
 const uidGenerator = require('./utils/uidGenerator');
 const _ = require('lodash');
 
 module.exports = (marketAlerts, usersManagement) => {
 	
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'marketAlertTrigger',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.marketAlerts.ROW_ID,
 			parameters.marketAlerts.EVENT_ID,
@@ -48,7 +48,6 @@ module.exports = (marketAlerts, usersManagement) => {
 					pushMessage.data[parameters.user.USER_ID] = push[parameters.user.USER_ID];
 					pushMessage.data.userLoggedIn = push[parameters.user.USER_ID];
 					pushMessage.data.token = push[parameters.messageChannels.TOKEN];
-					pushMessage.pushServerUrl = 'https://lcl.live.new.com';
 					fcm.send(pushMessage, (err, response) => {
 						if(err){
 							console.log(`FCM-Sending message to browser: [${pushMessage.data.token}]`.red + ` Error: ${err}`);
@@ -84,9 +83,8 @@ module.exports = (marketAlerts, usersManagement) => {
 		true
 	)
 
-	marketAlerts.addEvent(
+	marketAlerts.addHttpInEvent(
 		'marketAlertTriggerTest',
-		parameters.messageChannels.ROUTES,
 		[
 			parameters.marketAlerts.ROW_ID,
 			parameters.marketAlerts.EVENT_ID,
@@ -108,7 +106,9 @@ module.exports = (marketAlerts, usersManagement) => {
 		'post',
 		'/live/market-trigger/test',
 		true
-	)	
+	)
+
+
 
 
 }

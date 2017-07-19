@@ -75,7 +75,7 @@ const messageChannels = {
 	SOCKETS: 'socket',
 	BROWSERS: 'browser',
 	MOBILES: 'mobile',
-	ROUTES : 'routes',
+	HTTP : 'http',
 	REDIS: 'redis',
 	POST: 'post',
 	GET: 'get',
@@ -95,12 +95,22 @@ const messageChannels = {
 
 const tracking = {
 	TRIGGER_ID: 'triggerID',
+	NOTIFICATION_ID: 'notificationID',
 	TRIGGER_RECIEVED_TIME: 'triggerRecievedTime',
 	TRIGGER_TYPE: 'triggerType',
 	MARKET_ALERT: 'marketAlert',
 	PUSH_SERVER_URL: 'pushServerUrl',
 	NOTIFICATION_RECEIVED: 'notificationReceived',
 	PUSH_ID: 'pushID',
+	USER_AGENT: 'userAgent',
+	IP: 'ip',
+	COUNTRY: 'country',
+	LATITUDE: 'latitude',
+	LONGITUDE: 'longitude',
+	REGION: 'region',
+	VISIBLE: 'visible',
+	TIME: 'time',
+	USER_ACTION: 'userAction'
 }
 
 

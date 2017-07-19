@@ -6,9 +6,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 	
 
 	// Push notification subscription
-	marketAlerts.addEvent(
+	marketAlerts.addSocketInEvent(
 		'pushSubscribe',
-		parameters.messageChannels.SOCKETS,
 		[
 			parameters.messageChannels.TOKEN,
 			parameters.user.USER_ID,
@@ -84,13 +83,13 @@ module.exports  = (marketAlerts, usersManagement) => {
 				pub.publish('tracking.push.register', JSON.stringify(pushRegistration))
 			}
 
-		}
+		},
+		true
 	)
 
 	// Push notification removing subscription
-	marketAlerts.addEvent(
+	marketAlerts.addSocketInEvent(
 		'pushUnsubscribe',
-		parameters.messageChannels.SOCKETS,
 		[
 			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
@@ -116,7 +115,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			}
 			usersManagement.cleanUsersObject();
 
-		}
+		},
+		true
 	)
 
 

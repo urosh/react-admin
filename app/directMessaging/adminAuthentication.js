@@ -2,11 +2,10 @@
 const parameters = require('../parameters');
 
 module.exports = (directMessaging) => {
-
+	//console.log(directMessaging.getEventsTest().events);
 	// Mobile App Api methods
-	directMessaging.addEvent(
+	directMessaging.addHttpInEvent(
 		'/admin/auth/status',
-		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			if(req.session && req.session.username){
@@ -20,13 +19,12 @@ module.exports = (directMessaging) => {
 				});
 			}
 		},
-		[parameters.messageChannels.GET]
+		parameters.messageChannels.GET
 		
 	)
 
-	directMessaging.addEvent(
+	directMessaging.addHttpInEvent(
 		'adminLogin',
-		parameters.messageChannels.ROUTES,
 		[
 			[parameters.admin.USERNAME],
 			[parameters.admin.PASSWORD]
@@ -35,21 +33,21 @@ module.exports = (directMessaging) => {
 			req.session[parameters.admin.USERNAME] = 'uros';
 			res.send('Welcome');
 		},
-		[parameters.messageChannels.POST],
+		parameters.messageChannels.POST,
 		'/admin/auth/login',
 		false
 	)
 	
-	directMessaging.addEvent(
+	directMessaging.addHttpInEvent(
 		'/admin/auth/logout',
-		parameters.messageChannels.ROUTES,
 		[],
 		function(req, res) {
 			req.session.destroy(function(err) {
   				res.send('logout');
 			})
 		},
-		[parameters.messageChannels.GET]
+		parameters.messageChannels.GET
 	)
+
 
 }
