@@ -44,11 +44,9 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 				socket.join(parameters.admin.ADMIN);
 				socket.join(data[parameters.admin.USERNAME]);
 			}
-
 		},
 		true
 	)
-
 
 	directMessaging.addSocketInEvent(
 		'adminPushRegister',

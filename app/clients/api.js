@@ -1,10 +1,10 @@
 "use strict";
 const parameters = require('../parameters');
 
-module.exports  = (marketAlerts, usersManagement) => {
+module.exports  = (clients, usersManagement) => {
 
 	// Api methods for retrieving stats about users
-	marketAlerts.addHttpInEvent(
+	clients.addHttpInEvent(
 		'/api/fetch/users',
 		[],
 		function(req, res) {
@@ -18,7 +18,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	)
 	
 	// Api methods for retrieving list of logged out users
-	marketAlerts.addHttpInEvent(
+	clients.addHttpInEvent(
 		'/api/fetch/visitors',
 		[],
 		function(req, res) {
@@ -33,7 +33,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	
 
 	// Api method for retrieving a list of users with push notifications enabled
-	marketAlerts.addHttpInEvent(
+	clients.addHttpInEvent(
 		'/api/fetch/push',
 		[],
 		function(req, res) {
@@ -47,7 +47,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	)
 	
 	// Api method for retrieving a list of mobile app users
-	marketAlerts.addHttpInEvent(
+	clients.addHttpInEvent(
 		'/api/fetch/mobiles',
 		[],
 		function(req, res) {
@@ -60,7 +60,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 		'get'
 	)
 	
-	marketAlerts.addHttpInEvent(
+	clients.addHttpInEvent(
 		'/test',
 		[],
 		function(req, res) {

@@ -4,12 +4,11 @@ const config = require('../config');
 const parameters = require('../parameters');
 const languages = config.languages;
 const _ = require('lodash');
-const uidGenerator = require('./utils/uidGenerator');
+const uidGenerator = require('../uidGenerator');
 const moment = require('moment-timezone');
 const FCM = require('fcm-push');
 const adminFcm = new FCM(config.ADMIN_FCM_SERVER_KEY);
 const clientFcm = new FCM(config.CLIENT_FCM_SERVER_KEY);
-const usersFilters = require('./utils/usersFiltering')();
 moment().tz("UTC").format();
 
 const setEventDate = () => moment.utc().format('lll');
@@ -28,19 +27,18 @@ const clientMessageValidation = (data) => {
 		}
 	};
 
-	
 	if(!requestData[parameters.messageChannels.PUSH]) {
 		return {
 			error: 'Bad data format recieved.'
 		}
 	}
-
+	
 	if(!requestData[parameters.messageChannels.SOCKETS]) {
 		return {
 			error: 'Bad data format recieved.'
 		}
 	}
-
+	
 	Object.keys(requestData.push.title).forEach(lang => {
 		if(requestData[parameters.messageChannels.PUSH].text[lang] !== ''){
 			requestData[parameters.messageChannels.PUSH].text[lang] = requestData[parameters.messageChannels.PUSH].text[lang];
@@ -90,57 +88,10 @@ const formatPushMessage = (message, language, user, push) => {
 	return result;
 }
 
-module.exports  = (directMessaging, usersManagement, adminManagement) => {
+module.exports  = (marketAlerts, usersManagement) => {
 	
-	const usersFiltering = require('./utils/usersFiltering')(usersManagement);
-	// Mobile App Api methods
-	directMessaging.addHttpInEvent(
-		'messagePreview',
-		[
-			parameters.admin.FILTERS,
-			parameters.messageChannels.PUSH,
-			parameters.messageChannels.SOCKETS
-		],
-		function(req, res) {
-			
-			let message = clientMessageValidation(req);
-			if('error' in message) {
-				res.send(message.error);
-			}
-			message.pushServerUrl = 'https://' + req.get('host');
-			
-			const adminUser = adminManagement.getUser(message.adminUsername);
-			if(!adminUser) return;
-			let io = directMessaging.getSocketsConnection();
-
-			Object.keys(languages).forEach(code => {
-
-				let language = languages[code];
-				if(message[parameters.messageChannels.SOCKETS].text[language]){
-					var socketMessage = formatAlertMessage(message, language);
-					io.sockets.in(message.adminUsername).emit('clientNotificationPreview', socketMessage);
-				}
-
-				if(adminUser[parameters.messageChannels.TOKEN] && message[parameters.messageChannels.PUSH].text[language]){
-					var notificationMessage = formatPushMessage(message, language);
-					notificationMessage.to = adminUser[parameters.messageChannels.TOKEN];
-					
-					adminFcm.send(notificationMessage, function(err, response){
-					    if (err) {
-					    	console.log(`FCM-Sending message to browser: [${adminUser[parameters.messageChannels.TOKEN]}]`.red + ` Error: ${err}`);
-					    	return;
-					    }
-					});
-				}
-
-			})
-		},
-		'post',
-		'/live/client-trigger/preview',
-		false
-	)
 	
-	directMessaging.addHttpInEvent(
+	marketAlerts.addHttpInEvent(
 		'messageSend',
 		[
 			parameters.messageChannels.TOKEN,
@@ -152,8 +103,8 @@ module.exports  = (directMessaging, usersManagement, adminManagement) => {
 				res.send(message.error);
 			}
 			message.pushServerUrl = 'https://' + req.get('host');
-			const recipients = usersFilters.getUsersList(usersManagement, message.filters);
-			let io = directMessaging.getSocketsConnection();
+			const recipients = usersManagement.usersFiltering.getUsersList(message.filters);
+			let io = marketAlerts.getSocketsConnection();
 			Object.keys(languages)
 				.map(code => languages[code])
 				.forEach(language => {
@@ -161,7 +112,11 @@ module.exports  = (directMessaging, usersManagement, adminManagement) => {
 					if(message[parameters.messageChannels.SOCKETS].text[language]){
 						recipients.userInfo.alerts.forEach(user => {
 							let messageData = formatAlertMessage(message, language);
-							let room = language + '-' + user[parameters.user.USER_ID]
+							let parameter = usersManagement.getIdParameter(user);
+							let room = language + '-' + user[parameter];
+							console.log(parameter);
+							console.log(room);
+							console.log(messageData);
 							io.sockets.in(room).emit('client-notification', messageData);						
 						})
 					}

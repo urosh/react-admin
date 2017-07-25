@@ -3,83 +3,176 @@
  * more complex, we need to find a good way to organize client modules. At the moment its
  * a set of modules that communicate to each other using pub/sub event channel. 
  */
-(function(){
+var notificationAdminPanel = (function(){
+	var socket, 
+		username,
+		panelInitialized = false,
+		currentModule = 'messages',
+		parameters;
 	
-	// Create Connection
-	var socket = io('wss://', {
-		path:'/admin/socket.io',
-	//	path: ' https://lcl.lb.com/live232/socket.io/socket.io.js '
-	});
-
-	// When admin socket connects, still we have nothing to do, or we do?
-	socket.on('connect', function(data) {
-		console.log(data);
-		if(username) {
-			socket.emit('adminConnect', { username: username });	
-		}else{
-			$.get('/admin/auth/status', handleAdminConnect);
-		}
-	});
-	
-	socket.on('connected', function(data){
-		console.log('connected');
-		console.log(data);
-	})
-	var panelInitialized = false;
-	
-	function handleAdminConnect(data) {
-		if(!panelInitialized){
-			if(data.access === "allowed"){
-				username = data.username;
-				socket.emit('adminConnect', { username: username });	
-				events.publish(eventNames.admin.SHOW_PANEL, data);
-			}else{
-				events.publish(eventNames.admin.SHOW_LOGIN, data);
-			}
-			panelInitialized = true;
+	function panelModuleInit() {
+		if(currentModule === 'messages'){
+			messagesModule.init(username);
 		}
 	}
 	
-	
 
-	// When new user connected to the easymarkets, notify admin system and update user stats
-	socket.on('userUpdate', function(data) {
-		events.publish(eventNames.userStats._UPDATE_, data);
-	});
+	function adminInit(data) {
+		panelModule.init(panelModuleInit);
+		data.access === "allowed" ? showAdminPanel(data) : showLogin();
+		panelInitialized = true;
+	}
 
-	socket.on('clientNotificationPreview', function(data) {
-		events.publish(eventNames.messages._ALERT_PREVIEW_, data);
-	});
-	
-
-	// This event is triggered when there is a change of a filter on admin page. 
-	// When this happens we want to update recipient stats as soon as possible. We are emmiting filter data
-	// to the server. Server will then process this data, and send new data to the admin. 
-	events.subscribe(eventNames.recipientStats._REQUEST_, function(data){
-		socket.emit('recipientStats', {
-			username: username,
-			filters: data
-		});
-	});
-
-	events.subscribe(eventNames.admin._PUSH_REGSITER_, function(data){
-
-		data.username = username;
-		socket.emit('adminPushRegister', data);
-	});
-
-	// Server is notifying admin system, that it has processed filters data, and that new recipient stats are ready.
-	socket.on('recipientStats', function(data){
-		events.publish(eventNames.recipientStats._UPDATE_, data);
-	});
-
-	var username = null;
-	// When admin user registers, we notify the server using sockets. Socket is then added to admin room
-	// that used to communicate with the admin. 
-	events.subscribe(eventNames.authentication._LOGIN_, function(data) {
+	function showAdminPanel(data){
 		username = data.username;
-		socket.emit('adminConnect', data);	
-	});
+		panelModule.showPanel(data);
+		if(!pushRegistered){
+			registerPushNotifications();
+			pushRegistered = true;
+		}
+		socket.emit('adminConnect', {username: username});
+	}
+
+	function showLogin(){
+		loginModule.init();
+		loginModule.showLogin().then(function(data){
+			username = data.username;
+			if(!pushRegistered){
+				registerPushNotifications();
+				pushRegistered = true;
+			}
+			socket.emit('adminConnect', {username: username});	
+			panelModule.showPanel(data, true);
+		});
+	}
+	
+	function addSocketHandlers() {
+		socket.on('usersStats', function(data) {
+			messagesModule.updateUserStats(data);
+		});
+
+		socket.on('clientNotificationPreview', function(data) {
+			messagesModule.messagePreview(data);
+		});
+
+		socket.on('connect', function(){
+			if(username) {
+				socket.emit('adminRegister', {username: username});	
+			}else{
+				$.get('/admin/auth/status', adminInit);
+			}
+		});
+
+		socket.on('connected', function(data){
+			// Data is list of parameters we should send to the server
+			parameters = data.parametersList;
+			console.log(data)
+		})
+
+		socket.on('recipientStats', messagesModule.updateReciptientStats);
+
+	}
+
+	function addAppEventListeners(){
+		// This event is triggered when there is a change of a filter on admin page. 
+		// When this happens we want to update recipient stats as soon as possible. We are emmiting filter data
+		// to the server. Server will then process this data, and send new data to the admin. 
+		events.subscribe(eventNames.recipientStats._REQUEST_, function(data){
+			socket.emit('recipientStats', {
+				username: username,
+				filters: data
+			});
+		});
+
+		events.subscribe(eventNames.messages.SEND_PREVIEW, messagePreviewRequest);
+		events.subscribe(eventNames.messages.SEND, messageSend);
+	}
+	function messageSend(data){
+		$.ajax({
+			type: "POST",
+			url: '/live/client-trigger',
+			data: JSON.stringify(data),
+			dataType: 'text',
+			contentType: "application/json",
+			success: function(){
+				messagesModule.messageSentConfirmation();		
+			}
+		});
+	}
+	function messagePreviewRequest(data) {
+		$.ajax({
+			type: "POST",
+			url: '/live/client-trigger/preview',
+			data: JSON.stringify(data),
+			dataType: 'text',
+			contentType: "application/json",
+			success: function(){
+				console.log('Messages sent successfuly');
+			},
+			error: function(){
+				console.log('There was a problem while sending the message');
+			}
+		});
+	}
+	var pushRegistered = false;
+
+	function registerPushNotifications() {
+		var config = {
+		    apiKey: "AIzaSyCYVLNyZ707vfakmcv9Yxouu955O2cisgk",
+		    messagingSenderId: "454419618716"
+		};
+		
+  		firebase.initializeApp(config);
+		
+		var messaging = firebase.messaging();
+
+		messaging.onTokenRefresh(function() {
+			messaging.getToken()
+			  	.then(function(refreshedToken) {
+				    console.log('Market Notifications Admin: Token refreshed.');
+				  })
+			  	.catch(function(err) {
+			    	console.log('Market Notifications Admin: Unable to retrieve refreshed token ', err);
+			    });
+		});
+		
+	  	navigator.serviceWorker
+			.register('scripts/firebase-messaging-sw.js')
+			.then(function(registration) {
+				return messaging.useServiceWorker(registration);
+			})
+			.then(function() {
+				console.log('Market Notifications Admin: Service worker registered');
+				return messaging.requestPermission()
+			})
+			.then(function() {
+				return messaging.getToken();
+			})
+			.then(function(currentToken) {
+				var adminData = {};
+	            adminData.token = currentToken;
+	            adminData.username = username;
+	            socket.emit('adminPushRegister', adminData);
+			})
+			.catch(function(err) {
+				console.log('Market Notifications Admin: Push registration error: ' + err);
+			})			
+
+	}
 
 
+	function init() {
+		// Create Connection
+		socket = io('wss://', {
+			path:'/admin/socket.io',
+		});
+		addSocketHandlers();
+		addAppEventListeners();
+	};
+
+	return{
+		init: init
+	}
 })();
+
+notificationAdminPanel.init();

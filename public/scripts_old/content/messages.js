@@ -24,25 +24,7 @@
 		username,
 		messageSubscription,
 		modalContent;
-	
-	var languages = [
-		{
-			code: "en",
-			value: "English"
-		},
-		{
-			code: "pl",
-			value: "Polish"
-		},
-		{
-			code: "ar",
-			value: "Arabic"
-		},
-		{
-			code: "zh-hans",
-			value: "Chinese"
-		}
-	];
+
 	
 	dashboardContent = $('#dashboard-content');
 	
@@ -66,8 +48,17 @@
 		        userListContainer = $('.user-list-container');
 		        userListContainer.on('click', '.user-id-button', selectUser);
 		        selectedUserListContainer = $('.selected-user-list-container');
-		        messagesInit();
-		        
+		        events.subscribe(eventNames.languages._SET_LANGUAGES_, function(data) {
+		        	languages = [];
+		        	
+		        	data.forEach(function(lang) {
+		        		languages.push(lang);
+		        	});
+		        	messagesInit();
+		        	
+		        });
+		        // Request list of languages
+		        events.publish(eventNames.languages._GET_LANGUAGES_, null);
 		    }
 		});
 	});
@@ -91,6 +82,7 @@
 		$('.selectpicker').selectpicker({
 		  	size: 4
 		});
+		
 		if(!pushNotificationRegistered){
 			pushNotificationRegistered = true;	
 			registerPushNotifications();
@@ -263,7 +255,7 @@
 				break;
 			}
 		}
-		filters.selectedUsers = selectedUsers;
+
 
 	}
 
@@ -296,7 +288,7 @@
 				title: {},
 				text: {}
 			},
-			socket: {
+			sockets: {
 				title: {},
 				text: {}
 			},
@@ -320,8 +312,8 @@
 			message.push.title[lang.code] = 'Client Notification';
 			message.push.text[lang.code] = pushText;
 			if(pushText !== '') message.messageEmptymessageEmpty = false;
-			message.socket.title[lang.code] = 'Client Notification';
-			message.socket.text[lang.code] = htmlText;
+			message.sockets.title[lang.code] = 'Client Notification';
+			message.sockets.text[lang.code] = htmlText;
 		});
 		return message;
 	}
@@ -441,7 +433,6 @@
 			$('.users-stats .loggedInUsers span').text(numberOfLoggedInUsers);
 			$('.users-stats .loggedOutUsers span').text(numberOfVisitors);
 			$('.users-stats .mobileAppUsers span').text(numberOfMobiles);
-
 			getRecipientStats();
 		});
 		// Update recipient stats when this happens
@@ -452,7 +443,6 @@
 	// Called when we want to update recipients stats
 	function getRecipientStats() {
 		prepareFilters();
-
 		events.publish(eventNames.recipientStats._REQUEST_, filters);
 	}
 	
@@ -493,14 +483,13 @@
 		}else{
 			userListChanged = true;
 		}
-		
-		//console.log('We are here and user list changed ', userListChanged);
+
 		if(userListChanged){
 			oldList = [];
 			userList.forEach(function(user) {
-				oldList = oldList.concat([user]);
+				oldList.concat([user]);
 			})
-			// emit new array
+	        // emit new array
 			userList$.onNext(userList);
 		}
  
@@ -551,7 +540,7 @@
 			selectedUserListContainer.append('<div id="'+ userID +'-holder" class="user-id-holder"><span class="user-id-value">'+ userID +'</span><i id="'+ userID +'-remove-button" data-userID="' + userID + '" class="fa fa-times-circle "></i></div>');
 			$('#' + userID +'-remove-button').on('click', function() {
 				$(this).off();
-				
+
 				selectedUsers = selectedUsers.filter(function(id) {
 					return id !== userID;
 				});

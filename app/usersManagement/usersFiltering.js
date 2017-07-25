@@ -1,11 +1,12 @@
 "use strict";
 
-const parameters = require('../../parameters');
+const parameters = require('../parameters');
 
-module.exports = () => {
-	const getUsersList = (usersManagement, filters) => {
-		const users = usersManagement.getUsers();
+module.exports = (users) => {
+	const getUsersList = (filters) => {
 		
+		console.log('Starting the filtering');
+
 		const loggedInAlerts = Object.keys(users)
 			.map(id => users[id])
 			// Get only logged in users

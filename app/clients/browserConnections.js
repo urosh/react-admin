@@ -2,8 +2,8 @@
 const parameters = require('../parameters');
 const _ = require('lodash');
 
-module.exports = (marketAlerts, usersManagement) => {
-	marketAlerts.addSocketInEvent('connectBrowser', 
+module.exports = (clients, usersManagement) => {
+	clients.addSocketInEvent('connectBrowser', 
 		[
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.user.USER_ID,
@@ -15,8 +15,8 @@ module.exports = (marketAlerts, usersManagement) => {
 			parameters.general.SERVER_ID
 		], 
 		function(data){
-			let io = marketAlerts.getSocketsConnection();
-			let pub =  marketAlerts.getRedisConnection();
+			let io = clients.getSocketsConnection();
+			let pub =  clients.getRedisConnection();
 			
 			// Store user's data to variables for easier use
 			const id = usersManagement.getUserId(data);
@@ -94,15 +94,15 @@ module.exports = (marketAlerts, usersManagement) => {
 	);
 
 	// Closing socket connection
-	marketAlerts.addSocketInEvent(
+	clients.addSocketInEvent(
 		'disconnect', 
 		[
 			parameters.messageChannels.SOCKET_ID
 		], 
 		function(data){
 			const socketId = data[parameters.messageChannels.SOCKET_ID];
-			let io = marketAlerts.getSocketsConnection();
-			let pub =  marketAlerts.getRedisConnection();
+			let io = clients.getSocketsConnection();
+			let pub =  clients.getRedisConnection();
 			const user = usersManagement.getSocketUser(socketId, io);
 			if(user){
 				// Removing socket's reference from user's object
@@ -131,7 +131,7 @@ module.exports = (marketAlerts, usersManagement) => {
 
 
 	// Browser tab active event handler
-	marketAlerts.addSocketInEvent(
+	clients.addSocketInEvent(
 		'tabVisibilityChange',
 		[
 			parameters.user.USER_ID,
@@ -141,7 +141,7 @@ module.exports = (marketAlerts, usersManagement) => {
 		function(data) {
 			//usersManagement.browserTabVisibilityHandler(data);
 			const id = usersManagement.getUserId(data);
-			let io = marketAlerts.getSocketsConnection();
+			let io = clients.getSocketsConnection();
 			const socket = usersManagement.getSocket(data[parameters.messageChannels.SOCKET_ID], io);
 			let user = usersManagement.getUser(id);
 			
@@ -167,7 +167,7 @@ module.exports = (marketAlerts, usersManagement) => {
 
 
 
-	marketAlerts.addSocketInEvent(
+	clients.addSocketInEvent(
 		'updateMarketAlertsSubscription',
 		[
 			parameters.user.USER_ID,
@@ -178,7 +178,7 @@ module.exports = (marketAlerts, usersManagement) => {
 			const id = usersManagement.getUserId(data);
 			let  user = usersManagement.getUser(id);
 			if(!user) return;
-			let io = marketAlerts.getSocketsConnection();
+			let io = clients.getSocketsConnection();
 			const marketAlertAllow = data[parameters.user.MARKET_ALERT_ALLOW];
 			
 			// Update user's object
@@ -198,7 +198,7 @@ module.exports = (marketAlerts, usersManagement) => {
 	)
 
 
-	marketAlerts.addSocketInEvent(
+	clients.addSocketInEvent(
 		'instrumentUpdate',
 		[
 			parameters.user.USER_ID,
@@ -210,7 +210,7 @@ module.exports = (marketAlerts, usersManagement) => {
 			const id = usersManagement.getUserId(data);
 			let user = usersManagement.getUser(id);
 			if (!user) return;
-			let io = marketAlerts.getSocketsConnection();
+			let io = clients.getSocketsConnection();
 			const instrument = parameters.user.INSTRUMENT + '-' + data[parameters.user.INSTRUMENT];
 			let pairs = user[parameters.user.PAIRS].filter(pair => pair !== instrument);
 			
@@ -230,7 +230,7 @@ module.exports = (marketAlerts, usersManagement) => {
 		true
 	)
 
-	marketAlerts.addSocketInEvent(
+	clients.addSocketInEvent(
 		'setMachineInfo',
 		[
 			[parameters.messageChannels.MACHINE_HASH], 
@@ -242,8 +242,8 @@ module.exports = (marketAlerts, usersManagement) => {
 			[parameters.tracking.REGION]
 		],
 		function(data) {
-			let pub =  marketAlerts.getRedisConnection();
-			let io = marketAlerts.getSocketsConnection();
+			let pub =  clients.getRedisConnection();
+			let io = clients.getSocketsConnection();
 			
 			pub.publish('tracking.machine', JSON.stringify(data));
 			var startTime = new Date();

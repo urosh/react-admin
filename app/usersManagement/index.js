@@ -63,7 +63,7 @@ module.exports = function(){
 	}
 
 	let users = {};
-
+	const usersFiltering = require('./usersFiltering')(users);
 	let serverID;
 
 	const setServerId = id => {
@@ -494,6 +494,8 @@ module.exports = function(){
 		removeBrowserFromUser,
 		updateUserDatabaseRecord,
 		getUsersStats,
-		cleanUsersObject
+		cleanUsersObject,
+		getIdParameter,
+		usersFiltering
 	}
 }

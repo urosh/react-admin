@@ -1,6 +1,6 @@
 "use strict";
 
-const Settings = require('../../../models/settings');
+const Settings = require('../models/settings');
 const facter = require('facter');
 
 

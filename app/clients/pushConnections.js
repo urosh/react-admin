@@ -2,11 +2,11 @@
 
 const parameters = require('../parameters');
 
-module.exports  = (marketAlerts, usersManagement) => {
+module.exports  = (clients, usersManagement) => {
 	
 
 	// Push notification subscription
-	marketAlerts.addSocketInEvent(
+	clients.addSocketInEvent(
 		'pushSubscribe',
 		[
 			parameters.messageChannels.TOKEN,
@@ -20,8 +20,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let user = usersManagement.getUser(id);
 			if (!user) return;
 			
-			let io = marketAlerts.getSocketsConnection();
-			let pub = marketAlerts.getRedisConnection();
+			let io = clients.getSocketsConnection();
+			let pub = clients.getRedisConnection();
 
 			const machineHash = data[parameters.messageChannels.MACHINE_HASH];
 			const language = data[parameters.user.LANGUAGE];
@@ -88,7 +88,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	)
 
 	// Push notification removing subscription
-	marketAlerts.addSocketInEvent(
+	clients.addSocketInEvent(
 		'pushUnsubscribe',
 		[
 			parameters.user.USER_ID,
@@ -98,8 +98,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 		function(data) {
 			const id = usersManagement.getUserId(data);
 			let user = usersManagement.getUser(id);
-			let io = marketAlerts.getSocketsConnection();
-			let pub = marketAlerts.getRedisConnection();
+			let io = clients.getSocketsConnection();
+			let pub = clients.getRedisConnection();
 			let pushData = user[parameters.messageChannels.PUSH].filter(push => push[parameters.messageChannels.MACHINE_HASH] !== data[parameters.messageChannels.MACHINE_HASH]);
 			
 			user[parameters.messageChannels.BROWSERS].map(browser => {

@@ -20,10 +20,10 @@
  * }
  * 
  */
-const config = require('../../config');
+const config = require('../config');
 const eventList = config.eventList;
-const parameters = require('../../parameters');
-const uidGenerator = require('./uidGenerator');
+const parameters = require('../parameters');
+const uidGenerator = require('../uidGenerator');
 const languages = config.languages;
 const _ = require('lodash');
 const pushMessageTemplate = {

@@ -1,11 +1,11 @@
 "use strict";
 const config = require('../config');
 const parameters = require('../parameters');
-const marketAlertTranslate = require('./utils/marketAlerts');
+const marketAlertTranslate = require('./triggerMessageTransformation');
 const languages = config.languages;
 const FCM = require('fcm-push');
 const fcm = new FCM(config.CLIENT_FCM_SERVER_KEY);
-const uidGenerator = require('./utils/uidGenerator');
+const uidGenerator = require('../uidGenerator');
 const _ = require('lodash');
 
 module.exports = (marketAlerts, usersManagement) => {

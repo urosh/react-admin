@@ -291,6 +291,8 @@
 	top: 5px;
 	right: 30px;
     background-color: #DCD9D9;
+    background-color: #33393d;
+    color: #e2e2e2;
 	display: none;
 	font-family: "Roboto", sans-serif;
 }
@@ -336,4 +338,5 @@
 	display: inline-block;
 	width: 45px;
 	color: #0f5b8e;
+	color: #8dc74b;
 } 

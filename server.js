@@ -1,3 +1,39 @@
+/*
+ * Client messaging server v2. 
+ * 
+ * The application consists of connections library and events that are added
+ * using the library's api. Connection library connects different input
+ * channels over which the server is receiving information from the outside
+ * world. 
+ * 
+ * Currently there are three channels: Sockets, Redis, Http.The library
+ * itself is quite small and simple. Communication with the library is done
+ * using the events api, that allows user to add events to the system. In that
+ * way building the application consist of adding various events and providing 
+ * handlers for these events using the events api. In our implementation we 
+ * are adding these events in the app module using number of connections 
+ * instances.
+ *
+ * Clients module adds events for handling clients connections (browsers, 
+ * mobile and push registrations and handling)
+ *
+ * Direct messaging module adds events for handling notification admin panel 
+ * (Admin socket connections, message previews, user stats)
+ *
+ * Market alert module adds events for market alerts handling. Receiving market 
+ * alert triggers, transforming it to appropriate formats and sending it to
+ * clients over different channels (browser push, mobile push, html alert)
+ *
+ * Webeyez redis module handles user profile updates from received from 
+ * webeyez.
+ *
+ * User management module is independent module that stores user’s data and 
+ * provide various methods for manipulating this data.  These methods are 
+ * used by any module that is modifying the state of user profiles.
+ *
+ * 
+ */
+ 
 "use strict";
 
 // Read .env file if found
@@ -29,6 +65,7 @@ const Connections = require('./lib/connections');
 const marketAlerts = new Connections(http, app, parameters);
 const webeyezRedis = new Connections(http, app);
 const directMessaging = new Connections(http, app, parameters);
+const clients = new Connections(http, app, parameters);
 
 const marketAlertsConfig = require('./app/config');
 const Users = require('./app/usersManagement');
@@ -38,7 +75,7 @@ const mongoose = require('mongoose');
 const dbName = marketAlertsConfig.db.name;
 const connectionString = marketAlertsConfig.db.connection + dbName;
 
-const serverIdGenerator = require('./app/marketAlerts/utils/serverIdGenerator');
+const serverIdGenerator = require('./app/serverIdGenerator');
 
 app.use(bodyParser.json());
 app.use(bodyParserJsonError());
@@ -54,14 +91,37 @@ serverIdGenerator()
 		usersManagement.init();
 
 		usersManagement.setServerId(serverSettings[parameters.general.SERVER_ID]);
+		
+		let clientIo = socketIO(http, {
+			origins: marketAlertsConfig.socketOrigins,
+			path: '/live/socket.io'
+		});
+
+		let adminIo = socketIO(http, {
+			origins: 'lcl.live.new.com:*',
+			path: '/admin/socket.io'
+		});
 
 		marketAlerts.init({
 			name: 'Market Alerts',
 			serverID: serverSettings[parameters.general.SERVER_ID],
+			useMssql: false,
+			socket: {
+				io: clientIo
+			},
+			redis: {
+				sentinels: marketAlertsConfig.sentinels,
+				name: 'redis-cluster'
+			}
+		});
+		
+		
+		clients.init({
+			name: 'Clients',
+			serverID: serverSettings[parameters.general.SERVER_ID],
 			useMssql: true,
 			socket: {
-				origins: marketAlertsConfig.socketOrigins,
-				path: '/live/socket.io'
+				io: clientIo
 			},
 			redis: {
 				sentinels: marketAlertsConfig.sentinels,
@@ -70,10 +130,7 @@ serverIdGenerator()
 			mssql: {
 				host: marketAlertsConfig.mssqlHost
 			}
-		});
-		
-		
-
+		})
 
 		app.use('/admin', express.static('public'));
 		
@@ -103,14 +160,13 @@ serverIdGenerator()
 			serverID: serverSettings[parameters.general.SERVER_ID],
 			useMssql: false,
 			socket: {
-				origins: 'lcl.live.new.com:*',
-				path: '/admin/socket.io'
+				io: adminIo
 			},
 			redis: {
 				sentinels: marketAlertsConfig.sentinels,
 				name: 'redis-cluster'
 			}
-		})
+		});
 
 	}).catch(err => {
 		console.error((`There was an error while generating serverID. Server will not handle requests`));
@@ -122,6 +178,8 @@ require('./app/marketAlerts')(marketAlerts, usersManagement);
 require('./app/webeyezRedis')(webeyezRedis, usersManagement);
 // Adding direct messaging module and  admin panel 
 require('./app/directMessaging')(directMessaging, usersManagement);
+
+require('./app/clients')(clients, usersManagement);
 
 const port = 3031;
 
