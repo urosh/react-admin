@@ -248,7 +248,6 @@ module.exports = (clients, usersManagement) => {
 			pub.publish('tracking.machine', JSON.stringify(data));
 			var startTime = new Date();
 			let socket = usersManagement.getSocket(data[parameters.messageChannels.SOCKET_ID], io);
-
 			socket.emit('latency-check', data, Date.now(), function(startTime, user) {
 			    var latency = Date.now() - startTime;
 			    data.socketLatency = latency;

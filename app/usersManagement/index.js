@@ -114,6 +114,7 @@ module.exports = function(){
 	}
 
 	const getSocket = (socketId, io) => io.sockets.connected[socketId];
+	
 	/*
 	 * Helper function that sets correct pair format. It is used as a room for sockets
 	 * on different languages. 
