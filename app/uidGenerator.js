@@ -1,5 +1,7 @@
 "use strict";
-
+/*
+ * Utility function for generating random id's
+ */
 module.exports = () => {
 	let d = new Date().getTime();
     let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
