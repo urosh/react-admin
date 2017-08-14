@@ -1,3 +1,65 @@
+/*
+ * List of parameters used by different modules in the app. Not
+ * sure if this is the best solutions to keep them like this
+ * in the object. But at least it prevents errors when misstyping property names
+ */
+
+const general = {
+	TEST: 'test',
+	METHOD: 'method',
+	URL: 'url',
+	DATA: 'data',
+	SCREEN: 'screen'
+}
+
+const user = {
+	USER_ID: 'userID',
+	USER_LOGGED_IN: 'userLoggedIn',
+	TEST_ENABLED: 'testEnabled',
+	MARKET_ALERT_ALLOW: 'marketAlertAllow',
+	LANGUAGE: 'language',
+	CULTURE: 'culture',
+	PAIRS: 'pairs',
+	MOBILE_PAIRS: 'mobilePairs',
+	INSTRUMENT: 'instrument',
+	INSTRUMENT_STATUS: 'instrumentStatus',
+	ACCOUNT_BASE_CURRENCY: 'accountBaseCurrency',
+	ALLOW_DEPOSIT: 'allowDeposit',
+	ALLOW_WITHDRAWAL: 'allowWithdrawal',
+	ALLOWED_CANCELLATION: 'allowedCancellation',
+	COUNTRY_NAME: 'countryName',
+	COUNTRY_ID: 'countryID',
+	DEFAULT_PORTAL: 'defaultPortal',
+	DEMO_EXPIRATION_DAYS: 'demoExpirationDays',
+	HAS_CREDIT_CARD: 'hasCreditCard',
+	HAS_MT4_ACCOUNT: 'hasMts4Account',
+	IS_ACTIVE: 'isActive',
+	IS_ACCOUNT_CLOSED: 'isAccountClosed',
+	WITHDRAWAL_AVAILABLE: 'withdrawalAvailable',
+};
+
+const messageChannels = {
+	PUSH: 'push',
+	SOCKETS: 'socket',
+	BROWSERS: 'browser',
+	MOBILES: 'mobile',
+	HTTP : 'http',
+	REDIS: 'redis',
+	POST: 'post',
+	GET: 'get',
+	SOCKET_ID: 'socketID',
+	SOCKET_ACTIVE: 'socketActive',
+	TAB_ACTIVE: 'tabActive',
+	PUSH_ENABLED: 'pushEnabled',
+	PUSH_ACTIVE: 'pushActive',
+	NOTIFICATION_DELIVERY_METHOD: 'notificationDeliveryMethod',
+	TOKEN: 'token',
+	OLD_TOKEN: 'oldToken',
+	NEW_TOKEN: 'newToken',
+	MACHINE_HASH: 'machineHash',
+	DEVICE_ID: 'deviceID',
+	SYSTEM: 'system',
+}
 
 const marketAlerts = {
 	ROW_ID: 'row_id',
@@ -25,42 +87,6 @@ const marketAlerts = {
 
 };
 
-const general = {
-	SERVER_ID: 'serverID',
-	PROCESSING_SERVER_ID: 'processingServerID',
-	TEST: 'test',
-	METHOD: 'method',
-	URL: 'url',
-	DATA: 'data',
-	SCREEN: 'screen'
-}
-
-const user = {
-	USER_ID: 'userID',
-	
-	USER_LOGGED_IN: 'userLoggedIn',
-	TEST_ENABLED: 'testEnabled',
-	MARKET_ALERT_ALLOW: 'marketAlertAllow',
-	LANGUAGE: 'language',
-	CULTURE: 'culture',
-	PAIRS: 'pairs',
-	
-	INSTRUMENT: 'instrument',
-	INSTRUMENT_STATUS: 'instrumentStatus',
-	ACCOUNT_BASE_CURRENCY: 'accountBaseCurrency',
-	ALLOW_DEPOSIT: 'allowDeposit',
-	ALLOW_WITHDRAWAL: 'allowWithdrawal',
-	ALLOWED_CANCELLATION: 'allowedCancellation',
-	COUNTRY_NAME: 'countryName',
-	COUNTRY_ID: 'countryID',
-	DEFAULT_PORTAL: 'defaultPortal',
-	DEMO_EXPIRATION_DAYS: 'demoExpirationDays',
-	HAS_CREDIT_CARD: 'hasCreditCard',
-	HAS_MT4_ACCOUNT: 'hasMts4Account',
-	IS_ACTIVE: 'isActive',
-	IS_ACCOUNT_CLOSED: 'isAccountClosed',
-	WITHDRAWAL_AVAILABLE: 'withdrawalAvailable',
-};
 const admin = {
 	USERNAME: 'username',
 	FILTERS: 'filters',
@@ -70,28 +96,6 @@ const admin = {
 	RECIPIENT_STATS: 'recipientStats'
 };
 const directMessaging = {};
-const messageChannels = {
-	PUSH: 'push',
-	SOCKETS: 'socket',
-	BROWSERS: 'browser',
-	MOBILES: 'mobile',
-	HTTP : 'http',
-	REDIS: 'redis',
-	POST: 'post',
-	GET: 'get',
-	SOCKET_ID: 'socketID',
-	SOCKET_ACTIVE: 'socketActive',
-	TAB_ACTIVE: 'tabActive',
-	PUSH_ENABLED: 'pushEnabled',
-	PUSH_ACTIVE: 'pushActive',
-	NOTIFICATION_DELIVERY_METHOD: 'notificationDeliveryMethod',
-	TOKEN: 'token',
-	OLD_TOKEN: 'oldToken',
-	NEW_TOKEN: 'newToken',
-	MACHINE_HASH: 'machineHash',
-	SYSTEM: 'system',
-
-}
 
 const tracking = {
 	TRIGGER_ID: 'triggerID',
