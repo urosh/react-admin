@@ -83,8 +83,7 @@ module.exports  = (clients, usersManagement) => {
 				pub.publish('tracking.push.register', JSON.stringify(pushRegistration))
 			}
 
-		},
-		true
+		}
 	)
 
 	// Push notification removing subscription
@@ -115,8 +114,7 @@ module.exports  = (clients, usersManagement) => {
 			}
 			usersManagement.cleanUsersObject();
 
-		},
-		true
+		}
 	)
 
 
