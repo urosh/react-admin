@@ -32,8 +32,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 
 		},
 		'post',
-		'/api/track/push/delivered',
-		false
+		'/api/track/push/delivered'
 	)
 	
 	marketAlerts.addHttpInEvent(

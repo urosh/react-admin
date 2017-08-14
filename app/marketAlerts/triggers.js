@@ -79,8 +79,7 @@ module.exports = (marketAlerts, usersManagement) => {
 			
 		},
 		'post',
-		'/live/market-trigger',
-		true
+		'/live/market-trigger'
 	)
 
 	marketAlerts.addHttpInEvent(
@@ -104,8 +103,7 @@ module.exports = (marketAlerts, usersManagement) => {
 			let io = marketAlerts.getSocketsConnection();
 		},
 		'post',
-		'/live/market-trigger/test',
-		true
+		'/live/market-trigger/test'
 	)
 
 

@@ -141,8 +141,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			res.send('ok');
 		},
 		'post',
-		'/live/client-trigger',
-		false
+		'/live/client-trigger'
 	)
 
 	
