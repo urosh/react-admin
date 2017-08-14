@@ -4,8 +4,13 @@ const globalPairs = require('../config').globalPairs;
 let io;
 const UsersModel = require('../../models/user');
 const _ = require('lodash');
+const sql = require('mssql');
+const config = require('../config');
+
 
 module.exports = function(){
+	let users = {};
+	
 	const socketConnection = {
 		[parameters.messageChannels.SOCKET_ID]: '',
 		[parameters.messageChannels.SOCKET_ACTIVE]: '',
@@ -35,11 +40,12 @@ module.exports = function(){
 	}
 
 	const user = {
-		[parameters.user.USER_ID]: '',
+		[parameters.user.USER_ID]: null,
 		[parameters.messageChannels.MACHINE_HASH]: '',
 		[parameters.messageChannels.TOKEN]: '',
 		[parameters.user.USER_LOGGED_IN]: false,
 		[parameters.user.PAIRS]: [],
+		[parameters.user.MOBILE_PAIRS]: [],
 		[parameters.user.TEST_ENABLED]: false,
 		[parameters.user.MARKET_ALERT_ALLOW]: true,
 		[parameters.user.CULTURE]: 'eu',
@@ -61,31 +67,12 @@ module.exports = function(){
 		[parameters.messageChannels.BROWSERS]: [],
 		[parameters.messageChannels.MOBILES]: [],
 	}
-
-	let users = {};
+	
 	const usersFiltering = require('./usersFiltering')(users);
-	let serverID;
-
-	const setServerId = id => {
-		serverID = id;
-	}
-
 	/*
-	 * API function that gives access to the users object 
+	 * Helper methods
 	 */
-	const getUsers = () => users;
-
-	const getUser = id => users[id];
-
-	const getUserModel = () => user;
-
-	const getMobileUser = token => {
-		return Object.keys(users)
-			.map(id => users[id])
-			.filter(user => {
-				return (user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] === token)).length
-			})[0]
-	}
+	
 	/* 
 	 * Helper function to get user identifier. 
 	 * 
@@ -113,6 +100,14 @@ module.exports = function(){
 		return target.filter(t => source.indexOf(t) === -1);
 	}
 
+	/*
+	 * Facade to getting the socket instace from socketId
+	 *
+	 * @param string socketId
+	 * @param object io socketio instance
+	 * @return object socket instance
+	 *
+	 */
 	const getSocket = (socketId, io) => io.sockets.connected[socketId];
 	
 	/*
@@ -137,15 +132,267 @@ module.exports = function(){
 		return rooms;
 	}
 
-	const getIdParameter = user => {
-		if(user[parameters.user.USER_ID]) {
-			return parameters.user.USER_ID;
-		}else if(user[parameters.messageChannels.MACHINE_HASH]){
-			return parameters.messageChannels.MACHINE_HASH;
-		}else{
-			return parameters.messageChannels.TOKEN;
-		}
+	/*
+	 * Helper function that gives access to the browser object 
+	 * within users' data
+	 * 
+	 * @param string id user's id
+	 * @param string machineHash machine identifier
+	 * @return object browser's data object
+	 *
+	 */
+	const getBrowserObject = (user, machineHash) => {
+		if(!user) return {};
+		let browserObject = user[parameters.messageChannels.BROWSERS].filter(machine => machine[parameters.messageChannels.MACHINE_HASH] === machineHash);
+		return browserObject.length > 0 ? browserObject[0] : {} 
 	}
+	
+	/*
+	 * Helper function that searches users to lookup users based on 
+	 * socketId
+	 * 
+	 * @param string socketId
+	 * @return object users' data
+	 *
+	 */
+	const getSocketUser = (socketId) => {
+		return _.cloneDeep(Object.keys(users)
+			.map(id => users[id])
+			.reduce((prev, current) => {
+				if(!_.isEmpty(prev)) return prev;
+				let res = current[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] === socketId);
+				if(res.length) return current;
+				return {};
+			}, {}))
+	}
+
+	// Helper function that returns number of registered users
+	const getNumberOfUsers = () => Object.keys(users).length;
+	
+	/*
+	 * Helper function that returns number of logged out users
+	 * @param void
+	 * @return number
+	 */
+	const getNumberOfLoggedOutUsers = () => {
+		return Object.keys(users)
+				.map(id => users[id])
+				.filter(user => !user[parameters.user.USER_ID]).length;
+	}
+	/*
+	 * Get number of logged in users
+	 */
+	const getNumberOfLoggedInUsers = () => {
+		return Object.keys(users)
+				.map(id => users[id])
+				.filter(user => user[parameters.user.USER_ID]).length;
+	}
+
+	/*
+	 * Get number of mobile users
+	 */
+	const getNumberOfMobileUsers = () => {
+		return Object.keys(users)
+			.map(id => users[id])
+			.reduce((prev, current) => {
+				return prev + current[parameters.messageChannels.MOBILES].length
+			}, 0);
+	}
+
+	/*
+	 * API function that gives access to the users object 
+	 */
+	
+	/*
+	 * Init function kicked off on server start
+	 */
+	const init = () => {
+		sql.error = true;
+		sql.connect(config.mssql.host)
+			.then(() => {
+				sql.error = false;
+				console.log(`MSSQL database [${config.mssql.host}] connection established`.green);
+				getMobileDatabaseRecords(users);
+			})
+			.catch((err) => {
+				sql.error = true;
+				getMobileDatabaseRecords(users);
+				console.log(`There was an error connecting to the MSSQL database: ${config.mssql.host} `.red + err);
+			});
+		/*UsersModel
+			.find()
+			.exec()
+			.then(savedUsers => {
+				savedUsers.forEach(savedUser => {
+					let id = getUserId(savedUser);
+					if(!users[id]){
+						users[id] = {};
+						Object.keys(user)
+							.forEach(key => users[id][key] = savedUser[key])
+						users[id][parameters.messageChannels.SOCKETS] = [];	
+						// Go throgh mobile registrations and check the status
+					}
+				})
+				console.log('[Users Management] retreiving data from the database');
+			})*/
+	}
+	
+	// Pass user's object template
+	const getUserModel = () => _.cloneDeep(user);
+
+	// Get user based on id
+	const getUser = id => {
+		if(!id || !users[id]) return {};
+		return _.cloneDeep(users[id]);
+	}
+	
+	// Get user from mobile token
+	const getMobileUser = token => {
+		let user = Object.keys(users)
+			.map(id => users[id])
+			.filter(user => {
+				return (user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] === token)).length
+			})
+
+		return user.length > 0 ? _.cloneDeep(user[0]) : {};
+	}
+	
+	/*
+	 * Preparing browser push users list for market alerts
+	 * 
+	 * @param string instrument
+	 * @return array users list
+	 * 
+	 */
+	const getMarketAlertPushUsers = instrument => {
+		let userID;
+		let pushRegistrations = Object.keys(users)
+			.map(id => 	users[id])
+			// Check market alert allow flag
+			.filter(user => user[parameters.user.MARKET_ALERT_ALLOW])
+			// Check if there are push notification registrations for this user
+			.filter(user => user[parameters.messageChannels.PUSH].length > 0)
+			// Make sure instrument is in the pairs list
+			.filter(user => user[parameters.user.PAIRS].indexOf(parameters.user.INSTRUMENT + '-' + instrument) > -1)
+			// Pass push notification registration data only
+			.map(user => user[parameters.messageChannels.PUSH]);
+		
+		let push = [].concat.apply([], pushRegistrations);
+
+		// Make sure we are sending alerts only to the users on the server that received registration
+		return push.filter(push => push[parameters.messageChannels.PUSH_ACTIVE])
+	}
+	
+	/*
+	 * Preparing mobile market alerts receivers list
+	 */
+	const getMarketAlertMobileUsers = instrument => {
+		let userID;
+		let mobileRegistrations = Object.keys(users)
+			.map(id => 	users[id])
+			// Check the marketAlertAllow flag first
+			.filter(user => user[parameters.user.MARKET_ALERT_ALLOW])
+			// Make sure the user has mobile app registered
+			.filter(user => user[parameters.messageChannels.MOBILES].length > 0)
+			// Return actuall mobile app registration
+			.map(user => user[parameters.messageChannels.MOBILES]);
+		
+		let mobiles = [].concat.apply([], mobileRegistrations);
+		
+		return mobiles;
+	}
+	
+	/*
+	 * Get current users stats
+	 */
+	const getUsersStats = () => {
+		let totalUsers, 
+			loggedInUsers, 
+			loggedOutUsers,
+			mobileUsers;
+		
+		loggedInUsers = getNumberOfLoggedInUsers();
+		loggedOutUsers = getNumberOfLoggedOutUsers();
+		mobileUsers = getNumberOfMobileUsers();
+		totalUsers = getNumberOfUsers();
+
+		var results = {
+			totalUsers,
+			loggedInUsers,
+			loggedOutUsers,
+			mobileUsers
+		};
+		
+		return results;
+	}
+
+	
+	/*
+	 * Helper functions to get socket/push/browser object from users object. It is
+	 * used when we need to modify object record when updating user's data
+	 * 
+	 * @param string users id
+	 * @param string socketId/machineHash/token
+	 * @return object socket/push/mobile registration object
+	 *
+	 */
+	const getSocketObject = (user, socketId) => {
+		if(!user) return {};
+		let socketObject = user[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] === socketId);
+		return socketObject.length > 0 ? socketObject[0] : {}
+	}
+
+	const getPushObject = (user, machineHash) => {
+		if(!user) return {};
+		let pushObject = user[parameters.messageChannels.PUSH].filter(machine => machine[parameters.messageChannels.MACHINE_HASH] === machineHash);
+		return pushObject.length > 0 ? pushObject[0] : {};
+	}
+
+	const getMobileObject = (user, token) => {
+		if(!user) return {};
+		let mobileObject = user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] === token);
+		return mobileObject.length ? mobileObject[0] : {}
+	}
+	
+	
+	/*
+	 * Helper method that searches through the user registrations
+	 * and looks for provided mobile machine hash. If search is successfull it returns
+	 * browser object
+	 */
+	const getBrowserObjectFromMachineHash = machineHash => {
+		if (!machineHash) return {};
+
+		return _.cloneDeep(Object.keys(users)
+			.map(id => users[id])
+			.reduce((prev, current) => {
+				if(prev[parameters.messageChannels.MACHINE_HASH]) return prev;
+				let res = current[parameters.messageChannels.BROWSERS].filter(browser => browser[parameters.messageChannels.MACHINE_HASH] === machineHash);
+				if(res.length) return res[0];
+				return {};
+			}, false));
+	}
+	
+	/*
+	 * Helper function that searches through registrations and looks for provided socketId in the 
+	 * sockets object. If search is successful it returns socket registration
+	 */
+	const getSocketObjectFromSocketId = id => {
+		if (!id) return {};
+
+		return _.cloneDeep(Object.keys(users)
+			.map(id => users[id])
+			.reduce((prev, current) => {
+				if(prev[parameters.messageChannels.SOCKET_ID]) return prev;
+				let res = current[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] === id);
+				if(res.length) return res[0];
+				return {};
+			}, {}))
+	}
+
+
+
+	
 	/*
 	 * Adding socket to given rooms
 	 * 
@@ -235,163 +482,24 @@ module.exports = function(){
 		return pairs;
 	}
 
-
-	const init = () => {
-		UsersModel
-			.find()
-			.exec()
-			.then(savedUsers => {
-				savedUsers.forEach(savedUser => {
-					let id = getUserId(savedUser);
-					if(!users[id]){
-						users[id] = {};
-						Object.keys(user)
-								.forEach(key => users[id][key] = savedUser[key])
-						users[id][parameters.messageChannels.SOCKETS] = [];	
-						
-					}
-				})
-				console.log('[Users Management] retreiving data from the database');
-			})
-	}
-
 	/*
-	 * Helper functions to get socket/push/browser object from users object. It is
-	 * used when we need to modify object record when updating user's data
-	 * 
-	 * @param string users id
-	 * @param string socketId/machineHash
-	 * @return void
+	 * Helper function that determines which parameter is used as a key in the 
+	 * users object for the provided user. Based on the user status we can have three different 
+	 * parameters used as user's key. 
 	 */
-
-	const getSocketObject = (id, socketId) => {
-		const user = users[id];
-		if(!user) return null;
-		return user[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] === socketId)[0];
-	}
-
-	const getPushObject = (id, machineHash) => {
-		const user = users[id];
-		if(!user) return null;
-		return user[parameters.messageChannels.PUSH].filter(machine => machine[parameters.messageChannels.MACHINE_HASH] === machineHash)[0];
-	}
-
-	const getBrowserObject = (id, machineHash) => {
-		const user = users[id];
-		if(!user) return null;
-		return user[parameters.messageChannels.BROWSERS].filter(machine => machine[parameters.messageChannels.MACHINE_HASH] === machineHash)[0];
-	}
-
-	const getMobileObject = (id, token) => {
-		const user = users[id];
-		if(!user) return null;
-		return user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] === token)[0];
-	}
-
-	const getMobileObjectFromToken = token => {
-		if (!token) return {};
-
-		return Object.keys(users)
-			.map(id => users[id])
-			.reduce((prev, current) => {
-				if(prev[parameters.messageChannels.TOKEN]) return prev;
-				let res = current[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] === token);
-				if(res.length) return res[0];
-				return {};
-			}, false)
-	}
-
-	const getBrowserObjectFromMachineHash = machineHash => {
-		if (!machineHash) return {};
-
-		return Object.keys(users)
-			.map(id => users[id])
-			.reduce((prev, current) => {
-				if(prev[parameters.messageChannels.MACHINE_HASH]) return prev;
-				let res = current[parameters.messageChannels.BROWSERS].filter(browser => browser[parameters.messageChannels.MACHINE_HASH] === machineHash);
-				if(res.length) return res[0];
-				return {};
-			}, false)
-	}
-
-	const getSocketObjectFromSocketId = id => {
-		if (!id) return {};
-
-		return Object.keys(users)
-			.map(id => users[id])
-			.reduce((prev, current) => {
-				if(prev[parameters.messageChannels.SOCKET_ID]) return prev;
-				let res = current[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] === id);
-				if(res.length) return res[0];
-				return {};
-			}, false)
-	}
-
-	const getSocketUser = socketId => {
-		return Object.keys(users)
-			.map(id => users[id])
-			.reduce((prev, current) => {
-				if(prev) return prev;
-				let res = current[parameters.messageChannels.SOCKETS].filter(socket => socket[parameters.messageChannels.SOCKET_ID] === socketId);
-				if(res.length) return current;
-				return null;
-			}, false)
-	}
-
-	const getMarketAlertPushUsers = instrument => {
-		let userID;
-		let pushRegistrations = Object.keys(users)
-			.map(id => 	users[id])
-			.filter(user => user[parameters.user.MARKET_ALERT_ALLOW])
-			.filter(user => user[parameters.messageChannels.PUSH].length > 0)
-			.filter(user => user[parameters.user.PAIRS].indexOf(parameters.user.INSTRUMENT + '-' + instrument) > -1)
-			.map(user => user[parameters.messageChannels.PUSH]);
-		
-		let push = [].concat.apply([], pushRegistrations);
-		
-		return push.filter(push => push[parameters.messageChannels.PUSH_ACTIVE])
-			.filter(push => push[parameters.general.SERVER_ID] === serverID);
-	}
-
-	const getMarketAlertMobileUsers = instrument => {
-		let userID;
-		let mobileRegistrations = Object.keys(users)
-			.map(id => 	users[id])
-			.filter(user => user[parameters.user.MARKET_ALERT_ALLOW])
-			.filter(user => user[parameters.messageChannels.MOBILES].length > 0)
-			.map(user => user[parameters.messageChannels.MOBILES]);
-		
-		let mobiles = [].concat.apply([], mobileRegistrations);
-		
-		return mobiles.filter(push => push[parameters.general.SERVER_ID] === serverID);
-	}
-
-	const removePushRegistrations = token => {
-		if(!token) return;
-
-		Object.keys(users)
-			.map(id => users[id])
-			.map(user => {
-				user[parameters.messageChannels.PUSH] = user[parameters.messageChannels.PUSH].filter(push => push[parameters.messageChannels.TOKEN] !== token);
-				return user;
-			});
-	}
-
-	const removeBrowserFromUser = machineHash => {
-		if(!machineHash) return;
-		Object.keys(users)
-			.map(id => users[id])
-			.map(user => {
-				user[parameters.messageChannels.BROWSERS] = user[parameters.messageChannels.BROWSERS].filter(browser => browser[parameters.messageChannels.MACHINE_HASH] !== machineHash);
-				return user;
-			});
+	const getIdParameter = user => {
+		if(user[parameters.user.USER_ID]) {
+			return parameters.user.USER_ID;
+		}else if(user[parameters.messageChannels.MACHINE_HASH]){
+			return parameters.messageChannels.MACHINE_HASH;
+		}else{
+			return parameters.messageChannels.TOKEN;
+		}
 	}
 
 	const updateUserDatabaseRecord = (user) => {
 		let parameter = getIdParameter(user), 
 			value = user[parameter];
-
-		//console.log('Updating user in database: ', parameter, value);
 
 		if(user[parameters.messageChannels.PUSH].length === 0 && user[parameters.messageChannels.MOBILES] === 0){
 			UsersModel
@@ -406,46 +514,37 @@ module.exports = function(){
 		}
 	}
 	
-	const getNumberOfUsers = () => Object.keys(users).length;
-	const getNumberOfLoggedOutUsers = () => {
-		return Object.keys(users)
-				.map(id => users[id])
-				.filter(user => !user[parameters.user.USER_ID]).length;
 
-	}
-	const getNumberOfLoggedInUsers = () => {
-		return Object.keys(users)
-				.map(id => users[id])
-				.filter(user => user[parameters.user.USER_ID]).length;
-	}
-	const getNumberOfMobileUsers = () => {
-		
-		return Object.keys(users)
+	const removePushRegistrations = (token) => {
+		if(!token) return;
+		Object.keys(users)
 			.map(id => users[id])
-			.reduce((prev, current) => {
-				return prev + current[parameters.messageChannels.MOBILES].length
-			}, 0);
+			.map(user => {
+				user[parameters.messageChannels.PUSH] = user[parameters.messageChannels.PUSH].filter(push => push[parameters.messageChannels.TOKEN] !== token);
+				return user;
+			})
 	}
 
-	const getUsersStats = () => {
-		let totalUsers, 
-			loggedInUsers, 
-			loggedOutUsers,
-			mobileUsers;
-		
-		loggedInUsers = getNumberOfLoggedInUsers();
-		loggedOutUsers = getNumberOfLoggedOutUsers();
-		mobileUsers = getNumberOfMobileUsers();
-		totalUsers = getNumberOfUsers();
-
-		var results = {
-			totalUsers,
-			loggedInUsers,
-			loggedOutUsers,
-			mobileUsers
-		};
-		
-		return results;
+	const removeMobileFromUsers = (token, deviceId) => {
+		Object.keys(users)
+			.map(id => users[id])
+			.map(user => {
+				if(!token) return user;
+				user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile => {
+						mobile[parameters.messageChannels.TOKEN] !== token;
+					});
+				return user;
+			})
+			.map(user => {
+				console.log(deviceId);
+				if(!deviceId) return user;
+				user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile => {
+						mobile[parameters.messageChannels.DEVICE_ID] !== deviceId;
+					});
+				return user;
+			})
+	
+		delete users[token];
 	}
 	const cleanUsersObject = () => {
 		let ids = [];
@@ -471,32 +570,77 @@ module.exports = function(){
 			
 	}
 
+	const setUsersData = (data, id) => {
+		users[id] = _.cloneDeep(data);
+	}
+
+	const getUsersTestMethod = () => users;
+	
+	const getSqlConnection = () => {
+		if (sql.error) return null;
+		return sql;
+	};
+
+	const getUsersDataFromMssql = id => {
+		let queryString = "EXEC pim.usp_user_details_get " + id;
+		let response = {
+			[parameters.user.MARKET_ALERT_ALLOW]: true,
+			[parameters.user.MOBILE_PAIRS]: []
+		};
+
+		return new Promise((fulfill, reject) => {
+			new sql.Request().query(queryString)
+					.then(function(data) {
+						if(data && data.recordset && data.recordset.length > 0){
+						    response[parameters.user.MARKET_ALERT_ALLOW] = !!data.recordset[0].MarketAlertAllow;
+
+						    if(data.recordset[0].InstrumentNotifications){
+						    	response[parameters.user.MOBILE_PAIRS] = data.recordset[0].InstrumentNotifications
+							    	.split(',')
+							    	.map(pair => {
+								    	if(pair.length === 6){
+									    	return pair.slice(0,3) + '/' + pair.slice(3, 6);
+								    	}
+								    	return '';
+							    	})
+							    	.filter(pair => pair);
+				            }
+						    console.log(`Mssql Database: Retrieving data for user User [${id}]. Instruments, marketAlertAllow`, response[parameters.user.MOBILE_PAIRS],  response[parameters.user.MARKET_ALERT_ALLOW]);
+						}
+						fulfill(response);
+				    })
+				    .catch(err => {
+						console.log(`There was an error while retreiving users [${id}] data from the mssql database`);
+						fulfill(response);
+					});
+
+		})
+	}
+
 	return {
 		init,
-		setServerId,
 		generateUserPairs,
 		joinRooms,
 		getUser,
+		getUsersTestMethod,
 		getUserModel,
-		getUsers,
 		getUserId,
 		getMobileUser,
 		getMobileObject,
-		getMobileObjectFromToken,
-		getBrowserObjectFromMachineHash,
 		getSocketObjectFromSocketId,
-		getPushObject,
-		getSocketObject,
 		getSocketUser,
 		getSocket,
 		getMarketAlertPushUsers,
 		getMarketAlertMobileUsers,
 		removePushRegistrations,
-		removeBrowserFromUser,
+		removeMobileFromUsers,
 		updateUserDatabaseRecord,
 		getUsersStats,
 		cleanUsersObject,
 		getIdParameter,
-		usersFiltering
+		usersFiltering,
+		setUsersData,
+		getSqlConnection,
+		getUsersDataFromMssql
 	}
 }
