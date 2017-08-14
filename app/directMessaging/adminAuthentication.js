@@ -34,8 +34,7 @@ module.exports = (directMessaging) => {
 			res.send('Welcome');
 		},
 		parameters.messageChannels.POST,
-		'/admin/auth/login',
-		false
+		'/admin/auth/login'
 	)
 	
 	directMessaging.addHttpInEvent(

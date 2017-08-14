@@ -19,8 +19,7 @@ module.exports = (directMessaging, usersManagement) => {
 			let io = directMessaging.getSocketsConnection();
 			const usersStats = usersManagement.usersFiltering.getUsersList(filters);
 			io.sockets.in(data.username).emit(parameters.admin.RECIPIENT_STATS, usersStats);
-		},
-		false
+		}
 	)
 
 
