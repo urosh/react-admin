@@ -1,12 +1,25 @@
+/*
+ * Utility functions to help up with filtering users based on provided criterias. 
+ * 
+ * These are used when filtering users for direct messaging module. Based on the provided set
+ * of filteres list of users is returned that satisfy filtering criterias
+ *
+ */
 "use strict";
 
 const parameters = require('../parameters');
 
 module.exports = (users) => {
+	/*
+	 * Filtering function. Accepts list of applied filters and returns object with stats and 
+	 * users' data
+	 * 
+	 * @param filters object 
+	 * @return object 
+	 */
 	const getUsersList = (filters) => {
 		
-		console.log('Starting the filtering');
-
+		// Logged in users
 		const loggedInAlerts = Object.keys(users)
 			.map(id => users[id])
 			// Get only logged in users
@@ -31,7 +44,7 @@ module.exports = (users) => {
 			})
 			.filter(user => (!filters.selectedUsers.length || filters.selectedUsers.indexOf(user[parameters.user.USER_ID]) > -1))
 
-		
+		// Logged out users
 		const loggedOutAlerts = Object.keys(users)
 			.map(id => users[id])
 			.filter(user => !user[parameters.user.USER_ID])
@@ -52,6 +65,7 @@ module.exports = (users) => {
 			})
 			.filter(user => !filters.selectedUsers.length);
 		
+		// List of users with push notifications enabled
 		const pushMessages = Object.keys(users)
 			.map(id => users[id])
 			.filter(user => {
