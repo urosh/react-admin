@@ -3,7 +3,7 @@ const parameters = require('../parameters');
 
 module.exports  = (clients, usersManagement) => {
 
-	// Api methods for retrieving stats about users
+	// Api method for retrieving users list
 	clients.addHttpInEvent(
 		'/api/fetch/users',
 		[],
@@ -64,7 +64,7 @@ module.exports  = (clients, usersManagement) => {
 		'/test',
 		[],
 		function(req, res) {
-			res.send(usersManagement.getUsers());
+			res.send(usersManagement.getUsersTestMethod());
 		},
 		'get'
 	)
