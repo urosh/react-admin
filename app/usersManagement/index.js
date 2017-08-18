@@ -196,6 +196,7 @@ module.exports = function(){
 	 * Get number of mobile users
 	 */
 	const getNumberOfMobileUsers = () => {
+		return 0;
 		return Object.keys(users)
 			.map(id => users[id])
 			.reduce((prev, current) => {
@@ -249,24 +250,30 @@ module.exports = function(){
 			.exec()
 			.then(savedUsers => {
 				savedUsers.forEach(savedUser => {
+					//console.log(savedUser);
 					let id = getUserId(savedUser);
 					if(!users[id]){
-						users[id] = {};
-						Object.keys(user)
-							.forEach(key => users[id][key] = savedUser[key])
+
+						users[id] = JSON.parse(JSON.stringify(savedUser));
+						
+						Object.keys(users[id])
+							.forEach(key => {
+								if(!(key in user)){
+									delete users[id][key]
+								}
+						})
+
 						users[id][parameters.messageChannels.SOCKETS] = [];	
-						// Go throgh mobile registrations and check the status
 					}
 				})
 
-
 				if(!sql.error){
-					console.log('Starting the check');
 					Object.keys(users)
 						.map(id => users[id])
 						.filter(user => user[parameters.user.USER_ID])
 						.forEach(user => {
 							let queryString = "EXEC pim.usp_user_details_get " + user[parameters.user.USER_ID];
+							
 							getUsersDataFromMssql(user[parameters.user.USER_ID])
 								.then(data => {
 									// Check if we need to update the mongo db
@@ -278,17 +285,19 @@ module.exports = function(){
 									}
 									
 									if(!user[parameters.user.MOBILE_PAIRS]){
+										user[parameters.user.MOBILE_PAIRS] = [];
 										updateMongo = true;
+									}
+									if((user[parameters.user.MOBILE_PAIRS].sort().join(',') !== data[parameters.user.MOBILE_PAIRS].sort().join(','))) {
 									}
 
 									if( !updateMongo &&  (user[parameters.user.MOBILE_PAIRS].sort().join(',') !== data[parameters.user.MOBILE_PAIRS].sort().join(',')) ){
 										updateMongo = true;
-								    	user[parameters.user.MOBILE_PAIRS] = [...data[parameters.user.MOBILE_PAIRS]];
+										user[parameters.user.MOBILE_PAIRS] = [...data[parameters.user.MOBILE_PAIRS]];
 									}
 
 								    if(updateMongo){
-								    	console.log('Updating mongo db');
-										updateUserDatabaseRecord(user);
+								    	updateUserDatabaseRecord(user);
 								    }
 
 									
@@ -418,12 +427,11 @@ module.exports = function(){
 						}
 					})
 				}
-
 				// If instrument is not in the pairs and mobile pairs do not exist the user is left out
 				if(!user[parameters.user.MOBILE_PAIRS] || user[parameters.user.MOBILE_PAIRS].indexOf(instrument) === -1){
 					return 
 				}
-				console.log('And now mobiles');
+				
 				// Distribute mobile tokens according to language and delivery method			
 				user[parameters.messageChannels.MOBILES].map(mobileRegistration => {
 					if(mobileRegistration[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD] !== 'pushy'){
@@ -640,7 +648,7 @@ module.exports = function(){
 		let parameter = getIdParameter(user), 
 			value = user[parameter];
 
-		if(user[parameters.messageChannels.PUSH].length === 0 && user[parameters.messageChannels.MOBILES] === 0){
+		if(user[parameters.messageChannels.PUSH].length === 0 && user[parameters.messageChannels.MOBILES].length === 0){
 			UsersModel
 				.remove({ [parameter]: value });
 		}else{
@@ -669,6 +677,7 @@ module.exports = function(){
 			.map(id => users[id])
 			.map(user => {
 				if(!token) return user;
+
 				user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile =>  mobile[parameters.messageChannels.TOKEN] !== token)					
 				if(!deviceId) return user;
 				user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile =>  mobile[parameters.messageChannels.DEVICE_ID] !== deviceId);

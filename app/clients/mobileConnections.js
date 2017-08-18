@@ -41,9 +41,8 @@ module.exports  = (clients, usersManagement) => {
 			fs.readFile('/home/uros/Desktop/data.json', (err, content) => {
 				res.send('Mobile device connected successfully');
 				
-				let result = JSON.parse(content);
 				
-				console.log(Object.keys(result).length);
+				let result = JSON.parse(content);
 				
 				Object.keys(result)
 					.map(id => result[id])
@@ -57,6 +56,7 @@ module.exports  = (clients, usersManagement) => {
 						
 
 						const userModel = usersManagement.getUserModel();
+						
 						const sql = usersManagement.getSqlConnection();
 						
 						// Remove all references to the current mobile device

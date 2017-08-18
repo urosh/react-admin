@@ -14,7 +14,21 @@ const usersSchema = new Schema({
 	[parameters.messageChannels.PUSH]: Array,
 	[parameters.messageChannels.SOCKETS]: Array,
 	[parameters.messageChannels.BROWSERS]: Array,
-	[parameters.messageChannels.MOBILES]: Array
+	[parameters.messageChannels.MOBILES]: Array,
+	[parameters.user.CULTURE]: String,
+	[parameters.user.ACCOUNT_BASE_CURRENCY]: String,
+	[parameters.user.ALLOW_DEPOSIT]: String,
+	[parameters.user.ALLOW_WITHDRAWAL]: Boolean,
+	[parameters.user.ALLOWED_CANCELLATION]: Boolean,
+	[parameters.user.COUNTRY_NAME]: String,
+	[parameters.user.COUNTRY_ID]: String,
+	[parameters.user.DEFAULT_PORTAL]: String,
+	[parameters.user.DEMO_EXPIRATION_DAYS]: String,
+	[parameters.user.HAS_CREDIT_CARD]: Boolean,
+	[parameters.user.HAS_MT4_ACCOUNT]: Boolean,
+	[parameters.user.IS_ACTIVE]: Boolean,
+	[parameters.user.IS_ACCOUNT_CLOSED]: Boolean,
+	[parameters.user.WITHDRAWAL_AVAILABLE]: Boolean,
 });
 
 module.exports = mongoose.model('Users', usersSchema);
