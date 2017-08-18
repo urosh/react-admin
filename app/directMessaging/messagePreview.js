@@ -99,7 +99,8 @@ directMessaging.addHttpInEvent(
 			parameters.messageChannels.PUSH,
 			parameters.messageChannels.SOCKETS
 		],
-		function(req, res) {
+		function(req, res, data) {
+			res.send('Preview request received successfully');
 			let message = clientMessageValidation(req);
 			
 			if('error' in message) {

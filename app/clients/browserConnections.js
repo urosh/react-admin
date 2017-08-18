@@ -45,7 +45,7 @@ module.exports = (clients, usersManagement) => {
 			
 			// Deep cloning users registration, so that no modifications of users data
 			// is done in handler. Instead we are publishing redis event with user's data 
-			let user = Object.assign({}, usersManagement.getUser(id), data);
+			let user = Object.assign({}, userModel, usersManagement.getUser(id), data);
 			
 			// Generate instrument pairs based on the user's data
 			user[parameters.user.PAIRS] = usersManagement.generateUserPairs(data);
@@ -147,12 +147,13 @@ module.exports = (clients, usersManagement) => {
 			 */
 			let userIdParameter = usersManagement.getIdParameter(user);
 			
+
 			// Publish user's data over redis
 			pub.publish('updateUser', JSON.stringify({
 				data: user,
 				id: user[userIdParameter]
 			}));
-
+			
 			pub.publish('tracking.disconnect', JSON.stringify({
 				[parameters.user.USER_ID]: user[parameters.user.USER_ID] ? true : false,
 				[parameters.messageChannels.MACHINE_HASH]: socketMachine
@@ -182,6 +183,8 @@ module.exports = (clients, usersManagement) => {
 			// Clone user's object from users object 
 			let user = usersManagement.getUser(id);
 			
+			let pub =  clients.getRedisConnection();
+
 			if(_.isEmpty(user)) return;
 			
 			let io = clients.getSocketsConnection();
@@ -239,7 +242,8 @@ module.exports = (clients, usersManagement) => {
 			if(_.isEmpty(user)) return;
 			
 			let io = clients.getSocketsConnection();
-			
+			let pub =  clients.getRedisConnection();
+
 			const marketAlertAllow = data[parameters.user.MARKET_ALERT_ALLOW];
 			
 			// Update user's object
@@ -259,7 +263,7 @@ module.exports = (clients, usersManagement) => {
 			// Publish user's data over redis
 			pub.publish('updateUser', JSON.stringify({
 				data: user,
-				id: user[userIdParameter]
+				id: id
 			}));
 		},
 		true
@@ -296,7 +300,8 @@ module.exports = (clients, usersManagement) => {
 			
 			// Join/Leave room 
 			let io = clients.getSocketsConnection();
-			
+			let pub =  clients.getRedisConnection();
+
 			user[parameters.messageChannels.SOCKETS].forEach(socketData => {
 				let socket = usersManagement.getSocket(socketData[parameters.messageChannels.SOCKET_ID], io);
 				usersManagement.joinRooms(socket, pairs);

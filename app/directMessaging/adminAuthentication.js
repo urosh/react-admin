@@ -19,7 +19,7 @@ module.exports = (directMessaging) => {
 				});
 			}
 		},
-		parameters.messageChannels.GET
+		'get'
 		
 	)
 
@@ -33,7 +33,7 @@ module.exports = (directMessaging) => {
 			req.session[parameters.admin.USERNAME] = 'uros';
 			res.send('Welcome');
 		},
-		parameters.messageChannels.POST,
+		'post',
 		'/admin/auth/login'
 	)
 	
@@ -45,7 +45,7 @@ module.exports = (directMessaging) => {
   				res.send('logout');
 			})
 		},
-		parameters.messageChannels.GET
+		'get'
 	)
 
 

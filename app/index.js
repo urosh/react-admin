@@ -141,6 +141,7 @@ module.exports = (app, http) => {
 	 *  
 	 */
 
+	
 	// Implementation of market alerts
 	require('./marketAlerts')(marketAlerts, usersManagement);
 	// Connecting to webeyez redis and updating user subscriptions
@@ -154,8 +155,6 @@ module.exports = (app, http) => {
 	// Starting the user management module. It loads data from the database
 	usersManagement.init();
 			
-			
-
 	/*
 	 * Connections instance initialization. Init function receives 
 	 * object with following parameters: 

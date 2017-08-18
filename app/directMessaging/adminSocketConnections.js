@@ -57,7 +57,6 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 			let user = adminManagement.getUser(data[parameters.admin.USERNAME]);
 			if(!user) return;
 			user[parameters.messageChannels.TOKEN] = data[parameters.messageChannels.TOKEN];
-			user[parameters.general.SERVER_ID] = data[parameters.general.SERVER_ID];		
 		}
 	)
 

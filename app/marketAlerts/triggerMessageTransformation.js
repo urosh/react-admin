@@ -19,6 +19,15 @@
  *  	}
  * }
  * 
+ * TriggerMessageTransformation transforms market alert triggers received from 
+ * webeyez to the suitable format we can use to send message to  the users 
+ * using three main channels: sockets, browser push and mobile push. 
+ * 
+ * Each channel needs to have the data in the specific format. 
+ * 
+ * Single function that takes input data is exposed. It returns alertData object that  holds
+ * message objects for each type of channel and for each language. 
+ *
  */
 const config = require('../config');
 const eventList = config.eventList;
@@ -26,8 +35,9 @@ const parameters = require('../parameters');
 const uidGenerator = require('../uidGenerator');
 const languages = config.languages;
 const _ = require('lodash');
+
+// Push message template
 const pushMessageTemplate = {
-	to: '',
 	collapse_key: 'Market Alert',
 	data: {
 		[parameters.marketAlerts.TITLE]: '',
@@ -45,6 +55,7 @@ const pushMessageTemplate = {
 	}
 };
 
+// Socket message template
 const socketMessageTemplate = {
 	[parameters.marketAlerts.MESSAGE]: '',
 	[parameters.general.URL]: '',
@@ -54,8 +65,8 @@ const socketMessageTemplate = {
 	[parameters.user.INSTRUMENT]: ''
 };
 
-const mobileTemplate = {
-	to: '',
+// Mobile message template
+const mobileFcmTemplate = {
 	priority: 'high',
 	collapse_key: 'Market Alert',
 	data: {
@@ -63,12 +74,23 @@ const mobileTemplate = {
 		[parameters.user.PAIR]: '',
 		[parameters.marketAlerts.TITLE]: '',
 		[parameters.marketAlerts.DETAIL]: ''
-	}
+	},
+	dry_run: true
+};
+
+// Pushy template
+const mobilePushyTemplate = {
+	'screen': '1',
+	'pair': '',
+	'message': '',
+	'title': ''
 };
 
 
+// Utility function, rounding decimal values to two digits
 const roundToTwo = value => (Math.round(value * 100) / 100);
 
+// Set correct instrument format from received data
 const setInstrument = data => data[parameters.marketAlerts.BASE_CURR] + '/' + data[parameters.marketAlerts.NON_BASE_CURR];
 
 // Instrument based url
@@ -87,7 +109,7 @@ const setNotificationAction = data =>  {
 	}
 }
 
-
+// Utility function that sets correct event data format
 const setEventDate = data =>  {
 	return 	data[parameters.marketAlerts.EVENT_DATE]
 		.split(' ')
@@ -102,15 +124,19 @@ const setEventDate = data =>  {
 
 
 // Formating notification message based on recieved data
-const setPushMessage = (data, language, inst) => {
+const setPushMessage = (data, language, _instrument) => {
+	// Process input data and get event number, instrument price and event date
 	const eventNumber = parseInt(data[parameters.marketAlerts.EVENT_TYPE_ID], 10);
-	const instrument = inst;
+	
+	const instrument = _instrument;
 
 	const instrumentPrice = Math.round(data[parameters.marketAlerts.NEW_VALUE] * 10000) / 10000;
 	
-	
 	const date = setEventDate(data) + ' GMT';
+	
+	// Initialize push message
 	let message = '';
+	// Set the alert text based on the event number and language
 	if(eventNumber === 1 || eventNumber === 2) {
 		
 		let diff = data[parameters.marketAlerts.DIFFERENCE];
@@ -124,14 +150,17 @@ const setPushMessage = (data, language, inst) => {
 	}
 }
 
-const setSocketMessages = (data, language, inst) => {
+// Set socket messagew
+const setSocketMessages = (data, language, _instrument) => {
+	// Process input data and get event number, instrument price and event date
 	const eventNumber = parseInt(data[parameters.marketAlerts.EVENT_TYPE_ID], 10);
-	const instrument = inst;
+	
+	const instrument = _instrument;
 
 	const instrumentPrice = Math.round(data[parameters.marketAlerts.NEW_VALUE] * 10000) / 10000;
 	
 	const date = '<span class="eventDate">' +  setEventDate(data) + ' GMT</span>';
-
+	
 	let message;
 	
 	if (eventNumber === 1 || eventNumber === 2){
@@ -194,11 +223,18 @@ module.exports = function(requestData) {
 		[languages.ZH_HANS]: _.cloneDeep(socketMessageTemplate),
 	};
 
-	alertData.mobile = {
-		[languages.EN]: _.cloneDeep(mobileTemplate),
-		[languages.PL]: _.cloneDeep(mobileTemplate),
-		[languages.AR]: _.cloneDeep(mobileTemplate),
-		[languages.ZH_HANS]: _.cloneDeep(mobileTemplate),
+	alertData.fcmMobile = {
+		[languages.EN]: _.cloneDeep(mobileFcmTemplate),
+		[languages.PL]: _.cloneDeep(mobileFcmTemplate),
+		[languages.AR]: _.cloneDeep(mobileFcmTemplate),
+		[languages.ZH_HANS]: _.cloneDeep(mobileFcmTemplate),
+	}
+
+	alertData.pushyMobile = {
+		[languages.EN]: _.cloneDeep(mobilePushyTemplate),
+		[languages.PL]: _.cloneDeep(mobilePushyTemplate),
+		[languages.AR]: _.cloneDeep(mobilePushyTemplate),
+		[languages.ZH_HANS]: _.cloneDeep(mobilePushyTemplate),
 	}
 
     var eventNumber = parseInt(requestData[parameters.marketAlerts.EVENT_TYPE_ID], 10);
@@ -224,7 +260,6 @@ module.exports = function(requestData) {
 			alertData.push[language].data['title'] = setNotificationTitle(requestData, language);
 			alertData.push[language].data['pushUrl'] = setNotificationAction(requestData).push;
 			alertData.push[language].data[parameters.tracking.PUSH_SERVER_URL] = requestData.host;
-
 			alertData.push[language].data[parameters.tracking.TRIGGER_ID] = triggerID;
 			alertData.push[language].data[parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
 
@@ -238,15 +273,20 @@ module.exports = function(requestData) {
 			alertData.socket[language][parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
 			
 			// Set mobile message
-			alertData.mobile[language].data['pair'] = instrument;
-			alertData.mobile[language].data['title'] = setNotificationTitle(requestData, language);
-			alertData.mobile[language].data['detail'] = setPushMessage(requestData, language, instrument);
-			alertData.mobile[language].data[parameters.tracking.TRIGGER_ID] = triggerID;
-			alertData.mobile[language].data[parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
+			alertData.fcmMobile[language].data['pair'] = instrument;
+			alertData.fcmMobile[language].data['title'] = setNotificationTitle(requestData, language);
+			alertData.fcmMobile[language].data['detail'] = setPushMessage(requestData, language, instrument);
+			alertData.fcmMobile[language].data[parameters.tracking.TRIGGER_ID] = triggerID;
+			alertData.fcmMobile[language].data[parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
+			
+			// set pushy message
+			alertData.pushyMobile[language].pair = instrument;
+			alertData.pushyMobile[language].title = setNotificationTitle(requestData, language);
+			alertData.pushyMobile[language].message = setPushMessage(requestData, language, instrument);
 		});
 
 	alertData[parameters.user.INSTRUMENT] = instrument;
-	alertData[parameters.user.INSTRUMENT] = instrument;
+	
 	return alertData;
 };
 

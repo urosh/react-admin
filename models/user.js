@@ -8,6 +8,7 @@ const usersSchema = new Schema({
 	[parameters.messageChannels.MACHINE_HASH]: String,
 	[parameters.messageChannels.TOKEN]: String,
 	[parameters.user.PAIRS]: Array,
+	[parameters.user.MOBILE_PAIRS]: Array,
 	[parameters.user.TEST_ENABLED]: Boolean,
 	[parameters.user.MARKET_ALERT_ALLOW]: Boolean,
 	[parameters.messageChannels.PUSH]: Array,

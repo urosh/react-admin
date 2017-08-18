@@ -4,9 +4,10 @@ const globalPairs = require('../config').globalPairs;
 let io;
 const UsersModel = require('../../models/user');
 const _ = require('lodash');
-const sql = require('mssql');
 const config = require('../config');
-
+let sql = require('mssql');
+const fs = require('fs');
+const languages = ['en', 'zh-hans', 'pl', 'ar'];
 
 module.exports = function(){
 	let users = {};
@@ -36,7 +37,10 @@ module.exports = function(){
 
 	const mobile = {
 		[parameters.messageChannels.TOKEN]: '',
-		[parameters.user.LANGUAGE]: ''
+		[parameters.user.LANGUAGE]: '',
+		[parameters.user.USER_ID]: null,
+		[parameters.messageChannels.SYSTEM]: '',
+		[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD]: '',
 	}
 
 	const user = {
@@ -199,27 +203,48 @@ module.exports = function(){
 			}, 0);
 	}
 
-	/*
-	 * API function that gives access to the users object 
-	 */
-	
-	/*
-	 * Init function kicked off on server start
-	 */
-	const init = () => {
-		sql.error = true;
-		sql.connect(config.mssql.host)
-			.then(() => {
-				sql.error = false;
-				console.log(`MSSQL database [${config.mssql.host}] connection established`.green);
-				getMobileDatabaseRecords(users);
-			})
-			.catch((err) => {
-				sql.error = true;
-				getMobileDatabaseRecords(users);
-				console.log(`There was an error connecting to the MSSQL database: ${config.mssql.host} `.red + err);
-			});
-		/*UsersModel
+	const getUsersDataFromMssql = id => {
+		let queryString = "EXEC pim.usp_user_details_get " + id;
+		let response = {
+			[parameters.user.MARKET_ALERT_ALLOW]: true,
+			[parameters.user.MOBILE_PAIRS]: []
+		};
+
+		return new Promise((fullfill, reject) => {
+			if(sql.error) {
+				fullfill(response)
+				return;
+			}
+			new sql.Request().query(queryString)
+					.then(function(data) {
+						if(data && data.recordset && data.recordset.length > 0){
+						    response[parameters.user.MARKET_ALERT_ALLOW] = !!data.recordset[0].MarketAlertAllow;
+
+						    if(data.recordset[0].InstrumentNotifications){
+						    	response[parameters.user.MOBILE_PAIRS] = data.recordset[0].InstrumentNotifications
+							    	.split(',')
+							    	.map(pair => {
+								    	if(pair.length === 6){
+									    	return pair.slice(0,3) + '/' + pair.slice(3, 6);
+								    	}
+								    	return '';
+							    	})
+							    	.filter(pair => pair);
+				            }
+						    //console.log(`Mssql Database: Retrieving data for user User [${id}]. Instruments, marketAlertAllow`, response[parameters.user.MOBILE_PAIRS],  response[parameters.user.MARKET_ALERT_ALLOW]);
+						}
+						fullfill(response);
+				    })
+				    .catch(err => {
+						console.log(`There was an error while retreiving users [${id}] data from the mssql database`);
+						fullfill(response);
+					});
+
+		})
+	}
+
+	const getUsersDatabaseRecords = () => {
+		UsersModel
 			.find()
 			.exec()
 			.then(savedUsers => {
@@ -233,8 +258,69 @@ module.exports = function(){
 						// Go throgh mobile registrations and check the status
 					}
 				})
+
+
+				if(!sql.error){
+					console.log('Starting the check');
+					Object.keys(users)
+						.map(id => users[id])
+						.filter(user => user[parameters.user.USER_ID])
+						.forEach(user => {
+							let queryString = "EXEC pim.usp_user_details_get " + user[parameters.user.USER_ID];
+							getUsersDataFromMssql(user[parameters.user.USER_ID])
+								.then(data => {
+									// Check if we need to update the mongo db
+									let updateMongo = false;
+									
+									if(user[parameters.user.MARKET_ALERT_ALLOW] !== data[parameters.user.MARKET_ALERT_ALLOW]){
+										user[parameters.user.MARKET_ALERT_ALLOW] = data[parameters.user.MARKET_ALERT_ALLOW];
+										updateMongo = true;
+									}
+									
+									if(!user[parameters.user.MOBILE_PAIRS]){
+										updateMongo = true;
+									}
+
+									if( !updateMongo &&  (user[parameters.user.MOBILE_PAIRS].sort().join(',') !== data[parameters.user.MOBILE_PAIRS].sort().join(',')) ){
+										updateMongo = true;
+								    	user[parameters.user.MOBILE_PAIRS] = [...data[parameters.user.MOBILE_PAIRS]];
+									}
+
+								    if(updateMongo){
+								    	console.log('Updating mongo db');
+										updateUserDatabaseRecord(user);
+								    }
+
+									
+								})
+							
+							
+						})
+				}
 				console.log('[Users Management] retreiving data from the database');
-			})*/
+			})
+	}
+	/*
+	 * API function that gives access to the users object 
+	 */
+	
+	/*
+	 * Init function kicked off on server start
+	 */
+	const init = () => {
+		sql.error = true;
+		sql.connect(config.mssql.host)
+			.then(() => {
+				sql.error = false;
+				console.log(`MSSQL database [${config.mssql.host}] connection established`.green);
+
+				getUsersDatabaseRecords();
+			})
+			.catch((err) => {
+				sql.error = true;
+				getUsersDatabaseRecords();
+				console.log(`There was an error connecting to the MSSQL database: ${config.mssql.host} `.red + err);
+			});
 	}
 	
 	// Pass user's object template
@@ -294,14 +380,67 @@ module.exports = function(){
 			.filter(user => user[parameters.user.MARKET_ALERT_ALLOW])
 			// Make sure the user has mobile app registered
 			.filter(user => user[parameters.messageChannels.MOBILES].length > 0)
+			.filter(user => user[parameters.user.MOBILE_PAIRS])
+			.filter(user => user[parameters.user.MOBILE_PAIRS].indexOf(instrument) > -1)
 			// Return actuall mobile app registration
-			.map(user => user[parameters.messageChannels.MOBILES]);
+			.map(user => user[parameters.messageChannels.MOBILES])
+			
 		
 		let mobiles = [].concat.apply([], mobileRegistrations);
 		
 		return mobiles;
 	}
 	
+	const getMarketAlertReceivers = instrument => {
+		let receivers = {
+			push: {},
+			fcmMobile: {},
+			pushyMobile: {}
+		}
+		
+		languages.map(language => {
+			receivers.push[language] = [];
+			receivers.fcmMobile[language] = [];
+			receivers.pushyMobile[language] = []
+		});
+			
+		Object.keys(users)
+			.map(id => users[id])
+			.filter(user => user[parameters.user.MARKET_ALERT_ALLOW])
+			// Filter out users we know should not receive the alert
+			.forEach(user => {
+				// Add browser push tokens
+				if(user[parameters.user.PAIRS].indexOf(instrument) > -1) {
+					user[parameters.messageChannels.PUSH].map(pushRegistration => {
+						if(push[parameters.messageChannels.PUSH_ACTIVE]){
+
+							receivers.push[pushRegistration[parameters.user.LANGUAGE]].push(pushRegistration[parameters.messageChannels.TOKEN])
+						}
+					})
+				}
+
+				// If instrument is not in the pairs and mobile pairs do not exist the user is left out
+				if(!user[parameters.user.MOBILE_PAIRS] || user[parameters.user.MOBILE_PAIRS].indexOf(instrument) === -1){
+					return 
+				}
+				console.log('And now mobiles');
+				// Distribute mobile tokens according to language and delivery method			
+				user[parameters.messageChannels.MOBILES].map(mobileRegistration => {
+					if(mobileRegistration[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD] !== 'pushy'){
+						receivers.pushyMobile[mobileRegistration[parameters.user.LANGUAGE]].push(mobileRegistration[parameters.messageChannels.TOKEN])
+					}else{
+						receivers.fcmMobile[mobileRegistration[parameters.messageChannels.LANGUAGE]].push(mobileRegistration[parameters.messageChannels.TOKEN])
+						
+					}
+				})
+
+
+			})
+
+			
+		return receivers;
+	}
+
 	/*
 	 * Get current users stats
 	 */
@@ -530,22 +669,14 @@ module.exports = function(){
 			.map(id => users[id])
 			.map(user => {
 				if(!token) return user;
-				user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile => {
-						mobile[parameters.messageChannels.TOKEN] !== token;
-					});
-				return user;
-			})
-			.map(user => {
-				console.log(deviceId);
+				user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile =>  mobile[parameters.messageChannels.TOKEN] !== token)					
 				if(!deviceId) return user;
-				user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile => {
-						mobile[parameters.messageChannels.DEVICE_ID] !== deviceId;
-					});
+				user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile =>  mobile[parameters.messageChannels.DEVICE_ID] !== deviceId);
 				return user;
 			})
-	
 		delete users[token];
 	}
+	
 	const cleanUsersObject = () => {
 		let ids = [];
 		Object.keys(users)
@@ -571,6 +702,23 @@ module.exports = function(){
 	}
 
 	const setUsersData = (data, id) => {
+		
+		if(!id) return;
+
+		if(_.isEmpty(data)){
+			delete users[id]
+			return;
+		}
+		
+		if(
+			data[parameters.messageChannels.MOBILES].length === 0 && 
+			data[parameters.messageChannels.PUSH].length === 0 && 
+			data[parameters.messageChannels.SOCKETS].length === 0
+		){
+			delete users[id];
+			return;
+		}
+
 		users[id] = _.cloneDeep(data);
 	}
 
@@ -580,42 +728,6 @@ module.exports = function(){
 		if (sql.error) return null;
 		return sql;
 	};
-
-	const getUsersDataFromMssql = id => {
-		let queryString = "EXEC pim.usp_user_details_get " + id;
-		let response = {
-			[parameters.user.MARKET_ALERT_ALLOW]: true,
-			[parameters.user.MOBILE_PAIRS]: []
-		};
-
-		return new Promise((fulfill, reject) => {
-			new sql.Request().query(queryString)
-					.then(function(data) {
-						if(data && data.recordset && data.recordset.length > 0){
-						    response[parameters.user.MARKET_ALERT_ALLOW] = !!data.recordset[0].MarketAlertAllow;
-
-						    if(data.recordset[0].InstrumentNotifications){
-						    	response[parameters.user.MOBILE_PAIRS] = data.recordset[0].InstrumentNotifications
-							    	.split(',')
-							    	.map(pair => {
-								    	if(pair.length === 6){
-									    	return pair.slice(0,3) + '/' + pair.slice(3, 6);
-								    	}
-								    	return '';
-							    	})
-							    	.filter(pair => pair);
-				            }
-						    console.log(`Mssql Database: Retrieving data for user User [${id}]. Instruments, marketAlertAllow`, response[parameters.user.MOBILE_PAIRS],  response[parameters.user.MARKET_ALERT_ALLOW]);
-						}
-						fulfill(response);
-				    })
-				    .catch(err => {
-						console.log(`There was an error while retreiving users [${id}] data from the mssql database`);
-						fulfill(response);
-					});
-
-		})
-	}
 
 	return {
 		init,
@@ -630,8 +742,11 @@ module.exports = function(){
 		getSocketObjectFromSocketId,
 		getSocketUser,
 		getSocket,
+		getSocketObject,
+		getPushObject,
 		getMarketAlertPushUsers,
 		getMarketAlertMobileUsers,
+		getMarketAlertReceivers,
 		removePushRegistrations,
 		removeMobileFromUsers,
 		updateUserDatabaseRecord,

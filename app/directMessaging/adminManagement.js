@@ -6,7 +6,6 @@ module.exports = () => {
 	const adminModel = {
 		[parameters.admin.USERNAME]: '',
 		[parameters.messageChannels.SOCKETS]: [],
-		[parameters.general.SERVER_ID]: '',
 		[parameters.messageChannels.TOKEN]: ''
 	}
 

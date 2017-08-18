@@ -13,12 +13,11 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
 			parameters.tracking.NOTIFICATION_RECEIVED,
-			parameters.general.SERVER_ID,
 			parameters.tracking.PUSH_ID
 		],
-		function(req, res) {
+		function(req, res, data) {
 			let pub = marketAlerts.getRedisConnection();
-			let data = req.body;
+			
 			pub.publish('tracking.pushDelivered', JSON.stringify({
 				userID:  data[parameters.user.USER_ID],
 				machineHash: data[parameters.messageChannels.MACHINE_HASH],
@@ -44,12 +43,10 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
 			parameters.tracking.NOTIFICATION_RECEIVED,
-			parameters.general.SERVER_ID,
 			parameters.tracking.PUSH_ID
 		],
-		function(req, res) {
+		function(req, res, data) {
 			let pub = marketAlerts.getRedisConnection();
-			let data = req.body;
 			
 			pub.publish('tracking.pushClicked', JSON.stringify({
 				userID:  data[parameters.user.USER_ID],
@@ -66,12 +63,11 @@ module.exports  = (marketAlerts, usersManagement) => {
 			res.send('ok')
 		},
 		'post',
-		'/api/track/push/clicked',
-		false
+		'/api/track/push/clicked'
 	)
 	
 	marketAlerts.addHttpInEvent(
-		'pushClicked',
+		'pushClosed',
 		[
 			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
@@ -79,12 +75,10 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
 			parameters.tracking.NOTIFICATION_RECEIVED,
-			parameters.general.SERVER_ID,
 			parameters.tracking.PUSH_ID
 		],
-		function(req, res) {
+		function(req, res, data) {
 			let pub = marketAlerts.getRedisConnection();
-			let data = req.body;
 			
 			pub.publish('tracking.pushClosed', JSON.stringify({
 				userID:  data[parameters.user.USER_ID],
@@ -102,8 +96,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			
 		},
 		'post',
-		'/api/track/push/closed',
-		false
+		'/api/track/push/closed'
 	)
 
 	marketAlerts.addSocketInEvent(
@@ -117,8 +110,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			data.notificationInfoRecieved = new Date();
 			pub.publish('tracking.notificationDelivered', JSON.stringify(data));
 			
-		},
-		false
+		}
 	);
 	
 	marketAlerts.addSocketInEvent(
@@ -130,8 +122,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let pub = marketAlerts.getRedisConnection();
 			pub.publish('tracking.notificationAction', JSON.stringify(data));
 			
-		},
-		false
+		}
 
 	);
 
@@ -143,8 +134,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 		function(data){
 			let pub = marketAlerts.getRedisConnection();
 			pub.publish('tracking.notificationVisible', JSON.stringify(data));
-		},
-		false
+		}
 	);
 
 }

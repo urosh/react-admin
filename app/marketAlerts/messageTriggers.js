@@ -97,7 +97,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parameters.messageChannels.TOKEN,
 			parameters.user.USER_ID,
 		],
-		function(req, res) {
+		function(req, res, data) {
 			let message = clientMessageValidation(req);
 			if('error' in message) {
 				res.send(message.error);
