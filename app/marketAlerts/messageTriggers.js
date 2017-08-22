@@ -66,6 +66,8 @@ const formatAlertMessage = (message, language) => {
 }
 
 const formatPushMessage = (message, language, user, push) => {
+	
+	
 	let result = {
 		collapse_key: 'Client Message',
 		data: {
@@ -73,10 +75,12 @@ const formatPushMessage = (message, language, user, push) => {
 			detail: message[parameters.messageChannels.PUSH].text[language],
 			pushUrl: message.action[language],
 			triggerID: message.triggerID,
-			messageType: 'Client Message',
+			triggerType: 'Client Message',
 			pushServerUrl: message.pushServerUrl,
+			userID: user[parameters.user.USER_ID] || null
 		}
 	}
+
 	if(user) {
 		result.data[parameters.messageChannels.TOKEN] = push[parameters.messageChannels.TOKEN];
 		result.to = push[parameters.messageChannels.TOKEN];
@@ -102,8 +106,11 @@ module.exports  = (marketAlerts, usersManagement) => {
 				res.send(message.error);
 			}
 			message.pushServerUrl = 'https://' + req.get('host');
+			
 			const recipients = usersManagement.usersFiltering.getUsersList(message.filters);
+			
 			let io = marketAlerts.getSocketsConnection();
+			
 			Object.keys(languages)
 				.map(code => languages[code])
 				.forEach(language => {
@@ -113,10 +120,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 							let messageData = formatAlertMessage(message, language);
 							let parameter = usersManagement.getIdParameter(user);
 							let room = language + '-' + user[parameter];
-							console.log(parameter);
-							console.log(room);
-							console.log(messageData);
-							io.sockets.in(room).emit('client-notification', messageData);						
+							io.sockets.in(room).emit('client-notification', messageData);					
 						})
 					}
 
@@ -125,6 +129,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 							user[parameters.messageChannels.PUSH].forEach(push => {
 								if(push[parameters.user.LANGUAGE] === language && push[parameters.messageChannels.PUSH_ACTIVE]){
 									let notificationMessage = formatPushMessage(message, language, user, push);
+									
 									clientFcm.send(notificationMessage, function(err, response){
 									    if (err) {
 									    	console.log(`FCM-Sending message to browser:  Error: ${err}`);

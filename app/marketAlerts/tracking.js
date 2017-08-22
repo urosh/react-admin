@@ -7,9 +7,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	marketAlerts.addHttpInEvent(
 		'pushDelivered',
 		[
-			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
-			parameters.user.USER_LOGGED_IN,
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
 			parameters.tracking.NOTIFICATION_RECEIVED,
@@ -19,9 +17,9 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let pub = marketAlerts.getRedisConnection();
 			
 			pub.publish('tracking.pushDelivered', JSON.stringify({
-				userID:  data[parameters.user.USER_ID],
+				userID:  data[parameters.user.USER_ID] || 'null',
 				machineHash: data[parameters.messageChannels.MACHINE_HASH],
-				userLoggedIn: data[parameters.user.USER_LOGGED_IN],
+				userLoggedIn: data[parameters.user.USER_ID] || false,
 				triggerID: data[parameters.tracking.TRIGGER_ID],
 				triggerType: data[parameters.tracking.TRIGGER_TYPE],
 				notificationRecieved: data[parameters.tracking.NOTIFICATION_RECEIVED],
@@ -37,9 +35,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	marketAlerts.addHttpInEvent(
 		'pushClicked',
 		[
-			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
-			parameters.user.USER_LOGGED_IN,
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
 			parameters.tracking.NOTIFICATION_RECEIVED,
@@ -49,9 +45,9 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let pub = marketAlerts.getRedisConnection();
 			
 			pub.publish('tracking.pushClicked', JSON.stringify({
-				userID:  data[parameters.user.USER_ID],
+				userID:  data[parameters.user.USER_ID] || 'null',
 				machineHash: data[parameters.messageChannels.MACHINE_HASH],
-				userLoggedIn: data[parameters.user.USER_LOGGED_IN],
+				userLoggedIn: data[parameters.user.USER_ID] || false,
 				triggerID: data[parameters.tracking.TRIGGER_ID],
 				triggerType: data[parameters.tracking.TRIGGER_TYPE],
 				notificationRecieved: data[parameters.tracking.NOTIFICATION_RECEIVED],
@@ -69,9 +65,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	marketAlerts.addHttpInEvent(
 		'pushClosed',
 		[
-			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
-			parameters.user.USER_LOGGED_IN,
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
 			parameters.tracking.NOTIFICATION_RECEIVED,
@@ -81,9 +75,9 @@ module.exports  = (marketAlerts, usersManagement) => {
 			let pub = marketAlerts.getRedisConnection();
 			
 			pub.publish('tracking.pushClosed', JSON.stringify({
-				userID:  data[parameters.user.USER_ID],
+				userID:  data[parameters.user.USER_ID] || 'null',
 				machineHash: data[parameters.messageChannels.MACHINE_HASH],
-				userLoggedIn: data[parameters.user.USER_LOGGED_IN],
+				userLoggedIn: data[parameters.user.USER_ID] || false,
 				triggerID: data[parameters.tracking.TRIGGER_ID],
 				triggerType: data[parameters.tracking.TRIGGER_TYPE],
 				notificationRecieved: data[parameters.tracking.NOTIFICATION_RECEIVED],
