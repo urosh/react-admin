@@ -94,8 +94,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	marketAlerts.addHttpInEvent(
 		'messageSend',
 		[
-			parameters.messageChannels.TOKEN,
-			parameters.user.USER_ID,
+			parameters.admin.FILTERS
 		],
 		function(req, res, data) {
 			let message = clientMessageValidation(req);

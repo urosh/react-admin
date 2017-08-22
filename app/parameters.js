@@ -59,6 +59,8 @@ const messageChannels = {
 	MACHINE_HASH: 'machineHash',
 	DEVICE_ID: 'deviceID',
 	SYSTEM: 'system',
+	SOUND: 'sound'
+
 }
 
 const marketAlerts = {
@@ -80,6 +82,7 @@ const marketAlerts = {
 	EVENTID: 'eventID',
 	TITLE: 'title',
 	DETAIL: 'detail',
+	BODY: 'body',
 	MESSAGE: 'message',
 	SOCKET_MESSAGE: 'socketMessage',
 	PUSH_URL: 'pushUrl',

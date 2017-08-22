@@ -37,71 +37,61 @@ module.exports  = (clients, usersManagement) => {
 			parameters.messageChannels.SYSTEM,
 			parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD
 		],
-		function(req, res, dat) {
-			fs.readFile('/home/uros/Desktop/data.json', (err, content) => {
-				res.send('Mobile device connected successfully');
+		function(req, res, data) {
+			res.send('Mobile device connected successfully');
 				
-				
-				let result = JSON.parse(content);
-				
-				Object.keys(result)
-					.map(id => result[id])
-					.map(data => {
-						// Make sure userID is in correct format
-						if(data[parameters.user.USER_ID] === 'null') {
-							data[parameters.user.USER_ID] = null;
-						}
+			// Make sure userID is in correct format
+			if(data[parameters.user.USER_ID] === 'null') {
+				data[parameters.user.USER_ID] = null;
+			}
 
-						let id = usersManagement.getUserId(data);
-						
+			let id = usersManagement.getUserId(data);
 
-						const userModel = usersManagement.getUserModel();
+			const userModel = usersManagement.getUserModel();
+			
+			const sql = usersManagement.getSqlConnection();
+			
+			// Remove all references to the current mobile device
+			usersManagement.removeMobileFromUsers(data[parameters.messageChannels.TOKEN], data[parameters.messageChannels.DEVICE_ID]);
+			
+			let user = Object.assign({}, userModel, usersManagement.getUser(id));
+			
+			if(!user) return;
+			
+			// In case the user registration is new, we need to set userId
+			user[parameters.messageChannels.TOKEN] = data[parameters.messageChannels.TOKEN];
+			user[parameters.user.USER_ID] = data[parameters.user.USER_ID];
+			
+			let mobileRegistrations = user[parameters.messageChannels.MOBILES];
+			
+			mobileRegistrations.push(data);
+			
+			let pub =  clients.getRedisConnection();
+			
+			if(user[parameters.user.USER_ID]){
+				usersManagement.getUsersDataFromMssql(user[parameters.user.USER_ID])
+					.then((response) => {
+						user[parameters.user.MARKET_ALERT_ALLOW] = response[parameters.user.MARKET_ALERT_ALLOW];
 						
-						const sql = usersManagement.getSqlConnection();
+						user[parameters.user.MOBILE_PAIRS] = response[parameters.user.MOBILE_PAIRS];
 						
-						// Remove all references to the current mobile device
-						usersManagement.removeMobileFromUsers(data[parameters.messageChannels.TOKEN], data[parameters.messageChannels.DEVICE_ID]);
-						
-						let user = Object.assign({}, userModel, usersManagement.getUser(id));
-						
-						if(!user) return;
-						
-						// In case the user registration is new, we need to set userId
-						user[parameters.messageChannels.TOKEN] = data[parameters.messageChannels.TOKEN];
-						user[parameters.user.USER_ID] = data[parameters.user.USER_ID];
-						
-						let mobileRegistrations = user[parameters.messageChannels.MOBILES];
-						
-						mobileRegistrations.push(data);
-						
-						let pub =  clients.getRedisConnection();
-						
-						if(user[parameters.user.USER_ID]){
-							usersManagement.getUsersDataFromMssql(user[parameters.user.USER_ID])
-								.then((response) => {
-									usersManagement.updateUserDatabaseRecord(user);
-									user[parameters.user.MARKET_ALERT_ALLOW] = response[parameters.user.MARKET_ALERT_ALLOW];
-									
-									user[parameters.user.MOBILE_PAIRS] = response[parameters.user.MOBILE_PAIRS];
-									// Publish user's data over redis
-									pub.publish('updateUser', JSON.stringify({
-										data: user,
-										id: id
-									}));
-								})
-						}else{
-							usersManagement.updateUserDatabaseRecord(user);
-							// Publish user's data over redis
-							pub.publish('updateUser', JSON.stringify({
-								data: user,
-								id: id
-							}));
-						}
+						usersManagement.updateUserDatabaseRecord(user);
+
+						// Publish user's data over redis
+						pub.publish('updateUser', JSON.stringify({
+							data: user,
+							id: id
+						}));
 					})
-				
-
-
-			})
+			}else{
+				usersManagement.updateUserDatabaseRecord(user);
+				// Publish user's data over redis
+				pub.publish('updateUser', JSON.stringify({
+					data: user,
+					id: id
+				}));
+			}
+					
 
 			
 

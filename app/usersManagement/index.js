@@ -196,7 +196,6 @@ module.exports = function(){
 	 * Get number of mobile users
 	 */
 	const getNumberOfMobileUsers = () => {
-		return 0;
 		return Object.keys(users)
 			.map(id => users[id])
 			.reduce((prev, current) => {
@@ -232,7 +231,7 @@ module.exports = function(){
 							    	})
 							    	.filter(pair => pair);
 				            }
-						    //console.log(`Mssql Database: Retrieving data for user User [${id}]. Instruments, marketAlertAllow`, response[parameters.user.MOBILE_PAIRS],  response[parameters.user.MARKET_ALERT_ALLOW]);
+						    console.log(`Mssql Database: Retrieving data for user User [${id}]. Instruments, marketAlertAllow`, response[parameters.user.MOBILE_PAIRS],  response[parameters.user.MARKET_ALERT_ALLOW]);
 						}
 						fullfill(response);
 				    })
@@ -250,12 +249,13 @@ module.exports = function(){
 			.exec()
 			.then(savedUsers => {
 				savedUsers.forEach(savedUser => {
-					//console.log(savedUser);
+					
 					let id = getUserId(savedUser);
 					if(!users[id]){
-
+						// Parse and store user's object from mongodb
 						users[id] = JSON.parse(JSON.stringify(savedUser));
 						
+						// Delete keys added by mongodb, we dont need them in our user's object
 						Object.keys(users[id])
 							.forEach(key => {
 								if(!(key in user)){
@@ -288,9 +288,7 @@ module.exports = function(){
 										user[parameters.user.MOBILE_PAIRS] = [];
 										updateMongo = true;
 									}
-									if((user[parameters.user.MOBILE_PAIRS].sort().join(',') !== data[parameters.user.MOBILE_PAIRS].sort().join(','))) {
-									}
-
+									
 									if( !updateMongo &&  (user[parameters.user.MOBILE_PAIRS].sort().join(',') !== data[parameters.user.MOBILE_PAIRS].sort().join(',')) ){
 										updateMongo = true;
 										user[parameters.user.MOBILE_PAIRS] = [...data[parameters.user.MOBILE_PAIRS]];
@@ -299,11 +297,7 @@ module.exports = function(){
 								    if(updateMongo){
 								    	updateUserDatabaseRecord(user);
 								    }
-
-									
 								})
-							
-							
 						})
 				}
 				console.log('[Users Management] retreiving data from the database');
@@ -400,33 +394,45 @@ module.exports = function(){
 		return mobiles;
 	}
 	
+	/*
+	 * Get market alert receives based on the instrument. 
+	 * 
+	 * Runs when market alert trigger is received. The result is receivers object that separate receivers
+	 * based on device type, delivery method and language. 
+	 *
+	 */
 	const getMarketAlertReceivers = instrument => {
+		
+		// Initialize receivers object
 		let receivers = {
 			push: {},
 			fcmMobile: {},
 			pushyMobile: {}
 		}
 		
+		// Initialize language based information
 		languages.map(language => {
 			receivers.push[language] = [];
 			receivers.fcmMobile[language] = [];
 			receivers.pushyMobile[language] = []
 		});
 			
+		// Go through the user registrations and populate receivers object
 		Object.keys(users)
 			.map(id => users[id])
 			.filter(user => user[parameters.user.MARKET_ALERT_ALLOW])
 			// Filter out users we know should not receive the alert
 			.forEach(user => {
-				// Add browser push tokens
+				// Add browser push tokens if received instrument is in the pairs array
 				if(user[parameters.user.PAIRS].indexOf(instrument) > -1) {
 					user[parameters.messageChannels.PUSH].map(pushRegistration => {
-						if(push[parameters.messageChannels.PUSH_ACTIVE]){
+						if(push[parameters.messageChannels.PUSH_ACTIVE] && pushRegistration[parameters.user.LANGUAGE]){
 
 							receivers.push[pushRegistration[parameters.user.LANGUAGE]].push(pushRegistration[parameters.messageChannels.TOKEN])
 						}
 					})
 				}
+				
 				// If instrument is not in the pairs and mobile pairs do not exist the user is left out
 				if(!user[parameters.user.MOBILE_PAIRS] || user[parameters.user.MOBILE_PAIRS].indexOf(instrument) === -1){
 					return 
@@ -434,17 +440,15 @@ module.exports = function(){
 				
 				// Distribute mobile tokens according to language and delivery method			
 				user[parameters.messageChannels.MOBILES].map(mobileRegistration => {
-					if(mobileRegistration[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD] !== 'pushy'){
-						receivers.pushyMobile[mobileRegistration[parameters.user.LANGUAGE]].push(mobileRegistration[parameters.messageChannels.TOKEN])
-					}else{
-						receivers.fcmMobile[mobileRegistration[parameters.messageChannels.LANGUAGE]].push(mobileRegistration[parameters.messageChannels.TOKEN])
-						
+					if(mobileRegistration[parameters.user.LANGUAGE] && mobileRegistration[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD]){
+						if(mobileRegistration[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD] === 'pushy'){
+							receivers.pushyMobile[mobileRegistration[parameters.user.LANGUAGE]].push(mobileRegistration[parameters.messageChannels.TOKEN])
+						}else{
+							receivers.fcmMobile[mobileRegistration[parameters.user.LANGUAGE]].push(mobileRegistration[parameters.messageChannels.TOKEN])
+						}
 					}
 				})
-
-
 			})
-
 			
 		return receivers;
 	}
@@ -647,15 +651,20 @@ module.exports = function(){
 	const updateUserDatabaseRecord = (user) => {
 		let parameter = getIdParameter(user), 
 			value = user[parameter];
-
+		
 		if(user[parameters.messageChannels.PUSH].length === 0 && user[parameters.messageChannels.MOBILES].length === 0){
-			UsersModel
-				.remove({ [parameter]: value });
+			setTimeout(() => {
+				UsersModel
+					.find({ [parameter]: value })
+					.remove()
+					.exec();
+			}, 400)
 		}else{
 			UsersModel
 				.findOneAndUpdate({ [parameter]: value }, user, { upsert: true, new: true })
 				.exec()
 				.then(res => {
+					console.log(`Mongo: Updating user [${user[parameter]}]`);
 					return res;
 				})
 		}
@@ -667,23 +676,52 @@ module.exports = function(){
 		Object.keys(users)
 			.map(id => users[id])
 			.map(user => {
-				user[parameters.messageChannels.PUSH] = user[parameters.messageChannels.PUSH].filter(push => push[parameters.messageChannels.TOKEN] !== token);
+				user[parameters.messageChannels.PUSH] = user[parameters.messageChannels.PUSH].filter(push => {
+					if(push[parameters.messageChannels.TOKEN] !== token){
+						return true
+					}
+					updateUserDatabaseRecord(user);
+					return false;
+				})
+
 				return user;
 			})
 	}
+	
+	const addUniqueUserToArray = (arr, obj) => {
+		return arr.filter(user => getUserId(user) !== getUserId(obj)).concat([obj]);
+	}
 
 	const removeMobileFromUsers = (token, deviceId) => {
+		let updateDeviceList = [];
 		Object.keys(users)
 			.map(id => users[id])
 			.map(user => {
+				
 				if(!token) return user;
-
-				user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile =>  mobile[parameters.messageChannels.TOKEN] !== token)					
+				
+				// Check if this user has the mobile with provided token
+				if(_.find(user[parameters.messageChannels.MOBILES], {[parameters.messageChannels.TOKEN]: token})){
+					user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(u => u[parameters.messageChannels.TOKEN] !== token)
+					updateDeviceList = addUniqueUserToArray(updateDeviceList, user);	
+				}
 				if(!deviceId) return user;
-				user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile =>  mobile[parameters.messageChannels.DEVICE_ID] !== deviceId);
+				
+				if(_.find(user[parameters.messageChannels.MOBILES], {[parameters.messageChannels.DEVICE_ID]: deviceId})){
+					user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(u => u[parameters.messageChannels.DEVICE_ID] !== deviceId)
+					updateDeviceList = addUniqueUserToArray(updateDeviceList, user);
+				}
 				return user;
 			})
-		delete users[token];
+		if(users[token]){
+			updateDeviceList = addUniqueUserToArray(updateDeviceList, users[token]);
+			delete users[token];
+		}
+		
+		updateDeviceList.map(user => {
+			let u = _.cloneDeep(user);
+			updateUserDatabaseRecord(u)
+		});
 	}
 	
 	const cleanUsersObject = () => {
@@ -703,7 +741,9 @@ module.exports = function(){
 				.exec()
 				.then(res => {
 					if(res){
-						res.remove()
+						res
+							.remove()
+							.exec();
 					}
 				});
 		})

@@ -1,5 +1,6 @@
 "use strict";
 const parameters = require('../parameters');
+const ActiveDirectory = require('activedirectory');
 
 module.exports = (directMessaging) => {
 	//console.log(directMessaging.getEventsTest().events);
@@ -29,9 +30,42 @@ module.exports = (directMessaging) => {
 			[parameters.admin.USERNAME],
 			[parameters.admin.PASSWORD]
 		],
-		function(req, res) {
-			req.session[parameters.admin.USERNAME] = 'uros';
-			res.send('Welcome');
+		function(req, res, data) {
+			const username = data.username;
+			const password = data.password;
+			
+			var adConfig = { 
+				url: 'ldap://prime.cy.ef.ww',
+               	baseDN: 'dc=cy,dc=ef,dc=ww',
+               	username: username,
+               	password: password 
+            }
+			
+			var ad = new ActiveDirectory(adConfig);
+			
+			ad.authenticate(username, password, function(err, auth) {
+				if (err) {
+					console.log(err);
+			    	res.status(401);
+		  			res.send('Username and password are not recognized.');
+			    	return;
+			  	}
+			  
+			  	if (auth) {
+			  		req.session.username = username;
+					res.send('Welcome');
+			  	}
+
+			  	else {
+			  		console.log('Authentication failed!');
+			  		res.status(401);
+		  			res.send('Username and password are not recognized.');
+			  	}
+			});
+
+
+			//req.session[parameters.admin.USERNAME] = 'uros';
+			//res.send('Welcome');
 		},
 		'post',
 		'/admin/auth/login'

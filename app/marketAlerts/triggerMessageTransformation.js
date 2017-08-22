@@ -75,6 +75,11 @@ const mobileFcmTemplate = {
 		[parameters.marketAlerts.TITLE]: '',
 		[parameters.marketAlerts.DETAIL]: ''
 	},
+	notification: {
+		[parameters.marketAlerts.TITLE]: '',
+		[parameters.marketAlerts.BODY]: '',
+		[parameters.messageChannels.SOUND]: 'default'
+	},
 	dry_run: true
 };
 
@@ -253,12 +258,17 @@ module.exports = function(requestData) {
 	const triggerID = uidGenerator();
 	Object.keys(alertData.push)
 		.forEach(language => {
+			let pushMessage = setPushMessage(requestData, language, instrument);
+			let notificationTitle = setNotificationTitle(requestData, language);
+			let socketMessage = setSocketMessages(requestData, language, instrument);
+			let notificationAction = setNotificationAction(requestData)
+			
 			// Set push notification message
 			alertData.push[language].data[parameters.user.INSTRUMENT] = instrument;
 			alertData.push[language].data['messageType'] = eventList[eventNumber][parameters.marketAlerts.TYPE];
-			alertData.push[language].data['detail'] = setPushMessage(requestData, language, instrument);
-			alertData.push[language].data['title'] = setNotificationTitle(requestData, language);
-			alertData.push[language].data['pushUrl'] = setNotificationAction(requestData).push;
+			alertData.push[language].data['detail'] = pushMessage;
+			alertData.push[language].data['title'] = notificationTitle;
+			alertData.push[language].data['pushUrl'] = notificationAction.push;
 			alertData.push[language].data[parameters.tracking.PUSH_SERVER_URL] = requestData.host;
 			alertData.push[language].data[parameters.tracking.TRIGGER_ID] = triggerID;
 			alertData.push[language].data[parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
@@ -266,23 +276,25 @@ module.exports = function(requestData) {
 			// Set socket message
 			alertData.socket[language][parameters.user.INSTRUMENT] = instrument;
 			alertData.socket[language][parameters.marketAlerts.TYPE] = eventList[eventNumber][parameters.marketAlerts.TYPE];
-			alertData.socket[language]['message'] = setSocketMessages(requestData, language, instrument);
-			alertData.socket[language]['title'] = setNotificationTitle(requestData, language);
-			alertData.socket[language]['url'] = setNotificationAction(requestData).socket[language];
+			alertData.socket[language]['message'] = socketMessage;
+			alertData.socket[language]['title'] = notificationTitle;
+			alertData.socket[language]['url'] = notificationAction.socket[language];
 			alertData.socket[language][parameters.tracking.TRIGGER_ID] = triggerID;
 			alertData.socket[language][parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
 			
-			// Set mobile message
+			// Set mobile fcm message
 			alertData.fcmMobile[language].data['pair'] = instrument;
-			alertData.fcmMobile[language].data['title'] = setNotificationTitle(requestData, language);
-			alertData.fcmMobile[language].data['detail'] = setPushMessage(requestData, language, instrument);
+			alertData.fcmMobile[language].data['title'] = notificationTitle;
+			alertData.fcmMobile[language].data['detail'] = pushMessage;
+			alertData.fcmMobile[language].notification[parameters.marketAlerts.TITLE] = notificationTitle;
+			alertData.fcmMobile[language].notification[parameters.marketAlerts.BODY] = pushMessage;
 			alertData.fcmMobile[language].data[parameters.tracking.TRIGGER_ID] = triggerID;
 			alertData.fcmMobile[language].data[parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
 			
-			// set pushy message
+			// Set mobile pushy message
 			alertData.pushyMobile[language].pair = instrument;
-			alertData.pushyMobile[language].title = setNotificationTitle(requestData, language);
-			alertData.pushyMobile[language].message = setPushMessage(requestData, language, instrument);
+			alertData.pushyMobile[language].title = notificationTitle;
+			alertData.pushyMobile[language].message = pushMessage;
 		});
 
 	alertData[parameters.user.INSTRUMENT] = instrument;

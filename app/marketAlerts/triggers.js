@@ -63,16 +63,13 @@ module.exports = (marketAlerts, usersManagement) => {
 			//console.log(processedData);
 			let pub =  marketAlerts.getRedisConnection();
 
-			//console.log(processedData);
-
 			const instrument = processedData[parameters.user.INSTRUMENT];
 			
+			// Send the instrument to users management and get the list of receiving tokens arranged by device
+			// delivery method and language
 			let marketAlertReceivers = usersManagement.getMarketAlertReceivers(instrument);
-			console.log(marketAlertReceivers);
-			return;
-			//let marketAlertPushUsers = usersManagement.getMarketAlertPushUsers(instrument);
-			
-			//let marketAlertMobileUsers = usersManagement.getMarketAlertMobileUsers(instrument);
+
+			// Prepare push options
 			const pushyOptions = {
 			    notification: {
 			        badge: 1,
@@ -97,44 +94,43 @@ module.exports = (marketAlerts, usersManagement) => {
 						data: processedData.socket[language]
 					}));
 					
-					console.log('We are populating our arrays');
+					/*
+					 * Creating fcm push batches of 1000. For each language we create the batch with the 
+					 * array of tokens and assign appropriate message to this token. Grouping logic is 
+					 * following: All devices with the same language and same 
+					 */
 					let pushIterationsNumber = Math.ceil(marketAlertReceivers.push[language].length / 1000);
 					
 					let  mobileIterationNumber = Math.ceil(marketAlertReceivers.fcmMobile[language].length / 1000);
 					
-					console.log(pushIterationsNumber);
-					console.log(mobileIterationNumber);
-
 					for (let i = 0; i < pushIterationsNumber; i++) {
 						let message = Object.assign({}, processedData.push[language]);
-						message.dry_run = true;
+						message.dry_run = false;
 						message.registration_ids = marketAlertReceivers.push[language].slice(i*1000, 1000*(i+1));
 						browserPushCalls.push(fcmSend.bind(null, message));
 					}
 
 					for (let i = 0; i < mobileIterationNumber; i++) {
 						let message = Object.assign({}, processedData.fcmMobile[language]);
-						message.dry_run = true;
-						message.registration_ids = marketAlertReceivers.fcmMobile[language].length.slice(i*1000, 1000*(i+1));
+						message.dry_run = false;
+						message.registration_ids = marketAlertReceivers.fcmMobile[language].slice(i*1000, 1000*(i+1));
 						mobilePushCalls.push(fcmSend.bind(null, message));
 					}
-
 					
 					// Send to pushy devices
 					if(marketAlertReceivers.pushyMobile[language].length){
-						/*pushyAPI.sendPushNotification(processedData.pushyMobile[language], marketAlertReceivers.pushyMobile[language], pushyOptions, function(err, id) {
+						pushyAPI.sendPushNotification(processedData.pushyMobile[language], marketAlertReceivers.pushyMobile[language], pushyOptions, function(err, id) {
 							if(err) {
-								console.log(`Pushy Error: There was an error while trying to send a message to [${lang}] pushy`, err);
+								console.log(`Pushy Error: There was an error while trying to send a message to [${language}] pushy`, err);
 								return;
 							}
 							console.log(`Pushy Sending market alerts to [${language}] devices`);
-						});*/
+						});
 						
 					}
 
 				});
 			
-			console.log('Browser push calls, mobile push calls', browserPushCalls.length, mobilePushCalls.length);
 			// Start sending push notifications to browser
 			if(browserPushCalls.length){
 				async.series(browserPushCalls, function(err, res){
@@ -142,7 +138,7 @@ module.exports = (marketAlerts, usersManagement) => {
 						console.log('Market Alerts: There was an error while sending market alert push notification to the browsers', err);
 						return;
 					}
-					console.log(res)
+					
 					var result = res.reduce((curr, next) => {
 						if(!curr) return next;
 						next.success = curr.success +	next.success;

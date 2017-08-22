@@ -118,8 +118,6 @@ directMessaging.addHttpInEvent(
 				
 				if(message[parameters.messageChannels.SOCKETS].text[language]){
 					var socketMessage = formatAlertMessage(message, language);
-					console.log('we should send this message to the admin');
-					console.log(message.adminUsername);
 					
 					io.sockets.in(message.adminUsername).emit('clientNotificationPreview', socketMessage);
 				}

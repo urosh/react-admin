@@ -11,7 +11,6 @@ module.exports = (directMessaging, usersManagement) => {
 			parameters.admin.FILTERS
 		],
 		function(data) {
-			let users = usersManagement.getUsers();
 			let results = [];
 			let loggedInAlerts, loggedOutAlerts, pushMessages, mobileMessages;
 			const filters = data.filters;
