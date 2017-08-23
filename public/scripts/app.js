@@ -57,7 +57,7 @@ var notificationAdminPanel = (function(){
 
 		socket.on('connect', function(){
 			if(username) {
-				socket.emit('adminRegister', {username: username});	
+				socket.emit('adminConnect', {username: username});	
 			}else{
 				$.get('/admin/auth/status', adminInit);
 			}

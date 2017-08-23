@@ -11,7 +11,7 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 			let user;
 			const username = data[parameters.admin.USERNAME];
 			const socketId = data[parameters.messageChannels.SOCKET_ID];
-
+			
 			const userModel = adminManagement.getUserModel();
 			
 			let users = adminManagement.getUsers();
