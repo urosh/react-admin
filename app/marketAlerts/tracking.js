@@ -38,8 +38,8 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
-			parameters.tracking.NOTIFICATION_RECEIVED,
-			parameters.tracking.PUSH_ID
+			parameters.tracking.PUSH_ID,
+			parameters.tracking.ACTION_TIME
 		],
 		function(req, res, data) {
 			let pub = marketAlerts.getRedisConnection();
@@ -68,7 +68,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
-			parameters.tracking.NOTIFICATION_RECEIVED,
+			parameters.tracking.ACTION_TIME,
 			parameters.tracking.PUSH_ID
 		],
 		function(req, res, data) {
