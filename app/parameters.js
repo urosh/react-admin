@@ -108,6 +108,7 @@ const tracking = {
 	MARKET_ALERT: 'marketAlert',
 	PUSH_SERVER_URL: 'pushServerUrl',
 	NOTIFICATION_RECEIVED: 'notificationReceived',
+	ACTION_TIME: 'actionTime',
 	PUSH_ID: 'pushID',
 	USER_AGENT: 'userAgent',
 	IP: 'ip',
