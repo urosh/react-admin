@@ -270,7 +270,9 @@ module.exports = function(requestData) {
 			alertData.push[language].data['title'] = notificationTitle;
 			alertData.push[language].data['pushUrl'] = notificationAction.push;
 			alertData.push[language].data[parameters.tracking.PUSH_SERVER_URL] = requestData.host;
-			
+			alertData.push[language].data[parameters.tracking.TRIGGER_ID] = triggerID;
+			alertData.push[language].data[parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
+
 			// Set socket message
 			alertData.socket[language][parameters.user.INSTRUMENT] = instrument;
 			alertData.socket[language][parameters.marketAlerts.TYPE] = eventList[eventNumber][parameters.marketAlerts.TYPE];
