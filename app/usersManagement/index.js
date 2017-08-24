@@ -424,9 +424,9 @@ module.exports = function(){
 			// Filter out users we know should not receive the alert
 			.forEach(user => {
 				// Add browser push tokens if received instrument is in the pairs array
-				if(user[parameters.user.PAIRS].indexOf(instrument) > -1) {
+				if(user[parameters.user.PAIRS].indexOf((parameters.user.INSTRUMENT + '-'+ instrument)) > -1) {
 					user[parameters.messageChannels.PUSH].map(pushRegistration => {
-						if(push[parameters.messageChannels.PUSH_ACTIVE] && pushRegistration[parameters.user.LANGUAGE]){
+						if(pushRegistration[parameters.messageChannels.PUSH_ACTIVE] && pushRegistration[parameters.user.LANGUAGE]){
 
 							receivers.push[pushRegistration[parameters.user.LANGUAGE]].push(pushRegistration[parameters.messageChannels.TOKEN])
 						}
@@ -653,12 +653,11 @@ module.exports = function(){
 			value = user[parameter];
 		
 		if(user[parameters.messageChannels.PUSH].length === 0 && user[parameters.messageChannels.MOBILES].length === 0){
-			setTimeout(() => {
-				UsersModel
-					.find({ [parameter]: value })
-					.remove()
-					.exec();
-			}, 400)
+			UsersModel
+				.find({ [parameter]: value })
+				.remove()
+				.exec();
+			
 		}else{
 			UsersModel
 				.findOneAndUpdate({ [parameter]: value }, user, { upsert: true, new: true })
@@ -672,20 +671,29 @@ module.exports = function(){
 	
 
 	const removePushRegistrations = (token) => {
+		
 		if(!token) return;
+		
+		let updatePushList = [];
+
 		Object.keys(users)
 			.map(id => users[id])
 			.map(user => {
-				user[parameters.messageChannels.PUSH] = user[parameters.messageChannels.PUSH].filter(push => {
-					if(push[parameters.messageChannels.TOKEN] !== token){
-						return true
-					}
-					updateUserDatabaseRecord(user);
-					return false;
-				})
+				user[parameters.messageChannels.PUSH] = user[parameters.messageChannels.PUSH] = user[parameters.messageChannels.PUSH].filter(push => {
+						if(push[parameters.messageChannels.TOKEN] !== token){
+							return true;
+						}
+						updatePushList = addUniqueUserToArray(updatePushList, user);
+						return false;
+					})
 
 				return user;
 			})
+		updatePushList.map(user => {
+			let u = _.cloneDeep(user);
+			updateUserDatabaseRecord(u)
+		});
+
 	}
 	
 	const addUniqueUserToArray = (arr, obj) => {

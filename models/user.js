@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const parameters = require('../app/parameters');
 
+
+
 const usersSchema = new Schema({
 	[parameters.user.USER_ID]: String,
 	[parameters.user.USER_LOGGED_IN]: Boolean,
@@ -11,10 +13,6 @@ const usersSchema = new Schema({
 	[parameters.user.MOBILE_PAIRS]: Array,
 	[parameters.user.TEST_ENABLED]: Boolean,
 	[parameters.user.MARKET_ALERT_ALLOW]: Boolean,
-	[parameters.messageChannels.PUSH]: Array,
-	[parameters.messageChannels.SOCKETS]: Array,
-	[parameters.messageChannels.BROWSERS]: Array,
-	[parameters.messageChannels.MOBILES]: Array,
 	[parameters.user.CULTURE]: String,
 	[parameters.user.ACCOUNT_BASE_CURRENCY]: String,
 	[parameters.user.ALLOW_DEPOSIT]: String,
@@ -29,6 +27,10 @@ const usersSchema = new Schema({
 	[parameters.user.IS_ACTIVE]: Boolean,
 	[parameters.user.IS_ACCOUNT_CLOSED]: Boolean,
 	[parameters.user.WITHDRAWAL_AVAILABLE]: Boolean,
+	[parameters.messageChannels.PUSH]: Array,
+	[parameters.messageChannels.SOCKETS]: Array,
+	[parameters.messageChannels.BROWSERS]: Array,
+	[parameters.messageChannels.MOBILES]: Array,
 });
 
 module.exports = mongoose.model('Users', usersSchema);
