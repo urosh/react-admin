@@ -1,3 +1,4 @@
+const loadDataFromDatabase = process.env.LOAD_DATA_FROM_DATABASE || false;
 
 const globalPairs = [
 	'EUR/USD',
@@ -162,5 +163,6 @@ module.exports = {
 	webeyezRedisHost,
 	webeyezRedisPort,
 	ADMIN_FCM_SERVER_KEY,
-	CLIENT_FCM_SERVER_KEY
+	CLIENT_FCM_SERVER_KEY,
+	loadDataFromDatabase
 }

@@ -2,7 +2,11 @@
 const parameters = require('../parameters');
 const globalPairs = require('../config').globalPairs;
 let io;
+
 const UsersModel = require('../../models/user');
+const OldMobileModel = require('../../models/mobile');
+const OldPushModel = require('../../models/push');
+
 const _ = require('lodash');
 const config = require('../config');
 let sql = require('mssql');
@@ -244,64 +248,71 @@ module.exports = function(){
 	}
 
 	const getUsersDatabaseRecords = () => {
+		
+		if(config.loadDataFromDatabase)	return;
+		
+		console.log('[Users Management] retreiving data from the database');
+
 		UsersModel
-			.find()
-			.exec()
-			.then(savedUsers => {
-				savedUsers.forEach(savedUser => {
+		.find()
+		.exec()
+		.then(savedUsers => {
+			savedUsers.forEach(savedUser => {
+				
+				let id = getUserId(savedUser);
+				if(!users[id]){
+					// Parse and store user's object from mongodb
+					users[id] = JSON.parse(JSON.stringify(savedUser));
 					
-					let id = getUserId(savedUser);
-					if(!users[id]){
-						// Parse and store user's object from mongodb
-						users[id] = JSON.parse(JSON.stringify(savedUser));
-						
-						// Delete keys added by mongodb, we dont need them in our user's object
-						Object.keys(users[id])
-							.forEach(key => {
-								if(!(key in user)){
-									delete users[id][key]
-								}
-						})
+					// Delete keys added by mongodb, we dont need them in our user's object
+					Object.keys(users[id])
+						.forEach(key => {
+							if(!(key in user)){
+								delete users[id][key]
+							}
+					})
 
-						users[id][parameters.messageChannels.SOCKETS] = [];	
-					}
-				})
-
-				if(!sql.error){
-					Object.keys(users)
-						.map(id => users[id])
-						.filter(user => user[parameters.user.USER_ID])
-						.forEach(user => {
-							let queryString = "EXEC pim.usp_user_details_get " + user[parameters.user.USER_ID];
-							
-							getUsersDataFromMssql(user[parameters.user.USER_ID])
-								.then(data => {
-									// Check if we need to update the mongo db
-									let updateMongo = false;
-									
-									if(user[parameters.user.MARKET_ALERT_ALLOW] !== data[parameters.user.MARKET_ALERT_ALLOW]){
-										user[parameters.user.MARKET_ALERT_ALLOW] = data[parameters.user.MARKET_ALERT_ALLOW];
-										updateMongo = true;
-									}
-									
-									if(!user[parameters.user.MOBILE_PAIRS]){
-										user[parameters.user.MOBILE_PAIRS] = [];
-										updateMongo = true;
-									}
-									
-									if( !updateMongo &&  (user[parameters.user.MOBILE_PAIRS].sort().join(',') !== data[parameters.user.MOBILE_PAIRS].sort().join(',')) ){
-										updateMongo = true;
-										user[parameters.user.MOBILE_PAIRS] = [...data[parameters.user.MOBILE_PAIRS]];
-									}
-
-								    if(updateMongo){
-								    	updateUserDatabaseRecord(user);
-								    }
-								})
-						})
+					users[id][parameters.messageChannels.SOCKETS] = [];	
 				}
-				console.log('[Users Management] retreiving data from the database');
 			})
+
+			if(!sql.error){
+				Object.keys(users)
+					.map(id => users[id])
+					.filter(user => user[parameters.user.USER_ID])
+					.forEach(user => {
+						let queryString = "EXEC pim.usp_user_details_get " + user[parameters.user.USER_ID];
+						
+						getUsersDataFromMssql(user[parameters.user.USER_ID])
+							.then(data => {
+								// Check if we need to update the mongo db
+								let updateMongo = false;
+								
+								if(user[parameters.user.MARKET_ALERT_ALLOW] !== data[parameters.user.MARKET_ALERT_ALLOW]){
+									user[parameters.user.MARKET_ALERT_ALLOW] = data[parameters.user.MARKET_ALERT_ALLOW];
+									updateMongo = true;
+								}
+								
+								if(!user[parameters.user.MOBILE_PAIRS]){
+									user[parameters.user.MOBILE_PAIRS] = [];
+									updateMongo = true;
+								}
+								
+								if( !updateMongo &&  (user[parameters.user.MOBILE_PAIRS].sort().join(',') !== data[parameters.user.MOBILE_PAIRS].sort().join(',')) ){
+									updateMongo = true;
+									user[parameters.user.MOBILE_PAIRS] = [...data[parameters.user.MOBILE_PAIRS]];
+								}
+
+							    if(updateMongo){
+							    	updateUserDatabaseRecord(user);
+							    }
+							})
+					})
+			}
+			
+		})
+		
+		
 	}
 	/*
 	 * API function that gives access to the users object 
