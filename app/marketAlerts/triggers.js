@@ -68,7 +68,6 @@ module.exports = (marketAlerts, usersManagement) => {
 			// Send the instrument to users management and get the list of receiving tokens arranged by device
 			// delivery method and language
 			let marketAlertReceivers = usersManagement.getMarketAlertReceivers(instrument);
-
 			// Prepare push options
 			const pushyOptions = {
 			    notification: {
@@ -132,6 +131,7 @@ module.exports = (marketAlerts, usersManagement) => {
 				});
 			
 			// Start sending push notifications to browser
+			
 			if(browserPushCalls.length){
 				async.series(browserPushCalls, function(err, res){
 					if(err){
@@ -145,8 +145,6 @@ module.exports = (marketAlerts, usersManagement) => {
 						next.failures = curr.failures + next.failures;
 						return next;
 					});
-					
-					result.invalidTokensLength = result.invalidTokens.length;
 					
 					console.log('Market Alerts: Sending push notification market alerts to browsers [success] [failures]',result.success, result.failures);
 				})
