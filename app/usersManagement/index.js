@@ -356,6 +356,16 @@ module.exports = function(){
 
 		return user.length > 0 ? _.cloneDeep(user[0]) : {};
 	}
+
+	const getPushUser = token => {
+		let user = Object.keys(users)
+			.map(id => users[id])
+			.filter(user => {
+				return (user[parameters.messageChannels.PUSH].filter(push => push[parameters.messageChannels.TOKEN] === token)).length
+			})
+
+		return user.length > 0 ? _.cloneDeep(user[0]) : {};
+	}
 	
 	/*
 	 * Preparing browser push users list for market alerts
@@ -812,6 +822,7 @@ module.exports = function(){
 		getSocket,
 		getSocketObject,
 		getPushObject,
+		getPushUser,
 		getMarketAlertPushUsers,
 		getMarketAlertMobileUsers,
 		getMarketAlertReceivers,

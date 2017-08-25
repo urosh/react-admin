@@ -11,8 +11,18 @@ module.exports  = (clients, usersManagement) => {
 	const pushSubscribe  = data => {
 		// From received data we get id, and user object 
 		const id = usersManagement.getUserId(data);
-		let user = usersManagement.getUser(id);
-		if (_.isEmpty(user)) return;
+		const userModel = usersManagement.getUserModel();
+		
+		let user = Object.assign({}, userModel, usersManagement.getUser(id), data);
+		
+		user[parameters.user.PAIRS] = usersManagement.generateUserPairs(user);
+
+		Object.keys(user)
+			.forEach(key => {
+				if(!(key in userModel)){
+					delete user[key];
+				}
+			})
 		
 		let io = clients.getSocketsConnection();
 		let pub = clients.getRedisConnection();
@@ -32,6 +42,7 @@ module.exports  = (clients, usersManagement) => {
 			[parameters.user.LANGUAGE]: language,
 			[parameters.messageChannels.PUSH_ACTIVE]: user[parameters.user.MARKET_ALERT_ALLOW],
 			[parameters.user.USER_ID]: data[parameters.user.USER_ID]
+
 		}
 
 		// Remove any reference to the push registration from all other users
@@ -99,11 +110,14 @@ module.exports  = (clients, usersManagement) => {
 			.then(savedUsers => {
 				savedUsers.forEach(savedUser => {
 					
+					// If retreived token already in the system skip this step
+					//if(!_.isEmpty(usersManagement.getPushUser(savedUser[parameters.messageChannels.TOKEN]))) return;
+					
 					let userData = {};
-					console.log(savedUser);
 					
 					userData[parameters.messageChannels.TOKEN] = savedUser[parameters.messageChannels.TOKEN];
 					userData[parameters.user.USER_ID] = savedUser[parameters.user.USER_ID];
+					userData[parameters.user.PAIRS] = savedUser[parameters.user.PAIRS];
 					userData[parameters.messageChannels.TOKEN] = savedUser[parameters.messageChannels.TOKEN];
 					userData[parameters.messageChannels.MACHINE_HASH] = savedUser[parameters.messageChannels.MACHINE_HASH];
 					userData[parameters.messageChannels.TAB_ACTIVE] = false;
