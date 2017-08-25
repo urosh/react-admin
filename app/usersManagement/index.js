@@ -45,6 +45,9 @@ module.exports = function(){
 		[parameters.user.USER_ID]: null,
 		[parameters.messageChannels.SYSTEM]: '',
 		[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD]: '',
+		[parameters.messageChannels.FIRST_CONNECTION_DATE]: '',
+		[parameters.messageChannels.LAST_CONNECTION_DATE]: '',
+
 	}
 
 	const user = {
@@ -723,6 +726,10 @@ module.exports = function(){
 
 	const removeMobileFromUsers = (token, deviceId) => {
 		let updateDeviceList = [];
+		
+		let mobileConnectionDates = '';
+
+
 		Object.keys(users)
 			.map(id => users[id])
 			.map(user => {
@@ -731,8 +738,24 @@ module.exports = function(){
 				
 				// Check if this user has the mobile with provided token
 				if(_.find(user[parameters.messageChannels.MOBILES], {[parameters.messageChannels.TOKEN]: token})){
-					user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(u => u[parameters.messageChannels.TOKEN] !== token)
-					updateDeviceList = addUniqueUserToArray(updateDeviceList, user);	
+					user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(u => {
+						
+						if(u[parameters.messageChannels.FIRST_CONNECTION_DATE]) {
+							if(!mobileConnectionDates){
+								u[parameters.messageChannels.FIRST_CONNECTION_DATE]
+							}else{
+								mobileConnectionDates = mobileConnectionDates < u[parameters.messageChannels.FIRST_CONNECTION_DATE] ? mobileConnectionDates : u[parameters.messageChannels.FIRST_CONNECTION_DATE];
+							} 
+						}
+
+						if(u[parameters.messageChannels.FIRST_CONNECTION_DATE] && !mobileConnectionDates) {
+							mobileConnectionDates = u[parameters.messageChannels.FIRST_CONNECTION_DATE]
+						}
+
+						return u[parameters.messageChannels.TOKEN] !== token
+					})
+					updateDeviceList = addUniqueUserToArray(updateDeviceList, user);
+
 				}
 				if(!deviceId) return user;
 				
@@ -742,6 +765,7 @@ module.exports = function(){
 				}
 				return user;
 			})
+		
 		if(users[token]){
 			updateDeviceList = addUniqueUserToArray(updateDeviceList, users[token]);
 			delete users[token];
@@ -751,6 +775,8 @@ module.exports = function(){
 			let u = _.cloneDeep(user);
 			updateUserDatabaseRecord(u)
 		});
+
+		return mobileConnectionDates;
 	}
 	
 	const cleanUsersObject = () => {

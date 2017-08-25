@@ -50,8 +50,9 @@ module.exports  = (clients, usersManagement) => {
 		const sql = usersManagement.getSqlConnection();
 		
 		// Remove all references to the current mobile device
-		usersManagement.removeMobileFromUsers(data[parameters.messageChannels.TOKEN], data[parameters.messageChannels.DEVICE_ID]);
+		let mobileConnectionDates = usersManagement.removeMobileFromUsers(data[parameters.messageChannels.TOKEN], data[parameters.messageChannels.DEVICE_ID]);
 		
+
 		let user = Object.assign({}, userModel, usersManagement.getUser(id));
 		
 		if(!user) return;
@@ -59,6 +60,9 @@ module.exports  = (clients, usersManagement) => {
 		// In case the user registration is new, we need to set userId
 		user[parameters.messageChannels.TOKEN] = data[parameters.messageChannels.TOKEN];
 		user[parameters.user.USER_ID] = data[parameters.user.USER_ID];
+		
+		data[parameters.messageChannels.FIRST_CONNECTION_DATE] = mobileConnectionDates || new Date();
+		data[parameters.messageChannels.LAST_CONNECTION_DATE] = new Date();
 		
 		let mobileRegistrations = user[parameters.messageChannels.MOBILES];
 		

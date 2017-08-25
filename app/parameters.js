@@ -59,7 +59,9 @@ const messageChannels = {
 	MACHINE_HASH: 'machineHash',
 	DEVICE_ID: 'deviceID',
 	SYSTEM: 'system',
-	SOUND: 'sound'
+	SOUND: 'sound',
+	FIRST_CONNECTION_DATE: 'fisrtConnectionDate',
+	LAST_CONNECTION_DATE: 'lastConnectionDate'
 
 }
 

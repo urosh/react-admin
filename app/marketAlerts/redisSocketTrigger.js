@@ -13,7 +13,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	 *
 	 */
 	marketAlerts.addRedisInEvent(
-		'updateUser',
+		'sendSocketMessage',
 		[
 			'room',
 			'data',
