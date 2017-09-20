@@ -12,8 +12,8 @@ const Pushy = require('pushy');
 const pushyAPI = new Pushy(config.pushyApiKey);
 
 const FCM = require('fcm-push');
-const adminFcm = new FCM(config.ADMIN_FCM_SERVER_KEY);
-const clientFcm = new FCM(config.CLIENT_FCM_SERVER_KEY);
+const adminFcm = new FCM(config.adminFcmServerKey);
+const clientFcm = new FCM(config.clientFcmServerKey);
 
 // Currently maximum size of fcm user array batch
 const batchLength = 2;

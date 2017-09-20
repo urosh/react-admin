@@ -4,19 +4,8 @@ const config = require('../config');
 const parameters = require('../parameters');
 const languages = config.languages;
 const _ = require('lodash');
-const uidGenerator = require('../uidGenerator');
-const moment = require('moment-timezone');
-const FCM = require('fcm-push');
-const adminFcm = new FCM(config.ADMIN_FCM_SERVER_KEY);
-const clientFcm = new FCM(config.CLIENT_FCM_SERVER_KEY);
-const async = require('async');
-const Pushy = require('pushy');
-const pushyAPI = new Pushy(config.pushyApiKey);
 
 
-moment().tz("UTC").format();
-
-const setEventDate = () => moment.utc().format('lll');
 
 const clientMessageValidation = (data) => {
 	if(!data.body) {

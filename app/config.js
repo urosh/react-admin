@@ -155,10 +155,12 @@ const languages = {
 const webeyezRedisHost = process.env.WEBEYEZ_REDIS_IP;
 const webeyezRedisPort = process.env.WEBEYEZ_REDIS_PORT;
 
-const ADMIN_FCM_SERVER_KEY = 'AIzaSyAP8CDwT4ANSrCZvcaZMRHw1_Dt4dH1wBA';
-const CLIENT_FCM_SERVER_KEY = 'AIzaSyBuBkx25PYli0uCjdzhp20p9M6CqMibKyc';
+//const ADMIN_FCM_SERVER_KEY = 'AIzaSyAP8CDwT4ANSrCZvcaZMRHw1_Dt4dH1wBA';
+//const CLIENT_FCM_SERVER_KEY = 'AIzaSyBuBkx25PYli0uCjdzhp20p9M6CqMibKyc';
 
 const pushyApiKey = process.env.PUSHY_API_KEY;
+const adminFcmServerKey = process.env.ADMIN_FCM_SERVER_KEY;
+const clientFcmServerKey = process.env.CLIENT_FCM_SERVER_KEY;
 
 module.exports = {
 	globalPairs,
@@ -171,8 +173,8 @@ module.exports = {
 	languages,
 	webeyezRedisHost,
 	webeyezRedisPort,
-	ADMIN_FCM_SERVER_KEY,
-	CLIENT_FCM_SERVER_KEY,
+	adminFcmServerKey,
+	clientFcmServerKey,
 	loadDataFromDatabase,
 	pushyApiKey
 }

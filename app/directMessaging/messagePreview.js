@@ -6,8 +6,8 @@ const _ = require('lodash');
 const uidGenerator = require('../uidGenerator');
 const moment = require('moment-timezone');
 const FCM = require('fcm-push');
-const adminFcm = new FCM(config.ADMIN_FCM_SERVER_KEY);
-const clientFcm = new FCM(config.CLIENT_FCM_SERVER_KEY);
+const adminFcm = new FCM(config.adminFcmServerKey);
+const clientFcm = new FCM(config.clientFcmServerKey);
 const Pushy = require('pushy');
 const pushyAPI = new Pushy(config.pushyApiKey);
 

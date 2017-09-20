@@ -62,7 +62,7 @@ module.exports  = (clients, usersManagement) => {
 	
 	clients.addHttpInEvent({
 		name: 'getAllUsers',
-		url: '/test',
+		url: '/api/fetch/users',
 		handler: function(req, res) {
 			res.send(usersManagement.getUsers());
 		},
