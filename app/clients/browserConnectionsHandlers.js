@@ -76,16 +76,17 @@ module.exports = (clients, usersManagement) => {
 		user[parameters.messageChannels.BROWSERS] = [...browsers];
 		
 		// Publish user's data over redis
-		pub.publish('updateUser', JSON.stringify({
-			data: user,
-			id: id
-		}));
+		usersManagement.setUsersData(user, id);
+		
+	}
 
-		// Notify tracking on new connection
-		if(user[parameters.user.USER_ID]){
+	const connectBrowserTracker = data => {
+		let pub =  clients.getRedisConnection();
+
+		if(data[parameters.user.USER_ID]){
 			pub.publish('tracking.user', JSON.stringify({
-				userID:  user[parameters.user.USER_ID],
-				machineHash: user[parameters.messageChannels.MACHINE_HASH],
+				userID:  data[parameters.user.USER_ID],
+				machineHash: data[parameters.messageChannels.MACHINE_HASH],
 				loggedIn: true
 
 			}));
@@ -94,7 +95,6 @@ module.exports = (clients, usersManagement) => {
 				machineHash: data[parameters.messageChannels.MACHINE_HASH],
 			}));
 		}
-		
 	}
 	
 	/*
@@ -134,16 +134,16 @@ module.exports = (clients, usersManagement) => {
 		
 
 		// Publish user's data over redis
-		pub.publish('updateUser', JSON.stringify({
-			data: user,
-			id: user[userIdParameter]
-		}));
 		
-		pub.publish('tracking.disconnect', JSON.stringify({
+		usersManagement.setUsersData(user, user[userIdParameter]);
+		
+		// TODO TRACKING
+		/*pub.publish('tracking.disconnect', JSON.stringify({
 			[parameters.user.USER_ID]: user[parameters.user.USER_ID] ? true : false,
 			[parameters.messageChannels.MACHINE_HASH]: socketMachine
-		}))
+		}))*/
 	}
+	
 
 	/*
 	 * Tab visibility change handler. 
@@ -190,11 +190,8 @@ module.exports = (clients, usersManagement) => {
 			
 			usersManagement.joinRooms(socket, pairs);
 			
-			// Publish user's data over redis
-			pub.publish('updateUser', JSON.stringify({
-				data: user,
-				id: id
-			}));
+			usersManagement.setUsersData(user, id);
+
 		}
 	}
 
@@ -228,10 +225,8 @@ module.exports = (clients, usersManagement) => {
 		user[parameters.messageChannels.PUSH].map(push => push[parameters.messageChannels.PUSH_ACTIVE] = marketAlertAllow);
 
 		// Publish user's data over redis
-		pub.publish('updateUser', JSON.stringify({
-			data: user,
-			id: id
-		}));
+		usersManagement.setUsersData(user, id);
+
 	}
 	/*
 	 * Adding/Removing instrument from the favorite list. This call is triggered from the browsers 
@@ -264,11 +259,7 @@ module.exports = (clients, usersManagement) => {
 			usersManagement.joinRooms(socket, pairs);
 		})
 		
-		// Publish user's data over redis
-		pub.publish('updateUser', JSON.stringify({
-			data: user,
-			id: user[id]
-		}));
+		usersManagement.setUsersData(user, id);
 	}
 	
 	/*
@@ -291,6 +282,7 @@ module.exports = (clients, usersManagement) => {
 
 	return {
 		connectBrowser,
+		connectBrowserTracker,
 		disconnect,
 		tabVisibilityChange,
 		updateMarketAlertsSubscription,

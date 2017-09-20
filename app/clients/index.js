@@ -12,5 +12,4 @@ module.exports = (clients, usersManagement) => {
 	require('./mobileConnections')(clients, usersManagement);
 	require('./pushConnections')(clients, usersManagement);
 	require('./api')(clients,usersManagement);
-	require('./redisEvent')(clients,usersManagement);
 }

@@ -5,10 +5,10 @@ const ActiveDirectory = require('activedirectory');
 module.exports = (directMessaging) => {
 	//console.log(directMessaging.getEventsTest().events);
 	// Mobile App Api methods
-	directMessaging.addHttpInEvent(
-		'/admin/auth/status',
-		[],
-		function(req, res) {
+	directMessaging.addHttpInEvent({
+		url: '/admin/auth/status',
+		name: 'adminStatus',
+		handler: function(req, res) {
 			if(req.session && req.session.username){
 				res.send({
 					[parameters.admin.ACCESS]: 'allowed',
@@ -20,17 +20,16 @@ module.exports = (directMessaging) => {
 				});
 			}
 		},
-		'get'
-		
-	)
+		method: 'get'	
+	})
 
-	directMessaging.addHttpInEvent(
-		'adminLogin',
-		[
+	directMessaging.addHttpInEvent({
+		name: 'adminLogin',
+		data: [
 			[parameters.admin.USERNAME],
 			[parameters.admin.PASSWORD]
 		],
-		function(req, res, data) {
+		handler: function(req, res, data) {
 			const username = data.username;
 			const password = data.password;
 			
@@ -42,6 +41,7 @@ module.exports = (directMessaging) => {
             }
 			
 			var ad = new ActiveDirectory(adConfig);
+			
 			
 			ad.authenticate(username, password, function(err, auth) {
 				if (err) {
@@ -62,25 +62,20 @@ module.exports = (directMessaging) => {
 		  			res.send('Username and password are not recognized.');
 			  	}
 			});
-
-
-			//req.session[parameters.admin.USERNAME] = 'uros';
-			//res.send('Welcome');
 		},
-		'post',
-		'/admin/auth/login'
-	)
+		method: 'post',
+		url: '/admin/auth/login',
+	})
 	
-	directMessaging.addHttpInEvent(
-		'/admin/auth/logout',
-		[],
-		function(req, res) {
+	directMessaging.addHttpInEvent({
+		url: '/admin/auth/logout',
+		name: 'adminLogout',
+		handler: function(req, res) {
 			req.session.destroy(function(err) {
   				res.send('logout');
 			})
 		},
-		'get'
-	)
-
+		method: 'get'
+	})
 
 }

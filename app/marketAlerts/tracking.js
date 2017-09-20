@@ -4,16 +4,16 @@ const parameters = require('../parameters');
 module.exports  = (marketAlerts, usersManagement) => {
 	
 	// Api methods for retrieving stats about users
-	marketAlerts.addHttpInEvent(
-		'pushDelivered',
-		[
+	marketAlerts.addHttpInEvent({
+		name: 'pushDelivered',
+		data: [
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
 			parameters.tracking.NOTIFICATION_RECEIVED,
 			parameters.tracking.PUSH_ID
 		],
-		function(req, res, data) {
+		handler: function(req, res, data) {
 			let pub = marketAlerts.getRedisConnection();
 			
 			pub.publish('tracking.pushDelivered', JSON.stringify({
@@ -28,20 +28,20 @@ module.exports  = (marketAlerts, usersManagement) => {
 			res.send('ok');
 
 		},
-		'post',
-		'/api/track/push/delivered'
-	)
+		method: 'post',
+		url: '/api/track/push/delivered'
+	})
 	
-	marketAlerts.addHttpInEvent(
-		'pushClicked',
-		[
+	marketAlerts.addHttpInEvent({
+		name: 'pushClicked',
+		data: [
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
 			parameters.tracking.PUSH_ID,
 			parameters.tracking.ACTION_TIME
 		],
-		function(req, res, data) {
+		handler: function(req, res, data) {
 			let pub = marketAlerts.getRedisConnection();
 			
 			pub.publish('tracking.pushClicked', JSON.stringify({
@@ -58,20 +58,20 @@ module.exports  = (marketAlerts, usersManagement) => {
 
 			res.send('ok')
 		},
-		'post',
-		'/api/track/push/clicked'
-	)
+		method: 'post',
+		url: '/api/track/push/clicked'
+	})
 	
-	marketAlerts.addHttpInEvent(
-		'pushClosed',
-		[
+	marketAlerts.addHttpInEvent({
+		name: 'pushClosed',
+		data: [
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.tracking.TRIGGER_ID,
 			parameters.tracking.TRIGGER_TYPE,
 			parameters.tracking.ACTION_TIME,
 			parameters.tracking.PUSH_ID
 		],
-		function(req, res, data) {
+		handler: function(req, res, data) {
 			let pub = marketAlerts.getRedisConnection();
 			
 			pub.publish('tracking.pushClosed', JSON.stringify({
@@ -89,46 +89,38 @@ module.exports  = (marketAlerts, usersManagement) => {
 			res.send('ok');
 			
 		},
-		'post',
-		'/api/track/push/closed'
-	)
+		method: 'post',
+		url: '/api/track/push/closed'
+	})
 
-	marketAlerts.addSocketInEvent(
-		'notificationDelivered', 
-		[
-			parameters.messageChannels.SOCKET_ID
-		], 
-		function(data){
+	marketAlerts.addSocketInEvent({
+		name: 'notificationDelivered', 
+		data: [ parameters.messageChannels.SOCKET_ID ], 
+		handler: function(data){
 			let pub = marketAlerts.getRedisConnection();
 			
 			data.notificationInfoRecieved = new Date();
 			pub.publish('tracking.notificationDelivered', JSON.stringify(data));
-			
 		}
-	);
+	});
 	
-	marketAlerts.addSocketInEvent(
-		'notificationAction', 
-		[
-			parameters.messageChannels.SOCKET_ID
-		], 
-		function(data){
+	marketAlerts.addSocketInEvent({
+		name: 'notificationAction', 
+		data: [	parameters.messageChannels.SOCKET_ID ], 
+		handler: function(data){
 			let pub = marketAlerts.getRedisConnection();
 			pub.publish('tracking.notificationAction', JSON.stringify(data));
 			
 		}
+	});
 
-	);
-
-	marketAlerts.addSocketInEvent(
-		'notificationVisible', 
-		[
-			parameters.messageChannels.SOCKET_ID
-		], 
-		function(data){
+	marketAlerts.addSocketInEvent({
+		name: 'notificationVisible', 
+		data: [ parameters.messageChannels.SOCKET_ID ], 
+		handler: function(data){
 			let pub = marketAlerts.getRedisConnection();
 			pub.publish('tracking.notificationVisible', JSON.stringify(data));
 		}
-	);
+	});
 
 }

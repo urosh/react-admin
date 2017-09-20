@@ -17,9 +17,9 @@ const mobileConnectionsHandler = require('./mobileConnectionsHandlers')(clients,
 	/*
 	 * Connect method, called when user opens the app, or when the user logs in.
 	 */
-	clients.addHttpInEvent(
-		'mobileConnect',
-		[
+	clients.addHttpInEvent({
+		name: 'mobileConnect',
+		data: [
 			parameters.user.USER_ID,
 			parameters.user.LANGUAGE,
 			parameters.user.CULTURE,
@@ -27,10 +27,11 @@ const mobileConnectionsHandler = require('./mobileConnectionsHandlers')(clients,
 			parameters.messageChannels.SYSTEM,
 			parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD
 		],
-		mobileConnectionsHandler.mobileConnect,
-		'post',
-		'/devices/mobile/connect'
-	)
+		handler: mobileConnectionsHandler.mobileConnect,
+		method: 'post',
+		url: '/devices/mobile/connect',
+		distributed: true
+	})
 	/*
 	 * Transforming mongodb mobile registration to the new structure. This should be one off action
 	 * that is triggered when making transition between old and new server version. In the updated 
@@ -38,13 +39,13 @@ const mobileConnectionsHandler = require('./mobileConnectionsHandlers')(clients,
 	 * to get data stored in the mongodb using the old format and add it to the new system
 	 *
 	 */
-	clients.addHttpInEvent(
-		'transformMobileData',
-		[],
-		mobileConnectionsHandler.transformMobileData,
-		'post',
-		'/devices/mobile/transform'
-	)
+	clients.addHttpInEvent({
+		name: 'transformMobileData',
+		handler: mobileConnectionsHandler.transformMobileData,
+		method: 'post',
+		url: '/devices/mobile/transform',
+		distributed: true		
+	});
 	
 	/*
 	 * Mobile logout handler
@@ -55,37 +56,36 @@ const mobileConnectionsHandler = require('./mobileConnectionsHandlers')(clients,
 	 * - Update the users object
 	 *
 	 */
-	clients.addHttpInEvent(
-		'mobileLogout',
-		[
+	clients.addHttpInEvent({
+		name: 'mobileLogout',
+		data: [
 			parameters.messageChannels.TOKEN,
 			parameters.user.USER_ID,
 		],
-		mobileConnectionsHandler.mobileLogout,
-		'post',
-		'/devices/mobile/logout'
-	)
+		handler: mobileConnectionsHandler.mobileLogout,
+		method: 'post',
+		url: '/devices/mobile/logout',
+		distributed: true
+	});
 
-	clients.addHttpInEvent(
-		'mobileTokenUpdate',
-		[
+	clients.addHttpInEvent({
+		name: 'mobileTokenUpdate',
+		data: [
 			parameters.messageChannels.OLD_TOKEN,
 			parameters.messageChannels.NEW_TOKEN,
 		],
-		mobileConnectionsHandler.mobileTokenUpdate,
-		'post',
-		'/devices/mobile/update'
-	)
+		handler: mobileConnectionsHandler.mobileTokenUpdate,
+		method: 'post',
+		url: '/devices/mobile/update',
+		distributed: true
+	})
 
-	clients.addHttpInEvent(
-		'mobileDelete',
-		[
-			parameters.messageChannels.TOKEN
-		],
-		mobileConnectionsHandler.mobileDelete,
-		'post',
-		'/devices/mobile/delete'
-	)
-
+	clients.addHttpInEvent({
+		name: 'mobileDelete',
+		data: [ parameters.messageChannels.TOKEN ],
+		handler: mobileConnectionsHandler.mobileDelete,
+		method: 'post',
+		url: '/devices/mobile/delete'
+	})
 
 }

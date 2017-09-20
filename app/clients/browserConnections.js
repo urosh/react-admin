@@ -18,8 +18,9 @@ module.exports = (clients, usersManagement) => {
 	 * passed to the server is the most up to date information related to the given 
 	 * user. 
 	 */
-	clients.addSocketInEvent('connectBrowser', 
-		[
+	clients.addSocketInEvent({
+		name: 'connectBrowser', 
+		data: [
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.user.USER_ID,
 			parameters.user.TEST_ENABLED,
@@ -28,18 +29,19 @@ module.exports = (clients, usersManagement) => {
 			parameters.user.PAIRS,
 			parameters.messageChannels.SOCKET_ID
 		], 
-		browserConnectionsHandlers.connectBrowser
-	);
+		handler: browserConnectionsHandlers.connectBrowser,
+		distributed: true,
+		tracking: browserConnectionsHandlers.connectBrowserTracker
+	});
 
 
 	// Closing socket connection
-	clients.addSocketInEvent(
-		'disconnect', 
-		[
-			parameters.messageChannels.SOCKET_ID
-		], 
-		browserConnectionsHandlers.disconnect
-	);
+	clients.addSocketInEvent({
+		name: 'disconnect', 
+		data: [parameters.messageChannels.SOCKET_ID], 
+		handler: browserConnectionsHandlers.disconnect,
+		distributed: true
+	});
 
 
 	/*
@@ -49,49 +51,52 @@ module.exports = (clients, usersManagement) => {
 	 * not on the platform we should show push notification.
 	 *
 	 */
-	clients.addSocketInEvent(
-		'tabVisibilityChange',
-		[
+	clients.addSocketInEvent({
+		name: 'tabVisibilityChange',
+		data: [
 			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.messageChannels.TAB_ACTIVE,
 		],
-		browserConnectionsHandlers.tabVisibilityChange
-	)
+		handler: browserConnectionsHandlers.tabVisibilityChange,
+		distributed: true
+	})
 
 	/*
 	 * Updating Market Alert's subscription
 	 */
-	clients.addSocketInEvent(
-		'updateMarketAlertsSubscription',
-		[
+	clients.addSocketInEvent({
+		name: 'updateMarketAlertsSubscription',
+		data: [
 			parameters.user.USER_ID,
 			parameters.user.MARKET_ALERT_ALLOW
 		],
-		browserConnectionsHandlers.updateMarketAlertsSubscription
-	)
+		handler: browserConnectionsHandlers.updateMarketAlertsSubscription,
+		distributed: true
+	})
 	
 	/*
 	 * Instrument update handler. Initiated when user selects/unselects favorite instrument
 	 * in the tradezone. 
 	 */
-	clients.addSocketInEvent(
-		'instrumentUpdate',
-		[
+	clients.addSocketInEvent({
+		name: 'instrumentUpdate',
+		data: [
 			parameters.user.USER_ID,
 			parameters.user.INSTRUMENT,
 			parameters.user.INSTRUMENT_STATUS
 		],
-		browserConnectionsHandlers.instrumentUpdate
-	)
+		handler: browserConnectionsHandlers.instrumentUpdate,
+		distributed: true
+	})
 	
 	/*
 	 * Helper event that measures socket latency and sends this information to the tracking
 	 * module. 
 	 */
-	clients.addSocketInEvent(
-		'setMachineInfo',
-		[
+	clients.addSocketInEvent({
+		name: 'setMachineInfo',
+		data: [
 			[parameters.messageChannels.MACHINE_HASH], 
 			[parameters.tracking.USER_AGENT], 
 			[parameters.tracking.IP], 
@@ -100,7 +105,7 @@ module.exports = (clients, usersManagement) => {
 			[parameters.tracking.LONGITUDE], 
 			[parameters.tracking.REGION]
 		],
-		browserConnectionsHandlers.setMachineInfo
-	)
+		handler: browserConnectionsHandlers.setMachineInfo,
+	})
 }
 

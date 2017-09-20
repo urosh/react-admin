@@ -2,9 +2,10 @@
 const parameters = require('../parameters');
 
 module.exports = function(webeyezRedis, usersManagement){
-	webeyezRedis.addRedisInEvent('UserSettingsChanged', 
-		[],
-		function(data) {
+	
+	webeyezRedis.addRedisInEvent({
+		name: 'UserSettingsChanged', 
+		handler: function(data) {
 			
 			let userData = JSON.parse(data.Message);
                 
@@ -33,6 +34,7 @@ module.exports = function(webeyezRedis, usersManagement){
            	usersManagement.updateUserDatabaseRecord(user);
 
 		} 
-	)
+	})
+
 	return {};
 }

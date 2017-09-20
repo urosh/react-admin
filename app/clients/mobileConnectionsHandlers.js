@@ -2,7 +2,7 @@
 const parameters = require('../parameters');
 const _ = require('lodash');
 const fs = require('fs');
-
+const languages = require('../config').languages;
 
 const UsersModel = require('../../models/user');
 const OldMobileModel = require('../../models/mobile');
@@ -32,19 +32,30 @@ module.exports  = (clients, usersManagement) => {
 	 * - Send data over redis to all instances to update users object
 	 *
 	 */
-	const mobileConnect = (req, res, data) => {
-		if(res){
-			res.send('Mobile Management: Mobile data received');
-		}
+	const mobileConnect = data => {
 
-		console.log('Mobile Management: Mobile App Connnect', data);
 		// Make sure userID is in correct format
 		if(data[parameters.user.USER_ID] === 'null') {
 			data[parameters.user.USER_ID] = null;
 		}
-
+		// Get the id value for current user. Depending on user status it might
+		// be userID, token or machineHash
 		let id = usersManagement.getUserId(data);
+		
+		// Make sure language is valid. If not set to default -> en
+		let languageValid = false;
 
+		Object.keys(languages)
+			.map(lang => languages[lang])
+			.map(language => {
+				if(language === data[parameters.user.LANGUAGE]){
+					languageValid = true;
+				}
+			})
+		if(!languageValid){
+			data[parameters.user.LANGUAGE] = 'en';
+		}
+		// Get user object template	
 		const userModel = usersManagement.getUserModel();
 		
 		const sql = usersManagement.getSqlConnection();
@@ -52,9 +63,12 @@ module.exports  = (clients, usersManagement) => {
 		// Remove all references to the current mobile device
 		let mobileConnectionDates = usersManagement.removeMobileFromUsers(data[parameters.messageChannels.TOKEN], data[parameters.messageChannels.DEVICE_ID]);
 		
-
+		/*
+		 * Build updated user data, from potential existin users object, user 
+		 * template and receivied data
+		 */
 		let user = Object.assign({}, userModel, usersManagement.getUser(id));
-		
+
 		if(!user) return;
 		
 		// In case the user registration is new, we need to set userId
@@ -64,49 +78,43 @@ module.exports  = (clients, usersManagement) => {
 		data[parameters.messageChannels.FIRST_CONNECTION_DATE] = mobileConnectionDates || new Date();
 		data[parameters.messageChannels.LAST_CONNECTION_DATE] = new Date();
 		
+		if(!data[parameters.messageChannels.APP_VERSION_NUMBER]){
+			data[parameters.messageChannels.APP_VERSION_NUMBER] = null;
+		}
+
 		let mobileRegistrations = user[parameters.messageChannels.MOBILES];
 		
 		mobileRegistrations.push(data);
 		
-		let pub =  clients.getRedisConnection();
-		
+		usersManagement.updateUserDatabaseRecord(user);
+
+		usersManagement.setUsersData(user, id);
+
 		if(user[parameters.user.USER_ID]){
 			usersManagement.getUsersDataFromMssql(user[parameters.user.USER_ID])
 				.then((response) => {
+					user = usersManagement.getUser(id)
+					
 					user[parameters.user.MARKET_ALERT_ALLOW] = response[parameters.user.MARKET_ALERT_ALLOW];
 					
 					user[parameters.user.MOBILE_PAIRS] = response[parameters.user.MOBILE_PAIRS];
 					
 					usersManagement.updateUserDatabaseRecord(user);
+				
+					usersManagement.setUsersData(user, id);
 
-					// Publish user's data over redis
-					pub.publish('updateUser', JSON.stringify({
-						data: user,
-						id: id
-					}));
 				})
-		}else{
-			usersManagement.updateUserDatabaseRecord(user);
-			// Publish user's data over redis
-			pub.publish('updateUser', JSON.stringify({
-				data: user,
-				id: id
-			}));
 		}
 	}
 	
-	const transformMobileData = (req, res, data) => {
+	const transformMobileData = data => {
 		console.log('Mobile Management: Initializing MongoDB mobile data transformation');
 		
-		if(res){
-			res.send('Transform request received');
-		}
-
 		OldMobileModel
 			.find()
 			.exec()
 			.then(savedUsers => {
-				savedUsers.forEach(savedUser => {
+				savedUsers.forEach((savedUser, i) => {
 					
 					let userData = {};
 					
@@ -117,8 +125,9 @@ module.exports  = (clients, usersManagement) => {
 					userData[parameters.messageChannels.SYSTEM] = savedUser[parameters.messageChannels.SYSTEM];
 					userData[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD] = savedUser[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD];
 					userData[parameters.messageChannels.DEVICE_ID] = savedUser[parameters.messageChannels.DEVICE_ID];
-
-					mobileConnect(req, null, userData);			
+					userData[parameters.messageChannels.APP_VERSION_NUMBER] =  userData[parameters.messageChannels.APP_VERSION_NUMBER] ? userData[parameters.messageChannels.APP_VERSION_NUMBER] : null;
+					mobileConnect(userData);			
+					
 				})
 			})
 	}
@@ -131,8 +140,8 @@ module.exports  = (clients, usersManagement) => {
 	 * - Update the users object
 	 *
 	 */
-	const mobileLogout = (req, res, data) => {
-		res.send('Mobile device logged out successfully');
+	const mobileLogout = data => {
+		
 		console.log(`Mobile Management: Mobile app [userID: ${data[parameters.user.USER_ID]}] logout`)
 		
 		let mobileData;
@@ -150,17 +159,12 @@ module.exports  = (clients, usersManagement) => {
 			
 		usersManagement.updateUserDatabaseRecord(user);
 		
-		// Publish user's data over redis
-		let pub =  clients.getRedisConnection();
+		usersManagement.setUsersData(user, user[parameters.user.USER_ID]);
 
-		pub.publish('updateUser', JSON.stringify({
-			data: user,
-			id: user[parameters.user.USER_ID]
-		}));
 	}
 
-	const mobileTokenUpdate = (req, res, data) => {
-		res.send('Mobile device token updated');
+	const mobileTokenUpdate = data => {
+		
 		console.log(`Mobile Management: Updating mobile app token [old token, new token][${data[parameters.messageChannels.OLD_TOKEN]}, ${data[parameters.messageChannels.OLD_TOKEN]}]`);
 
 		// Grap new/old token references
@@ -175,30 +179,23 @@ module.exports  = (clients, usersManagement) => {
 		let oldId = oldUser[parameters.user.USER_ID] ? oldUser[parameters.user.USER_ID] : oldToken;
 		let newId = oldUser[parameters.user.USER_ID] ? oldUser[parameters.user.USER_ID] : newToken;
 
-		let pub =  clients.getRedisConnection();
-
-		// Publish user's data over redis
-		pub.publish('updateUser', JSON.stringify({
-			data: {},
-			id: oldId
-		}));
-
+		usersManagement.setUsersData({}, oldId);
+		
 		let newUser = _.cloneDeep(oldUser);
 		
 		let mobileObject = usersManagement.getMobileObject(newUser, oldToken);
+		
 		if(mobileObject) {
 			mobileObject[parameters.messageChannels.TOKEN] = newToken;
 		} 
 		
-		// Publish user's data over redis
-		pub.publish('updateUser', JSON.stringify({
-			data: newUser,
-			id: newId
-		}));
+		usersManagement.setUsersData(newUser, newId);
+		
+
 	}
 	
-	const mobileDelete = (req, res, data) => {
-		res.send('Mobile device deleted successfully');
+	const mobileDelete = data => {
+		
 		console.log(`Mobile Management: Deleting mobile app registration for token [${data[parameters.messageChannels.TOKEN]}]`);
 
 		// Mobile registration function
@@ -208,12 +205,9 @@ module.exports  = (clients, usersManagement) => {
 		if(_.isEmpty(user)) return;
 
 		user[parameters.messageChannels.MOBILES] = user[parameters.messageChannels.MOBILES].filter(mobile => mobile[parameters.messageChannels.TOKEN] !== token);
-		let pub =  clients.getRedisConnection();
-		// Publish user's data over redis
-		pub.publish('updateUser', JSON.stringify({
-			data: user,
-			id: usersManagement.getUserId(user)
-		}));
+		
+		usersManagement.setUsersData(user, usersManagement.getUserId(user));
+
 	}
 
 

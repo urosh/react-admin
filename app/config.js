@@ -1,4 +1,4 @@
-const loadDataFromDatabase = process.env.LOAD_DATA_FROM_DATABASE || false;
+const loadDataFromDatabase = process.env.LOAD_DATA_FROM_DATABASE === '1' ? true : false;
 
 const globalPairs = [
 	'EUR/USD',
@@ -49,6 +49,7 @@ const eventList = {
 		"type": "low", 
 		"message": {
 			"en": "trading at a 30 day low",
+			"es": "cotizando al nivel más bajo de los últimos 30 días",
 			"pl": "kurs na 30 dniowym spadku",
 			"ar": "يتداول عند أدنى مستوى لمدة 30 يوما",
 			"zh-hans": "跌至30日低位"
@@ -59,6 +60,7 @@ const eventList = {
 		"type": "high", 
 		"message": {
 			"en": "trading at a 30 day high",
+			"es": "cotizando al nivel más alto de los últimos 30 días",
 			"pl": "kurs na 30 dniowym wzroście",
 			"ar": "يتداول عند أعلى مستوى لمدة 30 يوما",
 			"zh-hans": "升至30日高位"
@@ -69,6 +71,7 @@ const eventList = {
 		"type": "low", 
 		"message": {
 			"en":"trading at a 90 day low",
+			"es":"cotizando al nivel más bajo de los últimos 90 días",
 			"pl":"kurs na 90 dniowym spadku",
 			"ar":" يتداول عند أدنى مستوى لمدة 90 يوما",
 			"zh-hans":"跌至90日低位"
@@ -79,6 +82,7 @@ const eventList = {
 		"type": "high", 
 		"message": {
 			"en": "trading at a 90 day high",
+			"es": "cotizando al nivel más alto de los últimos 90 días",
 			"pl": "kurs na 90 dniowym wzroście",
 			"ar": "يتداول عند أعلى مستوى لمدة 90 يوما",
 			"zh-hans": "升至90日高位"
@@ -89,6 +93,7 @@ const eventList = {
 		"type": "low", 
 		"message": {
 			"en":"trading at a 1 year low",
+			"es":"cotizando al nivel más bajo del año",
 			"pl":"kurs na rocznym spadku",
 			"ar":"يتداول عند أدنى مستوى لمدة سنة",
 			"zh-hans":"跌至1年来低位"
@@ -99,6 +104,7 @@ const eventList = {
 		"type": "high", 
 		"message": {
 			"en": "trading at a 1 year high",
+			"es": "cotizando al nivel más alto del año",
 			"pl": "kurs na rocznym wzroście",
 			"ar": "يتداول عند أعلى مستوى لمدة سنة",
 			"zh-hans": "升至1年来高位"
@@ -135,7 +141,8 @@ const languages = {
 	'EN': 'en',
 	'PL': 'pl',
 	'AR': 'ar',
-	'ZH_HANS': 'zh-hans'
+	'ZH_HANS': 'zh-hans',
+	'ES': 'es'
 }
 
 
@@ -151,6 +158,8 @@ const webeyezRedisPort = process.env.WEBEYEZ_REDIS_PORT;
 const ADMIN_FCM_SERVER_KEY = 'AIzaSyAP8CDwT4ANSrCZvcaZMRHw1_Dt4dH1wBA';
 const CLIENT_FCM_SERVER_KEY = 'AIzaSyBuBkx25PYli0uCjdzhp20p9M6CqMibKyc';
 
+const pushyApiKey = process.env.PUSHY_API_KEY;
+
 module.exports = {
 	globalPairs,
 	db,
@@ -164,5 +173,6 @@ module.exports = {
 	webeyezRedisPort,
 	ADMIN_FCM_SERVER_KEY,
 	CLIENT_FCM_SERVER_KEY,
-	loadDataFromDatabase
+	loadDataFromDatabase,
+	pushyApiKey
 }

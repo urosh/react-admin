@@ -46,16 +46,19 @@ module.exports = (app, http) => {
 	 * group of tasks. Connections library recieves app instance and the list of
 	 * parameters that we are planning to use in our handlers. 
 	 */
-	// Receiving market alert triggers and sending messages to the client
-	const marketAlerts = new Connections(app, parameters);
-	// Handling user updates 
-	const userUpdates = new Connections(app, null);
-	// Admin panel handling
-	const directMessaging = new Connections(app, parameters);
+	
 	// User connections (browser, push, mobiles)
 	const clients = new Connections(app, parameters);
+	
+	// Handling user updates coming from webeyez redis 
+	const userUpdates = new Connections(app, null);
+	
+	// Receiving market alert triggers and sending messages to the client
+	const marketAlerts = new Connections(app, parameters);
+	
+	// Admin panel handling
+	const directMessaging = new Connections(app, parameters);
 
-	// Start socket and redis connections
 	// Socket connection used to communicate to the clients
 	let clientIo = socketIO(http, {
 		origins: marketAlertsConfig.socketOrigins,
@@ -75,6 +78,7 @@ module.exports = (app, http) => {
 	});
 
 	let pubRedisError = false;
+	
 	pub.on("error", function(err) {
 	    if (!pubRedisError) {
 	        pubRedisError = true;
@@ -83,6 +87,7 @@ module.exports = (app, http) => {
 	});
 
 	let pubRedisConnected = false;
+	
 	pub.on('connect', err => {
 		if(!pubRedisConnected) {
 			pubRedisConnected = true;
@@ -97,6 +102,7 @@ module.exports = (app, http) => {
 	});
 
 	let subConnectionError = false;
+	
 	sub.on("error", function(err) {
 	    if (!subConnectionError) {
 	        subConnectionError = true;
@@ -105,6 +111,7 @@ module.exports = (app, http) => {
 	});
 
 	let subRedisConnected = false;
+	
 	sub.on('connect', err => {
 		if(!subRedisConnected) {
 			subRedisConnected = true;
@@ -119,6 +126,7 @@ module.exports = (app, http) => {
 	});
 
 	let webeyezRedisConnected = false;
+	
 	webeyezRedis.on('connect', err => {
 		if(!webeyezRedisConnected) {
 			webeyezRedisConnected = true;
@@ -127,6 +135,7 @@ module.exports = (app, http) => {
 	})
 
 	let webeyezConnectionError = false;
+	
 	webeyezRedis.on("error", function(err) {
 	    if (!webeyezConnectionError) {
 	        webeyezConnectionError = true;
@@ -142,15 +151,17 @@ module.exports = (app, http) => {
 	 */
 
 	
-	// Implementation of market alerts
-	require('./marketAlerts')(marketAlerts, usersManagement);
-	// Connecting to webeyez redis and updating user subscriptions
-	require('./userUpdates')(userUpdates, usersManagement);
-	// Adding direct messaging module and  admin panel 
-	require('./directMessaging')(directMessaging, usersManagement);
 	// Adding clients module
 	require('./clients')(clients, usersManagement);
-
+	
+	// Connecting to webeyez redis and updating user subscriptions
+	require('./userUpdates')(userUpdates, usersManagement);
+	
+	// Implementation of market alerts
+	require('./marketAlerts')(marketAlerts, usersManagement);
+	
+	// Adding direct messaging module and  admin panel 
+	require('./directMessaging')(directMessaging, usersManagement);
 
 	// Starting the user management module. It loads data from the database
 	usersManagement.init();

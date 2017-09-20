@@ -18,90 +18,136 @@ module.exports = (users) => {
 	 * @return object 
 	 */
 	const getUsersList = (filters) => {
-		
-		// Logged in users
-		const loggedInAlerts = Object.keys(users)
-			.map(id => users[id])
-			// Get only logged in users
-			.filter(user => user[parameters.user.USER_ID])
-			.filter(user => filters.messageType === 'all' || filters.messageType === 'alert')
-			// Filter by user type, we want logged in users only if user type is all or in
-			.filter(user =>  !filters.userType || filters.userType === 'all' || filters.userType === 'in')
-			// Check culture filter
-			.filter(user => !filters.cultures || filters.cultures === 'all' || filters.cultures === user[parameters.user.CULTURE])
-			// Check test user filter
-			.filter(user => {
-				return 	(filters.testUsers === 'test' && user.testEnabled) || 
-						(filters.testUsers === 'all') ||
-						(filters.testUsers === 'non-test' && !user.testEnabled)
-			})
-			// User has to have at least one socket active
-			.filter(user => {
-				return user[parameters.messageChannels.SOCKETS].reduce((prev, curr) => {
-						if(prev) return true;
-						return curr[parameters.messageChannels.SOCKET_ACTIVE];
-					}, false);
-			})
-			.filter(user => (!filters.selectedUsers.length || filters.selectedUsers.indexOf(user[parameters.user.USER_ID]) > -1))
 
-		// Logged out users
-		const loggedOutAlerts = Object.keys(users)
-			.map(id => users[id])
-			.filter(user => !user[parameters.user.USER_ID])
-			.filter(user => filters.messageType === 'all' || filters.messageType === 'alert')
-			.filter(user => !filters.userType || filters.userType === 'all' || filters.userType === 'out')
-			.filter(user => !filters.cultures || filters.cultures === 'all' || filters.cultures === user[parameters.user.CULTURE])
-			.filter(user => {
-				return 	(filters.testUsers === 'test' && user.testEnabled) || 
-					(filters.testUsers === 'all') ||
-					(filters.testUsers === 'non-test' && !user.testEnabled)
-			})
-			.filter(user => {
-				return user[parameters.messageChannels.SOCKETS]
-					.reduce((prev, curr) => {
-						if(prev) return true;
-						return curr[parameters.messageChannels.SOCKET_ACTIVE];
-					}, false);
-			})
-			.filter(user => !filters.selectedUsers.length);
+		let initialUserList = [];
+		let loggedInAlerts = [];
+		let loggedOutAlerts = [];
+
+		let alerts = [];
+		let pushMessages = [];
+		let mobileMessages = [];
+
+		filters.selectedUsers.map(id => {
+			initialUserList.push(users[id]);
+		})
 		
-		// List of users with push notifications enabled
-		const pushMessages = Object.keys(users)
-			.map(id => users[id])
-			.filter(user => {
-				return user[parameters.messageChannels.PUSH].reduce((prev, curr) => {
-						if(prev) return true;
-						return curr[parameters.messageChannels.PUSH_ACTIVE];
-					}, false);
-			})
-			.filter(user => {
-				if(!filters.userType || filters.userType === 'all') return true;
-				if(user[parameters.user.USER_ID]){
-					if(filters.userType === 'in') return true;
+		if(!initialUserList.length){
+			initialUserList = Object.keys(users).map(id => users[id]);
+		}
+		
+		// Apply filters to the user list 
+
+		// Culture filter, only if cultures filter exist and is not set to all
+		if(filters.cultures && filters.cultures !== 'all'){
+			initialUserList = initialUserList.filter(user => user[parameters.user.CULTURE] === filter.cultures)
+		}
+		
+		// Logged in/out, do filtering only if defined and not set to all
+		if(filters.userType && filters.userType !== 'all'){
+			initialUserList = initialUserList.filter(user => {
+				if(user[parameters.user.USER_ID]) {
+					return filters.userType === 'in'
 				}else{
-					if(filters.userType === 'out') return true;
+					return filters.userType === 'out'
 				}
-				return false;
 			})
-			.filter(user => {
-				if(filters.testUsers === 'test' && !user[parameters.user.TEST_ENABLED]) return false;
-				if(filters.testUsers === 'non-test' && user[parameters.user.TEST_ENABLED]) return false;
-				return true;
-			})
-			.filter(user => !filters.cultures || filters.cultures === 'all' || filters.cultures === user[parameters.user.CULTURE])
-			.filter(user => filters.messageType === 'all' || filters.messageType === 'push')
-			.filter(user => !filters.selectedUsers.length || filters.selectedUsers.indexOf(user[parameters.user.USER_ID]) > -1)
+		}
 		
-		const mobileMessages = [];
+		// Test/Regular
+		if(filters.testUsers && filters.testUsers !== 'all'){
+			initialUserList = initialUserList.filter(user => {
+				if(user[parameters.user.TEST_ENABLED]) {
+					return filters.userType === 'test'
+				}else{
+					return filters.userType === 'non-test'
+				}
+			})
+		}
+		
+		initialUserList.forEach(user => {
+			
+			if(
+				filters.deviceType === 'all' ||
+				filters.deviceType === 'alert' ||
+				filters.deviceType === 'browser' ||
+				filters.deviceType === 'browser-alert'
+			){
+				let alertEnabled = 
+					user[parameters.messageChannels.SOCKETS]
+						.reduce((prev, curr) => {
+							if(prev) return true;
+							return (curr[parameters.messageChannels.SOCKET_ACTIVE] && filters.alertActiveLanguages.indexOf(curr[parameters.user.LANGUAGE]) > -1);
+						}, false);
+				
+				if(alertEnabled){
+					alerts.push(user);
+				}
+			}
+
+
+
+			if(
+				filters.deviceType === 'all' ||
+				filters.deviceType === 'push-all' ||
+				filters.deviceType === 'browser' ||
+				filters.deviceType === 'browser-push'
+			){
+				// Push is considered enabled if the language of the user is found in the list of message 
+				// languages
+				user[parameters.messageChannels.PUSH]
+						.map(push => {
+							if(push[parameters.messageChannels.PUSH_ACTIVE] && filters.pushActiveLanguages.indexOf(push[parameters.user.LANGUAGE]) > -1){
+								pushMessages.push(push);			
+							}
+						});
+			}
+			
+
+			if(
+				filters.deviceType === 'all' ||
+				filters.deviceType === 'push-all' ||
+				filters.deviceType === 'mobile'
+			){
+				user[parameters.messageChannels.MOBILES]
+					.map(mobile => {
+						if( filters.mobileActiveLanguages.indexOf(mobile[parameters.user.LANGUAGE]) > -1 && mobile[parameters.messageChannels.APP_VERSION_NUMBER]){
+							mobileMessages.push(mobile);
+						}
+					});
+				
+			}
+		});
+
+		let pushyMobiles = [], 
+		    iosMobiles = [],
+		    androidMobiles = [];
+		
+		mobileMessages.map(mobile => {
+
+			if(mobile[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD] === 'pushy'){
+				pushyMobiles.push(mobile);
+				return;
+			}
+			
+			if(mobile[parameters.messageChannels.SYSTEM] === 'ios'){
+				iosMobiles.push(mobile);
+				return;
+			}
+			
+			androidMobiles.push(mobile);
+		})
 
 		return {
-			alerts: loggedOutAlerts.length + loggedInAlerts.length,
+			alerts: alerts.length,
 			push: pushMessages.length,
 			mobiles: mobileMessages.length,
 			userInfo: {
-				alerts: [...loggedOutAlerts, ...loggedInAlerts],
+				alerts: [...alerts],
 				push: [...pushMessages],
-				mobiles: [...mobileMessages]
+				mobiles: [...mobileMessages],
+				pushyMobiles: [...pushyMobiles],
+				iosMobiles: [...iosMobiles],
+				androidMobiles: [...androidMobiles]
 			}
 		}
 	}

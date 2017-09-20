@@ -21,7 +21,6 @@ var loginModule = (function() {
 	var loginErrorCallback = function(data) {
 		loginErrorContent.text('Username and password are not recognized');
 	  	loginError.css('visibility', 'visible');
-	  	deffered.reject();
 	};
 
 	function loginHandler(e) {

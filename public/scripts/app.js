@@ -35,15 +35,17 @@ var notificationAdminPanel = (function(){
 
 	function showLogin(){
 		loginModule.init();
-		loginModule.showLogin().then(function(data){
-			username = data.username;
-			if(!pushRegistered){
-				registerPushNotifications();
-				pushRegistered = true;
-			}
-			socket.emit('adminConnect', {username: username});	
-			panelModule.showPanel(data, true);
-		});
+		loginModule.showLogin()
+			.then(function(data){
+				username = data.username;
+				if(!pushRegistered){
+					registerPushNotifications();
+					pushRegistered = true;
+				}
+				socket.emit('adminConnect', {username: username});	
+				panelModule.showPanel(data, true);
+			})
+			
 	}
 	
 	function addSocketHandlers() {

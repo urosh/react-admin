@@ -6,7 +6,9 @@ module.exports = function(directMessaging, usersManagement){
 	require('./adminAuthentication')(directMessaging);
 	require('./adminSocketConnections')(directMessaging, usersManagement, adminManagement);
 	require('./messagePreview')(directMessaging, usersManagement, adminManagement);
+	require('./directMessageTrigger')(directMessaging, usersManagement, adminManagement);
 	require('./messageRecipientsFiltering')(directMessaging, usersManagement);
+	require('./redisSocketTrigger')(directMessaging, usersManagement);
 	
 	let io;
 	

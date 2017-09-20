@@ -66,7 +66,7 @@ const socketMessageTemplate = {
 };
 
 // Mobile message template
-const mobileFcmTemplate = {
+const mobileFcmIosTemplate = {
 	priority: 'high',
 	collapse_key: 'Market Alert',
 	data: {
@@ -82,6 +82,21 @@ const mobileFcmTemplate = {
 	},
 	dry_run: true
 };
+
+// Mobile message template
+const mobileFcmAndroidTemplate = {
+	priority: 'high',
+	collapse_key: 'Market Alert',
+	data: {
+		[parameters.general.SCREEN]: '1',
+		[parameters.user.PAIR]: '',
+		[parameters.marketAlerts.TITLE]: '',
+		[parameters.marketAlerts.DETAIL]: ''
+	},
+	dry_run: true
+};
+
+
 
 // Pushy template
 const mobilePushyTemplate = {
@@ -109,7 +124,8 @@ const setNotificationAction = data =>  {
 			[languages.EN]: actionUrl,
 			[languages.PL]: '/' + languages.PL +  actionUrl,
 			[languages.AR]: '/' + languages.AR +  actionUrl,
-			[languages.ZH_HANS]: '/' + languages.ZH_HANS + actionUrl
+			[languages.ZH_HANS]: '/' + languages.ZH_HANS + actionUrl,
+			[languages.ES]: '/' + languages.ES + actionUrl
 		}
 	}
 }
@@ -189,16 +205,19 @@ const setNotificationTitle = (data, language) => {
 		[languages.EN]: '',
 		[languages.PL]: '',
 		[languages.AR]: '',
-		[languages.ZH_HANS]: ''
+		[languages.ZH_HANS]: '',
+		[languages.ES]: ''
 	}
 	
 	if(data[parameters.user.TEST_ENABLED]) {
 		title[languages.EN] = 'Testing Market Notification';
+		title[languages.ES] = 'Testing Notificaciones del Mercado';
 		title[languages.PL] = 'Testing Notyfikacja z Rynku';
 		title[languages.AR] = 'testing إخطارات السوق';
 		title[languages.ZH_HANS] = 'Testing 市场价格提醒';
 	}else{
 		title[languages.EN] = 'Market Notification';
+		title[languages.ES] = 'Notificaciones del Mercado';
 		title[languages.PL] = 'Notyfikacja z Rynku';
 		title[languages.AR] = 'إخطارات السوق';
 		title[languages.ZH_HANS] = '市场价格提醒';
@@ -218,7 +237,8 @@ module.exports = function(requestData) {
 		[languages.EN]: _.cloneDeep(pushMessageTemplate),
 		[languages.PL]: _.cloneDeep(pushMessageTemplate),
 		[languages.AR]: _.cloneDeep(pushMessageTemplate),
-		[languages.ZH_HANS]: _.cloneDeep(pushMessageTemplate)
+		[languages.ZH_HANS]: _.cloneDeep(pushMessageTemplate),
+		[languages.ES]: _.cloneDeep(pushMessageTemplate)
 	};
 
 	alertData.socket = {
@@ -226,13 +246,23 @@ module.exports = function(requestData) {
 		[languages.PL]: _.cloneDeep(socketMessageTemplate),
 		[languages.AR]: _.cloneDeep(socketMessageTemplate),
 		[languages.ZH_HANS]: _.cloneDeep(socketMessageTemplate),
+		[languages.ES]: _.cloneDeep(socketMessageTemplate),
 	};
 
-	alertData.fcmMobile = {
-		[languages.EN]: _.cloneDeep(mobileFcmTemplate),
-		[languages.PL]: _.cloneDeep(mobileFcmTemplate),
-		[languages.AR]: _.cloneDeep(mobileFcmTemplate),
-		[languages.ZH_HANS]: _.cloneDeep(mobileFcmTemplate),
+	alertData.fcmIosMobile = {
+		[languages.EN]: _.cloneDeep(mobileFcmIosTemplate),
+		[languages.PL]: _.cloneDeep(mobileFcmIosTemplate),
+		[languages.AR]: _.cloneDeep(mobileFcmIosTemplate),
+		[languages.ZH_HANS]: _.cloneDeep(mobileFcmIosTemplate),
+		[languages.ES]: _.cloneDeep(mobileFcmIosTemplate),
+	}
+
+	alertData.fcmAndroidMobile = {
+		[languages.EN]: _.cloneDeep(mobileFcmAndroidTemplate),
+		[languages.PL]: _.cloneDeep(mobileFcmAndroidTemplate),
+		[languages.AR]: _.cloneDeep(mobileFcmAndroidTemplate),
+		[languages.ZH_HANS]: _.cloneDeep(mobileFcmAndroidTemplate),
+		[languages.ES]: _.cloneDeep(mobileFcmAndroidTemplate),
 	}
 
 	alertData.pushyMobile = {
@@ -240,6 +270,7 @@ module.exports = function(requestData) {
 		[languages.PL]: _.cloneDeep(mobilePushyTemplate),
 		[languages.AR]: _.cloneDeep(mobilePushyTemplate),
 		[languages.ZH_HANS]: _.cloneDeep(mobilePushyTemplate),
+		[languages.ES]: _.cloneDeep(mobilePushyTemplate),
 	}
 
     var eventNumber = parseInt(requestData[parameters.marketAlerts.EVENT_TYPE_ID], 10);
@@ -282,13 +313,18 @@ module.exports = function(requestData) {
 			alertData.socket[language][parameters.tracking.TRIGGER_ID] = triggerID;
 			alertData.socket[language][parameters.tracking.TRIGGER_TYPE] = parameters.tracking.MARKET_ALERT;
 			
-			// Set mobile fcm message
-			alertData.fcmMobile[language].data['pair'] = instrument;
-			alertData.fcmMobile[language].data['title'] = notificationTitle;
-			alertData.fcmMobile[language].data['detail'] = pushMessage;
-			alertData.fcmMobile[language].notification[parameters.marketAlerts.TITLE] = notificationTitle;
-			alertData.fcmMobile[language].notification[parameters.marketAlerts.BODY] = pushMessage;
+			// Set mobile ios fcm message
+			alertData.fcmIosMobile[language].data['pair'] = instrument;
+			alertData.fcmIosMobile[language].data['title'] = notificationTitle;
+			alertData.fcmIosMobile[language].data['detail'] = pushMessage;
+			alertData.fcmIosMobile[language].notification[parameters.marketAlerts.TITLE] = notificationTitle;
+			alertData.fcmIosMobile[language].notification[parameters.marketAlerts.BODY] = pushMessage;
 			
+			// Set mobile android fcm message
+			alertData.fcmAndroidMobile[language].data['pair'] = instrument;
+			alertData.fcmAndroidMobile[language].data['title'] = notificationTitle;
+			alertData.fcmAndroidMobile[language].data['detail'] = pushMessage;
+
 			// Set mobile pushy message
 			alertData.pushyMobile[language].pair = instrument;
 			alertData.pushyMobile[language].title = notificationTitle;

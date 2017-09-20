@@ -43,10 +43,11 @@
 						</div>
 					</div>
 				
-					<div class="col-sm-12 col-lg-9 dash-row  user-groups">
+					<div class="col-sm-12 col-lg-12 dash-row  user-groups">
 						<div class="dashboard-items">
-							<div class="dash-title ">Filter users</div>
+							<div class="dash-title ">Filter users </div>
 							<div class="select-container">
+								<p>Culture</p>
 							   	<select class="selectpicker cultures">
 			   			   		  	<option>All cultures</option>
 			   			   		  	<option>EU culture</option>
@@ -55,24 +56,37 @@
 							   	</select>
 							</div>
 							<div class="select-container">
+								<p>Logged in/out</p>
 								<select class="selectpicker users">
+									<option>All users</option>
 								  	<option>Logged in</option>
 								  	<option>Logged out</option>
-									<option>All users</option>
 								</select>
 							</div>
 							<div class="select-container">
+								<p>Test/Regular</p>
 								<select class="selectpicker test-users">
 								  	<option>All users</option>
 								  	<option>Test users</option>
 									<option>Non test users</option>
 								</select>
 							</div>
+							<div class="select-container">
+								<p>Device</p>
+								<select class="selectpicker alert">
+								  	<option>All</option>
+								  	<option>Browser</option>
+								  	<option>Browser Alert</option>
+								  	<option>Browser Push</option>
+								  	<option>Mobile</option>
+								  	<option>Push All</option>
+								</select>
+							</div>
 
 						</div>
 					</div>
 					
-					<div class="col-sm-12 col-lg-3 dash-row  message-types">
+					<!-- <div class="col-sm-12 col-lg-3 dash-row  message-types">
 						<div class="dashboard-items">
 							<div class="dash-title">Message type</div>
 							<select class="selectpicker alert">
@@ -81,7 +95,7 @@
 							  	<option>Push</option>
 							</select>
 						</div>
-					</div>
+					</div> -->
 					<div class="col-sm-12 col-lg-12 dash-row messages-filter-holder">
 						<div class="dashboard-items">
 							<div class="dash-title">Select users</div>
@@ -98,7 +112,127 @@
 					<div class="col-sm-12 col-lg-12 dash-row messages-input-holder">
 						<div class="dashboard-items">
 							<div class="dash-title stats-title">Write messages</div>
-							<div class="row">
+							<div id="message-input-tabs" class="container1">	
+								<ul  class="nav nav-pills">
+									<li class="active">
+								        <a  href="#alerts-input" data-toggle="tab"><i class="fa fa-tasks" aria-hidden="true"></i> Alerts</a>
+									</li>
+									<li>
+										<a href="#push-input" data-toggle="tab"><i class="fa fa-chrome" aria-hidden="true"></i>Push</a>
+									</li>
+									<li>
+										<a href="#mobiles-input" data-toggle="tab"><i class="fa fa-mobile" aria-hidden="true"></i>Mobiles</a>
+									</li>
+								</ul>
+
+								<div class="tab-content clearfix">
+									<div class="tab-pane active" id="alerts-input">
+					          			<div class="col-sm-6 message-input message-input-left alert-message en-input" data-language="en">
+											<span class="current-language">English</span>
+											<span class="message-input-type">Message</span>
+											<div id="alert-message-en"></div>
+											<span class="message-input-type">Action</span>
+											<input type="text" id="alert-action-en" class="browser action-input">
+										</div>
+										<div class="col-sm-6 message-input alert-message pl-input" data-language="pl">
+											<span class="current-language">Polish</span>
+											<span class="message-input-type">Message</span>
+											<div id="alert-message-pl"></div>
+											<span class="message-input-type">Action</span>
+											<input type="text" id="alert-action-pl" class="browser action-input">
+										</div>
+										<div class="col-sm-6 message-input message-input-left  alert-message zh-hans-input" data-language="zh-hans">
+											<span class="current-language">Chinese</span>
+											<span class="message-input-type">Message</span>
+											<div id="alert-message-zh-hans"></div>
+											<span class="message-input-type">action</span>
+											<input type="text" id="alert-action-zh-hans" class="browser action-input" >
+										</div>
+										<div class="col-sm-6 message-input alert-message ar-hans-input" data-language="ar-hans">
+											<span class="current-language">Arabic</span>
+											<span class="message-input-type">Message</span>
+											<div id="alert-message-ar"></div>
+											<span class="message-input-type">action</span>
+											<input type="text" id="alert-action-ar" class="browser action-input" >
+										</div>
+									</div>
+									<div class="tab-pane" id="push-input">
+					          			<div class="col-sm-6 message-input message-input-left push push-en-input" data-language="en">
+					          				<span class="current-language">English</span>
+											<span class="message-input-type">Title</span>
+											<input type="text" id="push-title-en" class="title-push">
+											<span class="message-input-type">Message</span>
+											<textarea id="push-message-en" rows="6"></textarea>
+											<span class="message-input-type">Action</span>
+											<input type="text" id="push-action-en" class="browser action-input">
+										</div>
+										<div class="col-sm-6 message-input message-input-right   push push-pl-input" data-language="pl">
+					          				<span class="current-language">Polish</span>
+											<span class="message-input-type">Title</span>
+											<input type="text" id="push-title-pl" class="title-push">
+											<span class="message-input-type">Message</span>
+											<textarea id="push-message-pl" rows="6"></textarea>
+											<span class="message-input-type">Action</span>
+											<input type="text" id="push-action-pl" class="browser action-input">
+										</div>
+										<div class="col-sm-6 message-input message-input-left  push push-zh-hans-input" data-language="zh-hans">
+					          				<span class="current-language">Chinese</span>
+											<span class="message-input-type">Title</span>
+											<input type="text" id="push-title-zh-hans" class="title-push">
+											<span class="message-input-type">Message</span>
+											<textarea id="push-message-zh-hans" rows="6"></textarea>
+											<span class="message-input-type">Action</span>
+											<input type="text" id="push-action-zh-hans" class="browser action-input">
+										</div>
+										<div class="col-sm-6 message-input message-input-right  push push-ar-input" data-language="ar">
+					          				<span class="current-language">Arabic</span>
+											<span class="message-input-type">Title</span>
+											<input type="text" id="push-title-ar" class="title-push">
+											<span class="message-input-type">Message</span>
+											<textarea id="push-message-ar" rows="6"></textarea>
+											<span class="message-input-type">Action</span>
+											<input type="text" id="push-action-ar" class="browser action-input">
+										</div>
+									</div>
+						        	<div class="tab-pane" id="mobiles-input">
+						          		<div class="col-sm-6  message-input   message-input-left mobile mobile-en-input" data-language="en">
+					          				<span class="current-language">English</span>
+											<span class="message-input-type">Title</span>
+											<input type="text" id="mobile-title-en" class="title-mobile">
+											<span class="message-input-type">Message</span>
+											<textarea id="mobile-message-en" rows="6"></textarea>
+											<span class="message-input-type">Action</span>
+											<input type="text" id="mobile-action-en" class="browser action-input">
+										</div>
+										<div class="col-sm-6  message-input message-input-right mobile mobile-pl-input" data-language="pl">
+					          				<span class="current-language">Polish</span>
+											<span class="message-input-type">Title</span>
+											<input type="text" id="mobile-title-pl" class="title-mobile" >
+											<span class="message-input-type">Message</span>
+											<textarea id="mobile-message-pl" rows="6"></textarea>
+											<span class="message-input-type">Action</span>
+											<input type="text" id="mobile-action-pl" class="browser action-input">
+										</div>
+										<div class="col-sm-6 message-input  message-input-left mobile mobile-zh-hans-input" data-language="zh-hans">
+					          				<span class="current-language">Chinese</span>
+											<span class="message-input-type">Title</span>
+											<input type="text" id="mobile-title-zh-hans" class="title-mobile" >
+											<span class="message-input-type">Message</span>
+											<textarea id="mobile-message-zh-hans" rows="6"></textarea>
+											<span class="message-input-type">Action</span>
+											<input type="text" id="mobile-action-zh-hans" class="browser action-input">
+										</div>
+										<div class="col-sm-6 message-input message-input-right mobile mobile-ar-input" data-language="ar">
+					          				<span class="current-language">Arabic</span>
+											<span class="message-input-type">Title</span>
+											<input type="text" id="mobile-title-ar" class="title-mobile" >
+											<span class="message-input-type">Message</span>
+											<textarea id="mobile-message-ar" rows="6"></textarea>
+											<span class="message-input-type">Action</span>
+											<input type="text" id="mobile-action-ar" class="browser action-input">
+										</div>
+									</div>
+						        </div>
 							</div>
 							<div class="send-button">
 								<a href="#" class="btn message-btn">Send message</a>

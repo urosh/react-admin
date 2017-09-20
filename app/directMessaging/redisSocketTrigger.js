@@ -4,7 +4,7 @@
 
 "use strict";
 
-module.exports  = (marketAlerts, usersManagement) => {
+module.exports  = (directMessaging, usersManagement) => {
 	
 	/*
 	 * Redis event used to trigger socket messages. Since socket connections are handled
@@ -12,7 +12,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 	 * need to react
 	 *
 	 */
-	marketAlerts.addRedisInEvent({
+	directMessaging.addRedisInEvent({
 		name: 'sendSocketMessage',
 		data: [
 			'room',
@@ -20,7 +20,7 @@ module.exports  = (marketAlerts, usersManagement) => {
 			'eventName'
 		],
 		handler: function(data) {
-			let io = marketAlerts.getSocketsConnection();
+			let io = directMessaging.getSocketsConnection();
 			io.sockets.in(data.room).emit(data.eventName, data.data);
 		}
 	})

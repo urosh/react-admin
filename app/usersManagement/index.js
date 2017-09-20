@@ -11,11 +11,15 @@ const _ = require('lodash');
 const config = require('../config');
 let sql = require('mssql');
 const fs = require('fs');
-const languages = ['en', 'zh-hans', 'pl', 'ar'];
+const languages = Object.keys(config.languages).map(lang => config.languages[lang]);
 
 module.exports = function(){
 	let users = {};
-	
+	let socketToUser = {};
+	let pushToUser = {};
+	let browserToUser = {};
+	let mobileToUser = {};
+
 	const socketConnection = {
 		[parameters.messageChannels.SOCKET_ID]: '',
 		[parameters.messageChannels.SOCKET_ACTIVE]: '',
@@ -47,6 +51,8 @@ module.exports = function(){
 		[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD]: '',
 		[parameters.messageChannels.FIRST_CONNECTION_DATE]: '',
 		[parameters.messageChannels.LAST_CONNECTION_DATE]: '',
+		[parameters.messageChannels.LAST_CONNECTION_DATE]: '',
+		[parameters.messageChannels.APP_VERSION_NUMBER]: '',
 
 	}
 
@@ -251,70 +257,67 @@ module.exports = function(){
 	}
 
 	const getUsersDatabaseRecords = () => {
-		
-		if(config.loadDataFromDatabase)	return;
-		
-		console.log('[Users Management] retreiving data from the database');
 
+		if(!config.loadDataFromDatabase)	return;
+		
 		UsersModel
-		.find()
-		.exec()
-		.then(savedUsers => {
-			savedUsers.forEach(savedUser => {
-				
-				let id = getUserId(savedUser);
-				if(!users[id]){
-					// Parse and store user's object from mongodb
-					users[id] = JSON.parse(JSON.stringify(savedUser));
+			.find()
+			.exec()
+			.then(savedUsers => {
+				savedUsers.forEach(savedUser => {
 					
-					// Delete keys added by mongodb, we dont need them in our user's object
-					Object.keys(users[id])
-						.forEach(key => {
-							if(!(key in user)){
-								delete users[id][key]
-							}
-					})
-
-					users[id][parameters.messageChannels.SOCKETS] = [];	
-				}
-			})
-
-			if(!sql.error){
-				Object.keys(users)
-					.map(id => users[id])
-					.filter(user => user[parameters.user.USER_ID])
-					.forEach(user => {
-						let queryString = "EXEC pim.usp_user_details_get " + user[parameters.user.USER_ID];
+					let id = getUserId(savedUser);
+					if(!users[id]){
+						// Parse and store user's object from mongodb
+						users[id] = JSON.parse(JSON.stringify(savedUser));
 						
-						getUsersDataFromMssql(user[parameters.user.USER_ID])
-							.then(data => {
-								// Check if we need to update the mongo db
-								let updateMongo = false;
-								
-								if(user[parameters.user.MARKET_ALERT_ALLOW] !== data[parameters.user.MARKET_ALERT_ALLOW]){
-									user[parameters.user.MARKET_ALERT_ALLOW] = data[parameters.user.MARKET_ALERT_ALLOW];
-									updateMongo = true;
+						// Delete keys added by mongodb, we dont need them in our user's object
+						Object.keys(users[id])
+							.forEach(key => {
+								if(!(key in user)){
+									delete users[id][key]
 								}
-								
-								if(!user[parameters.user.MOBILE_PAIRS]){
-									user[parameters.user.MOBILE_PAIRS] = [];
-									updateMongo = true;
-								}
-								
-								if( !updateMongo &&  (user[parameters.user.MOBILE_PAIRS].sort().join(',') !== data[parameters.user.MOBILE_PAIRS].sort().join(',')) ){
-									updateMongo = true;
-									user[parameters.user.MOBILE_PAIRS] = [...data[parameters.user.MOBILE_PAIRS]];
-								}
+						})
 
-							    if(updateMongo){
-							    	updateUserDatabaseRecord(user);
-							    }
-							})
-					})
-			}
+						users[id][parameters.messageChannels.SOCKETS] = [];	
+					}
+				})
+
+				if(!sql.error){
+					Object.keys(users)
+						.map(id => users[id])
+						.filter(user => user[parameters.user.USER_ID])
+						.forEach(user => {
+							let queryString = "EXEC pim.usp_user_details_get " + user[parameters.user.USER_ID];
+							
+							getUsersDataFromMssql(user[parameters.user.USER_ID])
+								.then(data => {
+									// Check if we need to update the mongo db
+									let updateMongo = false;
+									
+									if(user[parameters.user.MARKET_ALERT_ALLOW] !== data[parameters.user.MARKET_ALERT_ALLOW]){
+										user[parameters.user.MARKET_ALERT_ALLOW] = data[parameters.user.MARKET_ALERT_ALLOW];
+										updateMongo = true;
+									}
+									
+									if(!user[parameters.user.MOBILE_PAIRS]){
+										user[parameters.user.MOBILE_PAIRS] = [];
+										updateMongo = true;
+									}
+									
+									if( !updateMongo &&  (user[parameters.user.MOBILE_PAIRS].sort().join(',') !== data[parameters.user.MOBILE_PAIRS].sort().join(',')) ){
+										updateMongo = true;
+										user[parameters.user.MOBILE_PAIRS] = [...data[parameters.user.MOBILE_PAIRS]];
+									}
+
+								    if(updateMongo){
+								    	updateUserDatabaseRecord(user);
+								    }
+								})
+						})
+				}
 			
-		})
-		
+			})	
 		
 	}
 	/*
@@ -430,14 +433,16 @@ module.exports = function(){
 		// Initialize receivers object
 		let receivers = {
 			push: {},
-			fcmMobile: {},
+			fcmIosMobile: {},
+			fcmAndroidMobile: {},
 			pushyMobile: {}
 		}
 		
 		// Initialize language based information
 		languages.map(language => {
 			receivers.push[language] = [];
-			receivers.fcmMobile[language] = [];
+			receivers.fcmIosMobile[language] = [];
+			receivers.fcmAndroidMobile[language] = [];
 			receivers.pushyMobile[language] = []
 		});
 			
@@ -468,7 +473,11 @@ module.exports = function(){
 						if(mobileRegistration[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD] === 'pushy'){
 							receivers.pushyMobile[mobileRegistration[parameters.user.LANGUAGE]].push(mobileRegistration[parameters.messageChannels.TOKEN])
 						}else{
-							receivers.fcmMobile[mobileRegistration[parameters.user.LANGUAGE]].push(mobileRegistration[parameters.messageChannels.TOKEN])
+							if(mobileRegistration[parameters.messageChannels.SYSTEM] === 'ios'){
+								receivers.fcmIosMobile[mobileRegistration[parameters.user.LANGUAGE]].push(mobileRegistration[parameters.messageChannels.TOKEN])
+							}else{
+								receivers.fcmAndroidMobile[mobileRegistration[parameters.user.LANGUAGE]].push(mobileRegistration[parameters.messageChannels.TOKEN])
+							}
 						}
 					}
 				})
@@ -822,11 +831,31 @@ module.exports = function(){
 			delete users[id];
 			return;
 		}
+		data[parameters.messageChannels.MOBILES].map(mobile => {
+			mobileToUser[mobile[parameters.messageChannels.TOKEN]] = id;
+		})
+		
+		data[parameters.messageChannels.PUSH].map(push => {
+			pushToUser[push[parameters.messageChannels.TOKEN]] = id;
+		})
+		
+		data[parameters.messageChannels.SOCKETS].map(socket => {
+			socketToUser[socket[parameters.messageChannels.SOCKET_ID]] = id;
+		})
+		
+		data[parameters.messageChannels.BROWSERS].map(browser => {
+			browserToUser[browser[parameters.messageChannels.MACHINE_HASH]] = id;
+		})
 
+		
 		users[id] = _.cloneDeep(data);
+		
+		users[id]
+		// Update lookup tables
+
 	}
 
-	const getUsersTestMethod = () => users;
+	const getUsers = () => users;
 	
 	const getSqlConnection = () => {
 		if (sql.error) return null;
@@ -838,7 +867,7 @@ module.exports = function(){
 		generateUserPairs,
 		joinRooms,
 		getUser,
-		getUsersTestMethod,
+		getUsers,
 		getUserModel,
 		getUserId,
 		getMobileUser,

@@ -41,6 +41,7 @@ const user = {
 const messageChannels = {
 	PUSH: 'push',
 	SOCKETS: 'socket',
+	ALERT: 'alert',
 	BROWSERS: 'browser',
 	MOBILES: 'mobile',
 	HTTP : 'http',
@@ -61,7 +62,8 @@ const messageChannels = {
 	SYSTEM: 'system',
 	SOUND: 'sound',
 	FIRST_CONNECTION_DATE: 'fisrtConnectionDate',
-	LAST_CONNECTION_DATE: 'lastConnectionDate'
+	LAST_CONNECTION_DATE: 'lastConnectionDate',
+	APP_VERSION_NUMBER: 'appVersionNumber'
 
 }
 
@@ -100,7 +102,13 @@ const admin = {
 	ADMIN: 'admin',
 	RECIPIENT_STATS: 'recipientStats'
 };
-const directMessaging = {};
+const directMessaging = {
+	TITLE: 'title',
+	DETAIL: 'detail',
+	BODY: 'body',
+	MESSAGE: 'message',
+	DATA: 'data'
+};
 
 const tracking = {
 	TRIGGER_ID: 'triggerID',

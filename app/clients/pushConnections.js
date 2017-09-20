@@ -9,36 +9,40 @@ module.exports  = (clients, usersManagement) => {
 	const pushConnectionsHandlers = require('./pushConnectionsHandlers')(clients, usersManagement);
 
 	// Push notification subscription
-	clients.addSocketInEvent(
-		'pushSubscribe',
-		[
+	clients.addSocketInEvent({
+		name: 'pushSubscribe',
+		data: [
 			parameters.messageChannels.TOKEN,
 			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH,
 			parameters.messageChannels.TAB_ACTIVE,
 		],
-		pushConnectionsHandlers.pushSubscribe
-	)
+		handler: pushConnectionsHandlers.pushSubscribe,
+		distributed: true,
+		tracking: pushConnectionsHandlers.pushSubscribeTracker
+	})
 
 	// Push notification subscription
-	clients.addHttpInEvent(
-		'transformPushData',
-		[],
-		pushConnectionsHandlers.transformPushData,
-		'post',
-		'/devices/push/transform'
-	)
+	clients.addHttpInEvent({
+		name: 'transformPushData',
+		data: [],
+		handler: pushConnectionsHandlers.transformPushData,
+		method: 'post',
+		url: '/devices/push/transform',
+		distributed: true
+	})
 	
 
 	// Push notification removing subscription
-	clients.addSocketInEvent(
-		'pushUnsubscribe',
-		[
+	clients.addSocketInEvent({
+		name: 'pushUnsubscribe',
+		data: [
 			parameters.user.USER_ID,
 			parameters.messageChannels.MACHINE_HASH
 		],
-		pushConnectionsHandlers.pushUnsubscribe
-	)
-
+		handler: pushConnectionsHandlers.pushUnsubscribe,
+		distributed: true,
+		tracking: pushConnectionsHandlers.pushUnsubscribeTracker
+	})
 
 }

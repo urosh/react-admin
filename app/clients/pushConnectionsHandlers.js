@@ -25,7 +25,7 @@ module.exports  = (clients, usersManagement) => {
 			})
 		
 		let io = clients.getSocketsConnection();
-		let pub = clients.getRedisConnection();
+		
 		
 		const machineHash = data[parameters.messageChannels.MACHINE_HASH];
 		const language = data[parameters.user.LANGUAGE];
@@ -87,16 +87,29 @@ module.exports  = (clients, usersManagement) => {
 		
 		usersManagement.updateUserDatabaseRecord(user);
 		
-		// Publish user's data over redis
-		pub.publish('updateUser', JSON.stringify({
-			data: user,
-			id: id
-		}));
+		usersManagement.setUsersData(user, id);
 
-		// Send data to tracking server
-		pub.publish('tracking.push.register', JSON.stringify(pushRegistration))
+		
+		usersManagement.setUsersData(user, id);
+		
 	}
 	
+	const pushSubscribeTracker  = data => { 
+		let pub = clients.getRedisConnection();
+
+		const id = usersManagement.getUserId(data);
+		
+		let user = usersManagement.getUser(id)
+
+		pub.publish('tracking.push.register', JSON.stringify({
+			[parameters.messageChannels.MACHINE_HASH]: data[parameters.messageChannels.MACHINE_HASH],
+			[parameters.messageChannels.TOKEN]: data[parameters.messageChannels.TOKEN],
+			[parameters.user.LANGUAGE]: data[parameters.user.LANGUAGE],
+			[parameters.messageChannels.PUSH_ACTIVE]: user[parameters.user.MARKET_ALERT_ALLOW],
+			[parameters.user.USER_ID]: data[parameters.user.USER_ID]
+		}))
+	}
+
 	const transformPushData = (req, res, data) => {
 		console.log('Push Management: Received push MongoDB transformation request.');
 		
@@ -109,9 +122,6 @@ module.exports  = (clients, usersManagement) => {
 			.exec()
 			.then(savedUsers => {
 				savedUsers.forEach(savedUser => {
-					
-					// If retreived token already in the system skip this step
-					//if(!_.isEmpty(usersManagement.getPushUser(savedUser[parameters.messageChannels.TOKEN]))) return;
 					
 					let userData = {};
 					
@@ -134,7 +144,7 @@ module.exports  = (clients, usersManagement) => {
 		let user = usersManagement.getUser(id);
 		
 		// Get sockets and redis instances
-		let pub = clients.getRedisConnection();
+		
 		
 		// Remove current push from push registrations array
 		let pushData = user[parameters.messageChannels.PUSH].filter(push => push[parameters.messageChannels.MACHINE_HASH] !== data[parameters.messageChannels.MACHINE_HASH]);
@@ -151,17 +161,18 @@ module.exports  = (clients, usersManagement) => {
 		
 		usersManagement.updateUserDatabaseRecord(user);
 		
-		// Publish user's data over redis
-		pub.publish('updateUser', JSON.stringify({
-			data: user,
-			id: id
-		}));
+		usersManagement.setUsersData(user, id);
+		
+	}
 
+	const pushUnsubscribeTracker = data => {
+		let pub = clients.getRedisConnection();
 		pub.publish('tracking.push.block', JSON.stringify(data))
 	}
 	
 	return{
 		pushSubscribe,
+		pushSubscribeTracker,
 		transformPushData,
 		pushUnsubscribe
 	}

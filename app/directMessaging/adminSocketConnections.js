@@ -1,13 +1,13 @@
 "use strict";
 const parameters = require('../parameters');
 module.exports = (directMessaging, usersManagement, adminManagement) => {
-	directMessaging.addSocketInEvent(
-		'adminConnect',
-		[
+	directMessaging.addSocketInEvent({
+		name: 'adminConnect',
+		data: [
 			parameters.admin.USERNAME,
 			parameters.messageChannels.SOCKET_ID
 		],
-		function(data) {
+		handler: function(data) {
 			let user;
 			const username = data[parameters.admin.USERNAME];
 			const socketId = data[parameters.messageChannels.SOCKET_ID];
@@ -33,10 +33,11 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 				[parameters.messageChannels.SOCKET_ACTIVE]: true,
 				[parameters.admin.USERNAME]: data[parameters.admin.USERNAME]
 			});
+
 			let io = directMessaging.getSocketsConnection();
+			
 			let socket = adminManagement.getSocket(data[parameters.messageChannels.SOCKET_ID], io);
 			
-
 			user[parameters.messageChannels.SOCKETS] = [...sockets];
 			
 			if(socket){
@@ -44,21 +45,22 @@ module.exports = (directMessaging, usersManagement, adminManagement) => {
 				socket.join(parameters.admin.ADMIN);
 				socket.join(data[parameters.admin.USERNAME]);
 			}
-		}
-	)
+		},
+		distributed: true
+	})
 
-	directMessaging.addSocketInEvent(
-		'adminPushRegister',
-		[
+	directMessaging.addSocketInEvent({
+		name: 'adminPushRegister',
+		data: [
 			parameters.admin.USERNAME,
 			parameters.messageChannels.TOKEN
 		],
-		function(data) {
+		handler: function(data) {
 			let user = adminManagement.getUser(data[parameters.admin.USERNAME]);
 			if(!user) return;
 			user[parameters.messageChannels.TOKEN] = data[parameters.messageChannels.TOKEN];
-		}
-	)
-
+		},
+		distributed: true
+	})
 
 }

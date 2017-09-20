@@ -20,8 +20,7 @@ const fcmSend = (message, callback) => {
 	
 	fcm.send(message, (err, response) => {
 		if(err) {
-			console.log(`FCM Error-Sending market alerts to [${lang}] ios devices`);
-			// or should i pass all the results?
+			console.log(err);
 			callback(null, result);
 			return
 		}
@@ -40,9 +39,9 @@ const fcmSend = (message, callback) => {
 
 module.exports = (marketAlerts, usersManagement) => {
 	
-	marketAlerts.addHttpInEvent(
-		'marketAlertTrigger',
-		[
+	marketAlerts.addHttpInEvent({
+		name: 'marketAlertTrigger',
+		data: [
 			parameters.marketAlerts.ROW_ID,
 			parameters.marketAlerts.EVENT_ID,
 			parameters.marketAlerts.EVENT_DATE,
@@ -55,7 +54,7 @@ module.exports = (marketAlerts, usersManagement) => {
 			parameters.marketAlerts.DIFFERENCE,
 			parameters.marketAlerts.EVENT_DESCRIPTION
 		],
-		function(req, res, data) {
+		handler: function(req, res, data) {
 			
 			res.send('Market Alert data received successfully');
 
@@ -78,7 +77,8 @@ module.exports = (marketAlerts, usersManagement) => {
 			};
 
 			let browserPushCalls = [];
-			let mobilePushCalls = [];
+			let mobileAndroidPushCalls = [];
+			let mobileIosPushCalls = [];
 
 			Object.keys(languages)
 				.map(code => languages[code])
@@ -98,9 +98,12 @@ module.exports = (marketAlerts, usersManagement) => {
 					 * array of tokens and assign appropriate message to this token. Grouping logic is 
 					 * following: All devices with the same language and same 
 					 */
+
 					let pushIterationsNumber = Math.ceil(marketAlertReceivers.push[language].length / 1000);
 					
-					let  mobileIterationNumber = Math.ceil(marketAlertReceivers.fcmMobile[language].length / 1000);
+					let  mobileIosIterationNumber = Math.ceil(marketAlertReceivers.fcmIosMobile[language].length / 1000);
+					
+					let  mobileAndroidIterationNumber = Math.ceil(marketAlertReceivers.fcmAndroidMobile[language].length / 1000);
 					
 					for (let i = 0; i < pushIterationsNumber; i++) {
 						let message = Object.assign({}, processedData.push[language]);
@@ -109,13 +112,22 @@ module.exports = (marketAlerts, usersManagement) => {
 						browserPushCalls.push(fcmSend.bind(null, message));
 					}
 
-					for (let i = 0; i < mobileIterationNumber; i++) {
-						let message = Object.assign({}, processedData.fcmMobile[language]);
+					for (let i = 0; i < mobileIosIterationNumber; i++) {
+						let message = Object.assign({}, processedData.fcmIosMobile[language]);
 						message.dry_run = false;
-						message.registration_ids = marketAlertReceivers.fcmMobile[language].slice(i*1000, 1000*(i+1));
-						mobilePushCalls.push(fcmSend.bind(null, message));
+						message.registration_ids = marketAlertReceivers.fcmIosMobile[language].slice(i*1000, 1000*(i+1));
+						mobileIosPushCalls.push(fcmSend.bind(null, message));
 					}
 					
+					for (let i = 0; i < mobileAndroidIterationNumber; i++) {
+						let message = Object.assign({}, processedData.fcmAndroidMobile[language]);
+						message.dry_run = false;
+						message.registration_ids = marketAlertReceivers.fcmAndroidMobile[language].slice(i*1000, 1000*(i+1));
+						mobileAndroidPushCalls.push(fcmSend.bind(null, message));
+					}
+					
+
+
 					// Send to pushy devices
 					if(marketAlertReceivers.pushyMobile[language].length){
 						pushyAPI.sendPushNotification(processedData.pushyMobile[language], marketAlertReceivers.pushyMobile[language], pushyOptions, function(err, id) {
@@ -131,7 +143,6 @@ module.exports = (marketAlerts, usersManagement) => {
 				});
 			
 			// Start sending push notifications to browser
-			
 			if(browserPushCalls.length){
 				async.series(browserPushCalls, function(err, res){
 					if(err){
@@ -150,9 +161,28 @@ module.exports = (marketAlerts, usersManagement) => {
 				})
 			}
 			
-			// Start sending push notifications to mobiles
-			if(mobilePushCalls.length){
-				async.series(mobilePushCalls, function(err, res){
+			// Start sending push notifications to ios mobiles
+			if(mobileIosPushCalls.length){
+				async.series(mobileIosPushCalls, function(err, res){
+					if(err){
+						console.log('Market Alerts: There was an error while sending market alerts to mobiles using FCM', err);
+						return;
+					}
+					var result = res.reduce((curr, next) => {
+						if(!curr) return next;
+						next.success = curr.success +	next.success;
+						next.failures = curr.failures + next.failures;
+						return next;
+					});
+					
+					console.log('Market Alerts: Sending push notification market alerts to mobiles [success] [failures]',result.success, result.failures);
+					
+				})
+			}
+
+			// Start sending push notifications to android mobiles
+			if(mobileAndroidPushCalls.length){
+				async.series(mobileAndroidPushCalls, function(err, res){
 					if(err){
 						console.log('Market Alerts: There was an error while sending market alerts to mobiles using FCM', err);
 						return;
@@ -170,13 +200,13 @@ module.exports = (marketAlerts, usersManagement) => {
 			}
 
 		},
-		'post',
-		'/live/market-trigger'
-	)
+		method: 'post',
+		url: '/live/market-trigger'
+	})
 
-	marketAlerts.addHttpInEvent(
-		'marketAlertTriggerTest',
-		[
+	marketAlerts.addHttpInEvent({
+		name: 'marketAlertTriggerTest',
+		data: [
 			parameters.marketAlerts.ROW_ID,
 			parameters.marketAlerts.EVENT_ID,
 			parameters.marketAlerts.EVENT_DATE,
@@ -189,19 +219,16 @@ module.exports = (marketAlerts, usersManagement) => {
 			parameters.marketAlerts.DIFFERENCE,
 			parameters.marketAlerts.EVENT_DESCRIPTION
 		],
-		function(req, res, data) {
+		handler: function(req, res, data) {
 			res.send('Test Market Alert request received');
 
 			data[parameters.user.TEST_ENABLED] = true;
 			let processedData = marketAlertTranslate(data);
 			let io = marketAlerts.getSocketsConnection();
 		},
-		'post',
-		'/live/market-trigger/test'
-	)
-
-
-
+		method: 'post',
+		url: '/live/market-trigger/test'
+	})
 
 }
 

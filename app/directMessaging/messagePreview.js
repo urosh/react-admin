@@ -8,6 +8,9 @@ const moment = require('moment-timezone');
 const FCM = require('fcm-push');
 const adminFcm = new FCM(config.ADMIN_FCM_SERVER_KEY);
 const clientFcm = new FCM(config.CLIENT_FCM_SERVER_KEY);
+const Pushy = require('pushy');
+const pushyAPI = new Pushy(config.pushyApiKey);
+
 
 moment().tz("UTC").format();
 
@@ -92,14 +95,14 @@ const formatPushMessage = (message, language, user, push) => {
 
 module.exports = (directMessaging, usersManagement, adminManagement) => {
 	
-directMessaging.addHttpInEvent(
-		'messagePreview',
-		[
+	directMessaging.addHttpInEvent({
+		name: 'messagePreview',
+		data: [
 			parameters.admin.FILTERS,
 			parameters.messageChannels.PUSH,
 			parameters.messageChannels.SOCKETS
 		],
-		function(req, res, data) {
+		handler: function(req, res, data) {
 			res.send('Preview request received successfully');
 			let message = clientMessageValidation(req);
 			
@@ -111,6 +114,7 @@ directMessaging.addHttpInEvent(
 			const adminUser = adminManagement.getUser(message.adminUsername);
 			if(!adminUser) return;
 			let io = directMessaging.getSocketsConnection();
+			let pub = directMessaging.getRedisConnection();
 
 			Object.keys(languages).forEach(code => {
 
@@ -118,8 +122,15 @@ directMessaging.addHttpInEvent(
 				
 				if(message[parameters.messageChannels.SOCKETS].text[language]){
 					var socketMessage = formatAlertMessage(message, language);
-					
-					io.sockets.in(message.adminUsername).emit('clientNotificationPreview', socketMessage);
+					// This should go to redis
+					// Publish user's data over redis
+					pub.publish('sendSocketMessage', JSON.stringify({
+						room: message.adminUsername,
+						eventName: 'clientNotificationPreview',
+						data: socketMessage
+					}));
+
+					//io.sockets.in(message.adminUsername).emit('clientNotificationPreview', socketMessage);
 				}
 
 				if(adminUser[parameters.messageChannels.TOKEN] && message[parameters.messageChannels.PUSH].text[language]){
@@ -136,12 +147,84 @@ directMessaging.addHttpInEvent(
 
 			})
 		},
-		'post',
-		'/live/client-trigger/preview',
-		false
-	)
+		method: 'post',
+		url: '/live/client-trigger/preview'
+		
+	})
 
+	directMessaging.addHttpInEvent({
+		name: 'mobileDirectMessageTest',
+		method: 'post',
+		url: '/live/client-trigger/test',
+		data: [
+			parameters.messageChannels.TOKEN,
+			parameters.directMessaging.TITLE,
+			parameters.directMessaging.MESSAGE,
+			parameters.directMessaging.DATA,
+		],
+		handler: function(req, res, data) {
+			res.send('Direct message request received');
+			const token = data[parameters.messageChannels.TOKEN];
+			const user = usersManagement.getMobileUser(token);
+			
+			const deliveryType = user.notificationDeliveryMethod;
+			
+			let message = {};
 
+			if(deliveryType === 'pushy'){
+				var options = {
+				    notification: {
+				        badge: 1,
+				        priority: 'high',
+						collapse_key: data.title,
+				    },
+				};
 
+				let pushyTokens = {};
 
+				message = {
+					message: data.message,
+					title: data.title,
+					data: data.data
+				};
+				
+				pushyAPI.sendPushNotification(message, [token], options, function(err, id) {
+					if(err) {
+						console.log(`Direct Messaging: Pushy Error. There was an error while trying to send a message to [${token}]`, err);
+						return;
+					}
+					console.log(`Direct Messaging: Sending message to [${token}] using pushy`);
+				});
+			}else{
+				message = {
+					priority: 'high',
+					to: token,
+					collapse_key: data.title,
+					title: data.title,
+					body: data.message,
+					data: data.data
+				}
+				
+				if(user[parameters.messageChannels.SYSTEM] === 'ios') {
+					message.notification = {
+						title: data.title,
+						body: data.message
+					}
+				}
+
+			 	message.data.title = data.title;
+			 	message.data.message = data.message;
+			 	
+				clientFcm.send(message, function(err, response){
+				    if (err) {
+				    	console.log(`Direct Messaging: FCM-Sending message to mobile: [${token}]`, err);
+				    	return;
+				    }
+				    console.log(`Direct Messaging: FCM-Sending message to mobile: [${token}]`, response);  
+				});
+
+			}
+
+		}
+	})
 }

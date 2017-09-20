@@ -20,7 +20,8 @@ var messagesModule = (function(){
 			{
 				code: "zh-hans",
 				value: "Chinese"
-			}],
+			}
+		],
 		userList = [],
 		selectedUsers = [],
 		filtersMappings = {
@@ -35,9 +36,13 @@ var messagesModule = (function(){
 				'Logged in': 'in',
 				'Logged out': 'out'
 			},
-			messageType: {
+			deviceType: {
 				'Alert': 'alert',
-				'Push': 'push',
+				'Browser': 'browser',
+				'Browser Alert': 'browser-alert',
+				'Browser Push': 'browser-push',
+				'Mobile': 'mobile',
+				'Push All': 'push-all',
 				'All': 'all'
 			},
 			testUsers: {
@@ -45,13 +50,17 @@ var messagesModule = (function(){
 				'Test users': 'test',
 				'Non test users': 'non-test'
 			}
+
 		},
 		filters = {
 			cultures: filtersMappings.cultures['All cultures'], 
-			userType: filtersMappings.userType['Logged in'],
+			userType: filtersMappings.userType['All users'],
 			testUsers: filtersMappings.testUsers['All users'],
-			messageType: filtersMappings.messageType['All'],
-			selectedUsers: selectedUsers
+			deviceType: filtersMappings.deviceType['All'],
+			selectedUsers: selectedUsers,
+			alertActiveLanguages : [],
+			pushActiveLanguages : [],
+			mobileActiveLanguages: []
 		},
 		userSelection,
 		userStats,
@@ -78,7 +87,6 @@ var messagesModule = (function(){
 	function init(_username){
 		dashboardContent = $('#dashboard-content');
 		dashboardContent.empty();
-
 		username = _username;
 		$.ajax({
 		    url: "templates/messages/messages.html",
@@ -117,7 +125,7 @@ var messagesModule = (function(){
 					$("#adminModal").modal('hide');
 				})
 
-
+				getRecipientStats();
 		    }
 		});
 	}
@@ -132,33 +140,66 @@ var messagesModule = (function(){
 		var message = {
 			push: {
 				title: {},
-				text: {}
+				text: {},
+				action: {}
 			},
-			socket: {
+			alert: {
 				title: {},
-				text: {}
+				text: {},
+				action: {}
 			},
-			action:{},
+			mobile: {
+				title: {},
+				text: {},
+				action: {}
+			},
 			adminUsername: username,
 			messageEmpty: true
 		};
 
 		// Transform UI states to filter values that server can understand
 		message.filters = filters;
-
-		languages.forEach(function(lang) {
-			var pushText = $('#push-message-' + lang.code).val();
-			var clearText = $($('#message-' + lang.code).summernote('code')).text();
+		
+		filters.alertActiveLanguages.map(function(language) {
+			
+			var clearText = $($('#alert-message-' + language).summernote('code')).text();
+			
 			if(clearText !== '') message.messageEmpty = false;
-			var htmlText = clearText === '' ? '' : $('#message-' + lang.code).summernote('code');
-			var action = $('#action-' + lang.code ).val();
-			message.action[lang.code] = prepareMessageAction(action);
-			message.push.title[lang.code] = 'Client Notification';
-			message.push.text[lang.code] = pushText;
-			if(pushText !== '') message.messageEmpty = false;
-			message.socket.title[lang.code] = 'Client Notification';
-			message.socket.text[lang.code] = htmlText;
-		});
+			
+			var htmlText = clearText === '' ? '' : $('#alert-message-' + language).summernote('code');
+			
+			message.alert.title[language] = 'Client Notification';
+			
+			message.alert.text[language] = htmlText;
+			
+			message.alert.action[language] = prepareMessageAction($('#alert-action-' + language).val());
+		})
+		
+		filters.pushActiveLanguages.map(function(language){
+			message.push.title[language] = $('#push-title-' + language).val();
+			
+			message.push.text[language] = $('#push-message-' + language).val();
+			
+			message.push.action[language] = prepareMessageAction($('#push-action-' + language).val());
+					
+		})
+
+		if(filters.pushActiveLanguages){
+			message.messageEmpty = false;
+		}
+
+		filters.mobileActiveLanguages.map(function(language){
+			message.mobile.title[language] = $('#mobile-title-' + language).val();
+			
+			message.mobile.text[language] = $('#mobile-message-' + language).val();
+			
+			message.mobile.action[language] = $('#mobile-action-' + language ).val();
+
+		})
+		
+		if(filters.mobileActiveLanguages){
+			message.messageEmpty = false;
+		}
 		return message;
 	}
 	
@@ -232,7 +273,9 @@ var messagesModule = (function(){
 
 	function previewMessage() {
 		var message = prepareMessage();
-		events.publish(eventNames.messages.SEND_PREVIEW, message);
+		console.log(message);
+
+		//events.publish(eventNames.messages.SEND_PREVIEW, message);
 	}
 
 	function initializeUserIdFilter() {
@@ -284,53 +327,78 @@ var messagesModule = (function(){
 			})
 		}		
 	}
-
+	
+	// 
 	function addMessageInputs(){
-		$.ajax({
-		    url: "templates/messages/message-input.html",
-		    cache: false,
-		    dataType: "html",
-		    success: function(data) {
-		    	// Set panel data
-		    	
-		    	languages = languages.sort(function(a, b) {
-		    		return a.value < b.value;
-		    	});
-		    	
-		    	messageInputContent.empty();
-		    	
-		    	languages.forEach(function(lang, index) {
-					var input = data.replace(/%%code%%/g, lang.code);
-		    		input = input.replace(/%%language%%/g, lang.value);
-		    		
-		    		messageInputContent.append(input);
-					$('#message-' + lang.code ).summernote({
-						styleTags: ['h1', 'h2', 'h3', 'h4'],
-						fontSizes: ['10', '12', '14', '16'],
-					  	toolbar: [
-						    ['style', ['style']],
-						    ['style', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
-						    ['fontsize', ['fontsize']],
-						    ['color', ['color']],
-						    ['para', ['ul', 'ol', 'paragraph']],
-					  	]
-					});
-					$('#message-' + lang.code).on('summernote.change', function(we, contents, $editable) {
-						//pushText = $('#push-message-' + lang.code).val();
-						var clearText = $(contents).text();
-						$('#push-message-' + lang.code).val(clearText);
-					});
-					$('.note-current-color-button').hide();
-					$('.note-color .note-icon-caret').addClass('note-icon-font');
-					$('.note-color .note-icon-caret').css('color', 'brown');
-					
-					$('.note-current-color-button').off('click');
-					$('.note-current-color').off('click');
-					
-				});
-				initializeUserIdFilter();
-		    }
-		});
+		languages.map(function(lang){
+			return lang.code;
+		})
+		.map(function(language){
+			$('#alert-message-' + language ).summernote({
+				height: 120,
+				styleTags: ['h1', 'h2', 'h3', 'h4'],
+				fontSizes: ['10', '12', '14', '16'],
+			  	toolbar: [
+				    ['style', ['style']],
+				    ['style', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+				    ['fontsize', ['fontsize']],
+				    ['color', ['color']],
+				    ['para', ['ul', 'ol', 'paragraph']],
+			  	]
+			});
+
+			$('#alert-message-' + language).on('summernote.change', function(we, contents, $editable) {
+				//pushText = $('#push-message-' + lang.code).val();
+				var clearText = $(contents).text();
+				
+				/*
+				 * Handling active language filter
+				 * 
+				 * When filtering users we need to take into consideration what languages do we 
+				 * send. If the language input is empty users with this language selected should 
+				 * not receive the message
+				 */
+				if(clearText && filters.alertActiveLanguages.indexOf(language) === -1 ) {
+					filters.alertActiveLanguages.push(language);
+				}
+
+				if(!clearText && filters.alertActiveLanguages.indexOf(language) > -1){
+					filters.alertActiveLanguages.splice(filters.alertActiveLanguages.indexOf(language), 1);
+				}
+
+			});
+
+			$('#push-message-' + language).on('change keydown paste input', function(){
+				if($('#push-message-' + language).val() && filters.pushActiveLanguages.indexOf(language) === -1){
+					filters.pushActiveLanguages.push(language);
+				}
+				if(!$('#push-message-' + language).val() && filters.pushActiveLanguages.indexOf(language) > -1){
+					console.log("Removing from push");
+					filters.pushActiveLanguages.splice(filters.pushActiveLanguages.indexOf(language), 1);
+				}
+			});
+
+			$('#mobile-message-' + language).on('change keydown paste input', function(){
+				if($('#mobile-message-' + language).val() && filters.mobileActiveLanguages.indexOf(language) === -1){
+					filters.mobileActiveLanguages.push(language);
+				}
+				if(!$('#mobile-message-' + language).val() && filters.mobileActiveLanguages.indexOf(language) > -1){
+					filters.mobileActiveLanguages.splice(filters.mobileActiveLanguages.indexOf(language), 1);
+				}
+			});
+
+
+
+			$('.note-current-color-button').hide();
+			$('.note-color .note-icon-caret').addClass('note-icon-font');
+			$('.note-color .note-icon-caret').css('color', 'brown');
+			
+			$('.note-current-color-button').off('click');
+			$('.note-current-color').off('click');
+		
+		})
+    	
+		initializeUserIdFilter();
 	}
 
 
@@ -347,8 +415,8 @@ var messagesModule = (function(){
 			getRecipientStats();
 		});
 		$('.selectpicker.alert').change(function(e){
-			var selectedMessageType = $(e.currentTarget).find("option:selected").text();
-			filters.messageType = filtersMappings.messageType[selectedMessageType];
+			var selectedDeviceType = $(e.currentTarget).find("option:selected").text();
+			filters.deviceType = filtersMappings.deviceType[selectedDeviceType];
 			getRecipientStats();
 		});
 		$('.selectpicker.test-users').change(function(e){
@@ -372,9 +440,11 @@ var messagesModule = (function(){
 			$('.users-stats .loggedOutUsers span').text(data.loggedOutUsers);
 			$('.users-stats .mobileAppUsers span').text(data.mobileUsers);
 		}
+		getRecipientStats();
 	}
 
 	function updateReciptientStats(data){
+
 		$('.users-stats .overall span').text(data.alerts + data.push + data.mobiles);
 		$('.users-stats .alerts span').text(data.alerts);
 		$('.users-stats .push span').text(data.push);
@@ -414,6 +484,7 @@ var messagesModule = (function(){
 
 
 	function messagePreview(data) {
+		
 		var options = {
 			limit: 5,
 			animate: {
