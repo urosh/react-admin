@@ -88,9 +88,6 @@ module.exports  = (clients, usersManagement) => {
 		usersManagement.updateUserDatabaseRecord(user);
 		
 		usersManagement.setUsersData(user, id);
-
-		
-		usersManagement.setUsersData(user, id);
 		
 	}
 	

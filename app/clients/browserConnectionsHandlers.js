@@ -52,16 +52,19 @@ module.exports = (clients, usersManagement) => {
 		// Update user's object
 		user[parameters.messageChannels.SOCKETS] = sockets;
 		
-		// Add user's reference to the socket	
-		socket[parameters.messageChannels.MACHINE_HASH] = machineHash;
-		socket[parameters.user.USER_ID] = data[parameters.user.USER_ID];
-		socket[parameters.user.LANGUAGE] = data[parameters.user.LANGUAGE];
-		socket[parameters.user.TEST_ENABLED] = data[parameters.user.TEST_ENABLED];
-		
-		// Make socket join rooms 
-		if(user[parameters.user.MARKET_ALERT_ALLOW]){
-			usersManagement.joinRooms(socket, user[parameters.user.PAIRS], io);
+		if(socket){
+			// Add user's reference to the socket	
+			socket[parameters.messageChannels.MACHINE_HASH] = machineHash;
+			socket[parameters.user.USER_ID] = data[parameters.user.USER_ID];
+			socket[parameters.user.LANGUAGE] = data[parameters.user.LANGUAGE];
+			socket[parameters.user.TEST_ENABLED] = data[parameters.user.TEST_ENABLED];
+			
+			// Make socket join rooms 
+			if(user[parameters.user.MARKET_ALERT_ALLOW]){
+				usersManagement.joinRooms(socket, user[parameters.user.PAIRS], io);
+			}
 		}
+		
 		
 		// Adding machine info
 		let browsers = user[parameters.messageChannels.BROWSERS].filter(machine => machine[parameters.messageChannels.MACHINE_HASH] !== machineHash );
@@ -167,8 +170,6 @@ module.exports = (clients, usersManagement) => {
 		// Get socket object
 		const socket = usersManagement.getSocket(data[parameters.messageChannels.SOCKET_ID], io);
 		
-		if(!socket) return;
-		
 		// Get push and socket registrations 
 		let pushObject = usersManagement.getPushObject(user, data[parameters.messageChannels.MACHINE_HASH]);
 
@@ -179,16 +180,17 @@ module.exports = (clients, usersManagement) => {
 			
 			// Set push object pushActive flag to true/false
 			pushObject[parameters.messageChannels.PUSH_ACTIVE] = user[parameters.user.MARKET_ALERT_ALLOW] && !data[parameters.messageChannels.TAB_ACTIVE];
-			// Set socket active flag on current socket
-			socket[parameters.messageChannels.SOCKET_ACTIVE] = user[parameters.user.MARKET_ALERT_ALLOW] && data[parameters.messageChannels.TAB_ACTIVE];
 			
+			// Set socket active flag on current socket
+			if(socket){
+				socket[parameters.messageChannels.SOCKET_ACTIVE] = user[parameters.user.MARKET_ALERT_ALLOW] && data[parameters.messageChannels.TAB_ACTIVE];				
+				const pairs = ( data[parameters.messageChannels.TAB_ACTIVE] && user[parameters.user.MARKET_ALERT_ALLOW] )? user[parameters.user.PAIRS] : [];
+				usersManagement.joinRooms(socket, pairs);
+			}
+
 			if(!_.isEmpty(socketObject)){
 				socketObject[parameters.messageChannels.SOCKET_ACTIVE] = data[parameters.messageChannels.TAB_ACTIVE];
 			}
-			
-			const pairs = ( data[parameters.messageChannels.TAB_ACTIVE] && user[parameters.user.MARKET_ALERT_ALLOW] )? user[parameters.user.PAIRS] : [];
-			
-			usersManagement.joinRooms(socket, pairs);
 			
 			usersManagement.setUsersData(user, id);
 
@@ -218,7 +220,9 @@ module.exports = (clients, usersManagement) => {
 		// Tell all sockets to leave rooms
 		user[parameters.messageChannels.SOCKETS].forEach(socketData => {
 			let socket = usersManagement.getSocket(socketData[parameters.messageChannels.SOCKET_ID], io);
-			usersManagement.joinRooms(socket, pairs);
+			if(socket){
+				usersManagement.joinRooms(socket, pairs);
+			}
 		})
 
 		// Block push notifications
@@ -256,7 +260,9 @@ module.exports = (clients, usersManagement) => {
 
 		user[parameters.messageChannels.SOCKETS].forEach(socketData => {
 			let socket = usersManagement.getSocket(socketData[parameters.messageChannels.SOCKET_ID], io);
-			usersManagement.joinRooms(socket, pairs);
+			if(socket){
+				usersManagement.joinRooms(socket, pairs);
+			}
 		})
 		
 		usersManagement.setUsersData(user, id);
@@ -273,11 +279,13 @@ module.exports = (clients, usersManagement) => {
 		pub.publish('tracking.machine', JSON.stringify(data));
 		var startTime = new Date();
 		let socket = usersManagement.getSocket(data[parameters.messageChannels.SOCKET_ID], io);
-		socket.emit('latency-check', data, Date.now(), function(startTime, user) {
-		    var latency = Date.now() - startTime;
-		    data.socketLatency = latency;
-			pub.publish('tracking.machine.latency', JSON.stringify(data));
-		});
+		if(socket){
+			socket.emit('latency-check', data, Date.now(), function(startTime, user) {
+			    var latency = Date.now() - startTime;
+			    data.socketLatency = latency;
+				pub.publish('tracking.machine.latency', JSON.stringify(data));
+			});
+		}
 	}
 
 	return {
