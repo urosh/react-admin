@@ -123,7 +123,7 @@ const sentinels = [
 ];
 
 
-const socketOrigins = 'www.easymarkets.com:* chn.easymarkets.com:* prp.easymarkets.com:* prpchn.easymarkets.com:* lcl.easymarkets.com:* pushprp.easymarkets.com:* notify.easymarkets.com:*';
+const socketOrigins = 'www.easymarkets.com:* chn.easymarkets.com:* prp.easymarkets.com:* prpchn.easymarkets.com:* lcl.easymarkets.com:* pushprp.easymarkets.com:* notify.easymarkets.com:* lcl.live.new.com:*';
 
 const eventChannels = {
 	

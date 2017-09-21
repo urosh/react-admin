@@ -64,10 +64,10 @@ module.exports = (app, http) => {
 		origins: marketAlertsConfig.socketOrigins,
 		path: '/live/socket.io'
 	});
-
+	
 	// Socket connection used to communicate to the admin panel
 	let adminIo = socketIO(http, {
-		origins: 'lcl.live.new.com:*',
+		origins: marketAlertsConfig.socketOrigins,
 		path: '/admin/socket.io'
 	});
 
