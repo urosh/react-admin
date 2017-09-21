@@ -67,7 +67,7 @@ const marketNotificationsServer = require('./app');
 
 marketNotificationsServer(app, http);
 
-const port = 3031;
+const port = 3333;
 
 http.listen(port, () => {
 	console.log(`Server listening on port ${port}`.magenta.bold.bgWhite);

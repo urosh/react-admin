@@ -65,6 +65,7 @@ module.exports = function(){
 		[parameters.user.MOBILE_PAIRS]: [],
 		[parameters.user.TEST_ENABLED]: false,
 		[parameters.user.MARKET_ALERT_ALLOW]: true,
+		[parameters.user.DIRECT_MESSAGE_ALLOW]: true,
 		[parameters.user.CULTURE]: 'eu',
 		[parameters.user.ACCOUNT_BASE_CURRENCY]: null,
 		[parameters.user.ALLOW_DEPOSIT]: null,

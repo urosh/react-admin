@@ -18,7 +18,7 @@ module.exports = (users) => {
 	 * @return object 
 	 */
 	const getUsersList = (filters) => {
-
+		
 		let initialUserList = [];
 		let loggedInAlerts = [];
 		let loggedOutAlerts = [];
@@ -27,10 +27,25 @@ module.exports = (users) => {
 		let pushMessages = [];
 		let mobileMessages = [];
 
+		// If we provided users id from the user id's filter we initalize the user list with this list
 		filters.selectedUsers.map(id => {
 			initialUserList.push(users[id]);
 		})
 		
+		// If we imported users from csv then this list is what we use as a starting point
+		if(filters.importedUsers.length){
+			initialUserList = [];
+			filters.importedUsers.map(id => {
+				initialUserList.push(id);
+			})
+		}
+		if(initialUserList.length){
+			initialUserList = initialUserList
+				.filter(id => users[id])
+				.map(id => users[id]);
+		}
+
+		// If no users are provided using id filter, or csv import functionality start from scratch
 		if(!initialUserList.length){
 			initialUserList = Object.keys(users).map(id => users[id]);
 		}
@@ -63,7 +78,7 @@ module.exports = (users) => {
 				}
 			})
 		}
-		
+
 		initialUserList.forEach(user => {
 			
 			if(
@@ -121,7 +136,7 @@ module.exports = (users) => {
 		let pushyMobiles = [], 
 		    iosMobiles = [],
 		    androidMobiles = [];
-		
+		//console.log(mobileMessages);
 		mobileMessages.map(mobile => {
 
 			if(mobile[parameters.messageChannels.NOTIFICATION_DELIVERY_METHOD] === 'pushy'){

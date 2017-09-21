@@ -521,4 +521,17 @@
 	margin-top: 10px;
 }
 
-
+#csv-upload-button{
+	height: 30px;
+	border-radius: 0;
+    box-shadow: none;
+    text-shadow: none;
+    background-image: none;
+    background: none;
+    background-color: #0f5b8e;
+    color: white;
+    margin-top: 10px;
+    width: 120px;
+    border-width: 0;
+    border-style: none;
+}

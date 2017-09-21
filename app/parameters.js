@@ -17,6 +17,7 @@ const user = {
 	USER_LOGGED_IN: 'userLoggedIn',
 	TEST_ENABLED: 'testEnabled',
 	MARKET_ALERT_ALLOW: 'marketAlertAllow',
+	DIRECT_MESSAGE_ALLOW: 'directMessageAllow',
 	LANGUAGE: 'language',
 	CULTURE: 'culture',
 	PAIRS: 'pairs',

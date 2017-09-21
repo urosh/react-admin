@@ -24,6 +24,7 @@ var messagesModule = (function(){
 		],
 		userList = [],
 		selectedUsers = [],
+		importedUsers = [],
 		filtersMappings = {
 			cultures: {
 				'International': 'int',
@@ -58,6 +59,7 @@ var messagesModule = (function(){
 			testUsers: filtersMappings.testUsers['All users'],
 			deviceType: filtersMappings.deviceType['All'],
 			selectedUsers: selectedUsers,
+			importedUsers: importedUsers,
 			alertActiveLanguages : [],
 			pushActiveLanguages : [],
 			mobileActiveLanguages: []
@@ -107,6 +109,7 @@ var messagesModule = (function(){
 				});
 
 				selectedUsers = [];
+				importedUsers = [];
 				addFilterChangeHandlers();
 				userSelection = $('.messages-filter-holder');
 		  		userStats = userSelection.find('.user-stats')[0];
@@ -124,7 +127,31 @@ var messagesModule = (function(){
 				$(document).on('click', '.modal-send-message-confirmation .cancel-btn', function(){
 					$("#adminModal").modal('hide');
 				})
+				
 
+				$('#csv-upload-button').on('click', function(e){
+					e.preventDefault();
+					var csv = $('#csv-file-select');
+	        		var csvFile = csv[0].files[0];
+	        		var ext = csv.val().split(".").pop().toLowerCase();
+
+			        if($.inArray(ext, ["csv"]) === -1){
+			            console.log('File format error');
+			            return false;
+			        }
+			        var test = Papa.parse(csvFile, {
+						delimiter: ",",
+						complete: function(data){
+							data.data.forEach(function(item,i){
+								if(i > 0){
+									importedUsers.push(item[0]);
+								}
+							})
+							// /filters.importedUsers = importedUsers;
+						}
+					});
+	
+				})
 				getRecipientStats();
 		    }
 		});
@@ -265,18 +292,19 @@ var messagesModule = (function(){
 		var message = prepareMessage();
 		//When sending the message attach user id's to the filter object.
 		message.filters.selectedUsers = selectedUsers.slice(0);
+		message.filters.importedUsers = importedUsers.slice(0);
 		// check received message
 		events.publish(eventNames.messages.SEND, message);
 		filters.selectedUsers = [];
+		filters.importedUsers = [];
 		
 	}
 
 	function previewMessage() {
 		var message = prepareMessage();
-		console.log(message);
-
-		//events.publish(eventNames.messages.SEND_PREVIEW, message);
+		events.publish(eventNames.messages.SEND_PREVIEW, message);
 	}
+
 
 	function initializeUserIdFilter() {
 		var inputForm = document.querySelector('#user-id-filter');
@@ -328,6 +356,12 @@ var messagesModule = (function(){
 		}		
 	}
 	
+	/*
+	 * CSV Upload handler
+	 */
+	function csvUploadHandler(e) {
+		console.log('We got our csv and are so happy');
+	}
 	// 
 	function addMessageInputs(){
 		languages.map(function(lang){
@@ -424,6 +458,8 @@ var messagesModule = (function(){
 			filters.testUsers = filtersMappings.testUsers[selectedTestUsers];
 			getRecipientStats();
 		});
+
+		filters.importedUsers = importedUsers;
 	}
 	
 	
