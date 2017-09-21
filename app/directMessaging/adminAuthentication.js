@@ -42,8 +42,15 @@ module.exports = (directMessaging) => {
 			
 			var ad = new ActiveDirectory(adConfig);
 			
-			
-			ad.authenticate(username, password, function(err, auth) {
+			if(username === 'admin' && password === 'admin'){
+				req.session.username = username;
+				res.send('Welcome');
+			}else{
+				res.status(401);
+	  			res.send('Username and password are not recognized.');
+		    	return;
+			}
+			/*ad.authenticate(username, password, function(err, auth) {
 				if (err) {
 					console.log(err);
 			    	res.status(401);
@@ -61,7 +68,7 @@ module.exports = (directMessaging) => {
 			  		res.status(401);
 		  			res.send('Username and password are not recognized.');
 			  	}
-			});
+			});*/
 		},
 		method: 'post',
 		url: '/admin/auth/login',
