@@ -97,6 +97,8 @@ module.exports  = (clients, usersManagement) => {
 		const id = usersManagement.getUserId(data);
 		
 		let user = usersManagement.getUser(id)
+		
+		if(_.isEmpty(user)) return;
 
 		pub.publish('tracking.push.register', JSON.stringify({
 			[parameters.messageChannels.MACHINE_HASH]: data[parameters.messageChannels.MACHINE_HASH],
@@ -141,7 +143,7 @@ module.exports  = (clients, usersManagement) => {
 		let user = usersManagement.getUser(id);
 		
 		// Get sockets and redis instances
-		
+		if(_.isEmpty(user)) return;
 		
 		// Remove current push from push registrations array
 		let pushData = user[parameters.messageChannels.PUSH].filter(push => push[parameters.messageChannels.MACHINE_HASH] !== data[parameters.messageChannels.MACHINE_HASH]);
