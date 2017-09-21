@@ -4,7 +4,7 @@ const parameters = require('../parameters');
 module.exports  = (clients, usersManagement) => {
 
 	// Api method for retrieving users list
-	clients.addHttpInEvent({
+	/*clients.addHttpInEvent({
 		name: 'getLoggedInUsers',
 		url: '/api/fetch/users',
 		handler: function(req, res) {
@@ -15,7 +15,7 @@ module.exports  = (clients, usersManagement) => {
 			res.send(loggedInUsers);
 		},
 		method: 'get'
-	})
+	})*/
 	
 	// Api methods for retrieving list of logged out users
 	clients.addHttpInEvent({

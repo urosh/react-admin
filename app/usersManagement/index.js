@@ -847,12 +847,8 @@ module.exports = function(){
 		data[parameters.messageChannels.BROWSERS].map(browser => {
 			browserToUser[browser[parameters.messageChannels.MACHINE_HASH]] = id;
 		})
-
 		
 		users[id] = _.cloneDeep(data);
-		
-		users[id]
-		// Update lookup tables
 
 	}
 
