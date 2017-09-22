@@ -535,3 +535,26 @@
     border-width: 0;
     border-style: none;
 }
+.csv-upload .dashboard-items{
+	height: 180px;
+}
+.csv-upload .upload-csv-container{
+	float: left;
+	height: 180px;
+}
+
+.csv-upload .upload-csv-stats{
+	/* display: none; */
+	visibility: hidden;
+	height: 180px;
+	float: left;
+}
+
+.csv-upload .upload-csv-stats p{
+	/* display: none; */
+	margin: 5px 0;
+}
+
+.csv-upload .upload-csv-stats .csv-number{
+	color: #0f5b8e;
+}

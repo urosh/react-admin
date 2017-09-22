@@ -142,11 +142,30 @@ var messagesModule = (function(){
 			        var test = Papa.parse(csvFile, {
 						delimiter: ",",
 						complete: function(data){
+							importedUsers = [];
 							data.data.forEach(function(item,i){
 								if(i > 0){
-									importedUsers.push(item[0]);
+									if(item[0]){
+										importedUsers.push(item[0]);
+									}
 								}
 							})
+							// Here i want to add stats about imported data
+							$.ajax({
+								type: "POST",
+								url: '/api/fetch/csv/stats',
+								data: JSON.stringify({users: importedUsers}),
+								contentType: "application/json",
+								success: function(res){
+									console.log('Messages sent successfuly', res);
+									
+								},
+								error: function(){
+									console.log('There was a problem while sending the message');
+								}
+							});
+
+
 							// /filters.importedUsers = importedUsers;
 						}
 					});

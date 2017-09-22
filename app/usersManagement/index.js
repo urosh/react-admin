@@ -859,6 +859,52 @@ module.exports = function(){
 		return sql;
 	};
 
+	const getCsvStats = importedUsers => {
+		
+		let totalNumber = importedUsers.length;
+		let totalAvailable = importedUsers.filter(id => users[id]).length;
+		let totalUnavailable = importedUsers.filter(id => !users[id]).length;
+		let totalActive = Object.keys(users)
+			.map(key => users[key])
+			.filter(user => users[parameters.messageChannels.SOCKETS].length > -1).length;
+
+		return {
+			totalNumber,
+			totalAvailable,
+			totalUnavailable,
+			totalActive
+		}
+	}
+
+	const getUserStats = () => {
+		let individualUsers = Object.keys(users).length;
+		let loggedInUsers =  Object.keys(users)
+			.map(id => users[id])
+			.filter(user => users[parameters.user.USER_ID])
+			.length;
+		let loggedOutUsers = individualUsers - loggedInUsers;
+		let mobileApps = 0;
+		let browserPush = 0;
+		let sockets = 0;
+
+		Object.keys(users)
+			.map(id => users[id])
+			.map(user => {
+				mobileApps = mobileApps + user[parameters.messageChannels.MOBILES].length
+				browserPush = browserPush + user[parameters.messageChannels.PUSH].length;
+				sockets = sockets + user[parameters.messageChannels.SOCKETS].length;
+			});
+			
+		return {
+			individualUsers,
+			loggedInUsers,
+			loggedOutUsers,
+			mobileApps,
+			browserPush,
+			sockets
+		}
+	}
+
 	return {
 		init,
 		generateUserPairs,
@@ -887,6 +933,8 @@ module.exports = function(){
 		usersFiltering,
 		setUsersData,
 		getSqlConnection,
-		getUsersDataFromMssql
+		getUsersDataFromMssql,
+		getCsvStats,
+		getUserStats
 	}
 }

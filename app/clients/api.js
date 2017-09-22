@@ -68,4 +68,27 @@ module.exports  = (clients, usersManagement) => {
 		},
 		method: 'get'
 	})
+
+	clients.addHttpInEvent({
+		name: 'csvStats',
+		url: '/api/fetch/csv/stats',
+		handler: function(req, res) {
+			console.log(usersManagement.getCsvStats(req.body.users));
+			res.send(usersManagement.getCsvStats(req.body.users));
+		},
+		method: 'post',
+	});
+
+	clients.addHttpInEvent({
+		name: 'userStats',
+		url: '/api/fetch/user/stats',
+		handler: function(req, res) {
+			console.log('getting users stats');
+			res.send(usersManagement.getUserStats());
+		},
+		method: 'get',
+	});	
+
+
+
 }
