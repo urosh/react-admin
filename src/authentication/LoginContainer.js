@@ -50,7 +50,7 @@ class LoginContainer extends Component {
 			this.setState({transitionStage: transitionStageStates._COMPLETE_});
 			
 			browserHistory.push('/messages');
-		}, 1600)
+		}, 800)
 	}
 
 	onLogin(username, password) {

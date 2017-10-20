@@ -1,7 +1,5 @@
-import React,  {Component} from 'react';
+import React from 'react';
 import './Login.css';
-import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
-
 
 /*
  * Login presentational component. 

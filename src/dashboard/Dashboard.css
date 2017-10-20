@@ -1,0 +1,60 @@
+.dashboard-menu{
+	background: #33393d;
+	width: 260px;
+	height: 100%;
+	overflow: hidden;
+	position: absolute;
+	bottom: 0;
+	top: 0;
+	padding: 0;
+}
+
+.dashboard-menu .menu-header{
+	padding: 10px;
+}
+.dashboard-menu .dashboard-menu-list{
+	margin-top: 20px;
+}
+.dashboard-menu .panel-row{
+	height: 50px;
+	border-bottom: solid 1px #282d30;
+	overflow: hidden;
+	padding: 0;
+	cursor: pointer;
+	box-sizing: border-box;
+
+}
+
+.dashboard-menu  .panel-row:first-child{ border-top: solid 1px #282d30;}
+
+.dashboard-menu .panel-data{ float: left;}
+.dashboard-menu  .panel-row .panel-marker{
+	background: #33393d;
+	width: 6px;
+	height: 100%;
+	margin-right: 10px;
+}
+.dashboard-menu  .panel-row.active{ color: #8dc74b;}
+.dashboard-menu  .panel-row.active .panel-marker{background: #8dc74b;}
+
+.dashboard-menu  .panel-icon{
+	width: 40px;
+	height: 50px;
+	text-align: ceneter;
+	font-size: 16px;
+	line-height: 50px;
+}
+
+
+.dashboard-menu   .panel-text{
+	height: 50px;
+	width: 180px;
+	line-height: 47px;
+	font-size: 14px;
+}
+
+.dashboard-content{
+	float: right;
+	width: 100%;
+	height: 100%;
+}
